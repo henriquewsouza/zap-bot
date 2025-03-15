@@ -7,7 +7,7 @@ import json
 import asyncio
 
 # Constants
-TIMES_CHANNEL_ID = 1335633874453008414
+# Removed TIMES_CHANNEL_ID as it is no longer needed.
 BOT_ADMINS = [291617683416285194, 701661704844738580]
 MEMBERS_FILE = "members.json"
 
@@ -170,24 +170,22 @@ async def mix_teams(ctx):
 
     mix_in_progress = True
     try:
-        times_channel = bot.get_channel(TIMES_CHANNEL_ID)
-        if not times_channel:
-            await ctx.send(f"Error: Unable to find the #times channel (ID {TIMES_CHANNEL_ID}).")
-            return
+        # Use the current channel instead of the dedicated times channel.
+        channel = ctx.channel
 
         exclusions, extras = await parse_mix_args(ctx)
         members = get_mix_members(ctx, exclusions, extras)
         if len(members) != 10:
-            await times_channel.send("There must be exactly 10 members (voice channel members minus exclusions plus extras) to start a mix.")
+            await channel.send("There must be exactly 10 members (voice channel members minus exclusions plus extras) to start a mix.")
             return
 
         partitions = generate_valid_partitions(members)
         if not partitions:
-            await times_channel.send("No valid team partitions available with the current constraints.")
+            await channel.send("No valid team partitions available with the current constraints.")
             return
 
         diff, team1, team2 = select_best_partition(partitions)
-        await send_mix_result(times_channel, team1, team2)
+        await send_mix_result(channel, team1, team2)
     finally:
         mix_in_progress = False
 
@@ -198,16 +196,13 @@ async def clear(ctx):
     """
     !clear
 
-    Clears all (non-pinned) messages from the #times channel.
+    Clears all (non-pinned) messages from the current channel.
     (Requires Manage Messages permission; Bot Admins only.)
     """
-    times_channel = bot.get_channel(TIMES_CHANNEL_ID)
-    if not times_channel:
-        await ctx.send(f"Error: Unable to find the #times channel (ID {TIMES_CHANNEL_ID}).")
-        return
-
-    deleted = await times_channel.purge(limit=None)
-    confirmation = await times_channel.send(f"Cleared {len(deleted)} messages from this channel.")
+    # Use the current channel instead of a dedicated one.
+    channel = ctx.channel
+    deleted = await channel.purge(limit=None)
+    confirmation = await channel.send(f"Cleared {len(deleted)} messages from this channel.")
     await asyncio.sleep(5)
     await confirmation.delete()
 
@@ -285,7 +280,7 @@ async def help_command(ctx):
         "   - Generates two balanced teams from exactly 10 non-bot members. It starts with all voice channel members, \n"
         "     removes those specified after --exclude, and adds those specified after --extra.\n"
         "**!clear**\n"
-        "   - Clears all (non-pinned) messages from the #times channel. (Requires Manage Messages permission; Bot Admins only.)\n"
+        "   - Clears all (non-pinned) messages from the current channel. (Requires Manage Messages permission; Bot Admins only.)\n"
         "**!setlevel @User <level>**\n"
         "   - Permanently updates a member's level and writes the change to members.json. (Bot Admins only.)\n"
         "**!addtemp @User <level>**\n"
