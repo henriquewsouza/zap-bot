@@ -5,24 +5,61 @@ from discord.ext import commands
 import itertools
 import json
 import asyncio
+import random
+import boto3
+from botocore.exceptions import ClientError
 
-# Constants
-# Removed TIMES_CHANNEL_ID as it is no longer needed.
+# ---------------------------
+# Configuration
+# ---------------------------
+
+# Discord Bot Configuration
 BOT_ADMINS = [291617683416285194, 701661704844738580]
-MEMBERS_FILE = "members.json"
 
+# Lightsail Bucket (S3‑compatible) Configuration
+BUCKET_NAME = "bucket-6sk08y"       # Your Lightsail bucket name
+OBJECT_KEY = "members.json"         # The object key for persistent data
+# Option B: Using the standard S3 endpoint. If needed, you can try using the bucket domain as the endpoint.
+ENDPOINT_URL = "https://s3.us-east-1.amazonaws.com"
 
-# Load user levels from file.
+# Create an S3 client using the custom endpoint
+s3 = boto3.client("s3", endpoint_url=ENDPOINT_URL)
+
+# ---------------------------
+# Persistence Functions
+# ---------------------------
+
 def load_user_levels():
-    with open(MEMBERS_FILE, "r", encoding="utf-8") as f:
-        user_data = json.load(f)
-    return {int(user_id): info for user_id, info in user_data.items()}
+    """
+    Load user levels from the Lightsail bucket.
+    If the object doesn't exist, return an empty dictionary.
+    """
+    try:
+        response = s3.get_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY)
+        contents = response["Body"].read().decode("utf-8")
+        user_data = json.loads(contents)
+        return {int(user_id): info for user_id, info in user_data.items()}
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "NoSuchKey":
+            # Object not found; return empty data.
+            return {}
+        else:
+            raise
 
-# Check if a context author is a bot admin.
-def is_bot_admin(ctx):
-    return ctx.author.id in BOT_ADMINS
+def save_user_levels(user_levels):
+    """
+    Save user levels to the Lightsail bucket.
+    """
+    data = json.dumps({str(uid): info for uid, info in user_levels.items()}, indent=4)
+    s3.put_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY, Body=data.encode("utf-8"))
 
-# Set up Discord bot with proper intents.
+# Global in-memory user_levels loaded from the bucket
+user_levels = load_user_levels()
+
+# ---------------------------
+# Discord Bot Setup
+# ---------------------------
+
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
@@ -32,12 +69,14 @@ bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 # Global flag to prevent concurrent mixes.
 mix_in_progress = False
 
-# --- Team Building Helpers ---
+# ---------------------------
+# Team Building Helpers
+# ---------------------------
 
 def build_team_message(team1, team2):
     """
-    Construct a message showing both teams sorted by level (highest first),
-    along with total team skill and the skill difference.
+    Constructs a message displaying both teams, sorted by level (highest first),
+    with total team skills and the difference.
     """
     sorted_team1 = sorted(team1, key=lambda m: user_levels[m.id]["level"], reverse=True)
     sorted_team2 = sorted(team2, key=lambda m: user_levels[m.id]["level"], reverse=True)
@@ -51,61 +90,52 @@ def build_team_message(team1, team2):
     message = (
         f"**Team 1:**\n{team1_text}\n**Total Skill:** {total_team1}\n\n"
         f"**Team 2:**\n{team2_text}\n**Total Skill:** {total_team2}\n\n"
-        f"**Difference:** {abs(total_team1 - total_team2)}"
+        f"**Difference:** {abs(total_team1 - total_team2)}\n\n"
+        f"**Lembre-se: Se vc sacanear o Zap é melhor esperar que ele não descubra seu IP**"
     )
     return message
 
-def is_valid_partition(team1, team2, zapgod_id=291617683416285194, jotalha_id=692595982378074222):
-    """
-    Return True if Zapgod and JOTALHA are not on the same team.
-    """
-    if (any(m.id == zapgod_id for m in team1) and any(m.id == jotalha_id for m in team1)) or \
-       (any(m.id == zapgod_id for m in team2) and any(m.id == jotalha_id for m in team2)):
-        return False
-    return True
-
 def generate_valid_partitions(members):
     """
-    Generate all valid team partitions (teams of 5) that satisfy the
-    Zapgod/JOTALHA constraint.
+    Generate all valid team partitions from the list of members.
+    For even numbers, teams are equal; for odd, team1 gets floor(n/2) members.
     Returns a list of tuples: (difference, team1, team2).
     """
     partitions = []
-    for team1 in itertools.combinations(members, 5):
+    n = len(members)
+    team1_size = n // 2  # If odd, team2 will have one extra member.
+    for team1 in itertools.combinations(members, team1_size):
         team2 = [member for member in members if member not in team1]
-        if not is_valid_partition(team1, team2):
-            continue
         total_team1 = sum(user_levels[m.id]["level"] for m in team1)
         total_team2 = sum(user_levels[m.id]["level"] for m in team2)
         diff = abs(total_team1 - total_team2)
         partitions.append((diff, team1, team2))
     return partitions
 
-def select_best_partition(partitions):
-    """
-    Sort the partitions by the difference in total skill and return the best one.
-    """
-    partitions.sort(key=lambda x: x[0])
-    return partitions[0]
-
 async def send_mix_result(channel, team1, team2):
     """
-    Send the generated team partition result to the specified channel.
+    Sends the generated team partition result to the specified channel.
     """
     message = build_team_message(team1, team2)
     await channel.send("**Teams Generated:**\n" + message)
 
-# --- Parsing Helpers for Mix Command ---
+# ---------------------------
+# Parsing Helpers for Mix Command
+# ---------------------------
 
 async def parse_mix_args(ctx):
     """
-    Parse the command arguments from ctx.message.content.
-    The expected format is:
-      !mix [--exclude or -e] <member mentions> [--extra or -x] <member mentions>
-    If no flag is set, defaults to extras.
-    Returns a tuple: (exclusions, extras) as lists of discord.Member.
+    Parse command arguments from ctx.message.content.
+    Expected format:
+      !mix [<number>] [--exclude or -e] <member mentions> [--extra or -x] <member mentions>
+    Returns a tuple: (combination_count, exclusions, extras)
     """
     args = ctx.message.content.split()[1:]  # skip the command name
+    combination_count = 1  # default value
+    if args and args[0].isdigit():
+        combination_count = int(args[0])
+        args = args[1:]
+    
     mode = None
     exclusions = []
     extras = []
@@ -120,48 +150,41 @@ async def parse_mix_args(ctx):
                 member = await converter.convert(ctx, arg)
             except commands.BadArgument:
                 continue
-            # Default to extras if no mode is set.
             if mode is None:
                 mode = "extra"
             if mode == "exclude":
                 exclusions.append(member)
             elif mode == "extra":
                 extras.append(member)
-    return exclusions, extras
+    return combination_count, exclusions, extras
 
 def get_mix_members(ctx, exclusions, extras):
     """
-    Build the final list of members for the mix.
-    
-    Start with non-bot members from the voice channel (if any), remove any in the exclusions list,
-    then add the extra members (avoiding duplicates).
+    Build the final list of members for the mix from:
+      - Non‑bot members in the voice channel (if any), minus exclusions.
+      - Extra members specified.
     """
     members = []
     if ctx.author.voice is not None:
         voice_members = [member for member in ctx.author.voice.channel.members if not member.bot]
         members.extend(voice_members)
-    # Remove excluded members
     exclusions_ids = {member.id for member in exclusions}
     members = [m for m in members if m.id not in exclusions_ids]
-    # Add extras (if not already present)
     for member in extras:
         if all(member.id != m.id for m in members):
             members.append(member)
     return members
 
-# --- Bot Commands ---
+# ---------------------------
+# Bot Commands
+# ---------------------------
 
-@bot.command(name="mix2")
+@bot.command(name="mix")
 async def mix_teams(ctx):
     """
-    !mix [--exclude @User ...] [--extra @User ...]
-
-    Generates two balanced teams from exactly 10 non-bot members combined from:
-      - Members in your current voice channel (after removing those specified by --exclude), and 
-      - Any extra members specified by --extra (even if they aren’t in the voice channel).
-
-    The final pool must total exactly 10 members. The best valid partition (respecting the Zapgod/JOTALHA constraint)
-    is sent immediately.
+    !mix [<number>] [--exclude @User ...] [--extra @User ...]
+    Generates one or more balanced team partitions from non‑bot members.
+    If any member does not have a level set, their name is reported.
     """
     global mix_in_progress
     if mix_in_progress:
@@ -170,13 +193,17 @@ async def mix_teams(ctx):
 
     mix_in_progress = True
     try:
-        # Use the current channel instead of the dedicated times channel.
         channel = ctx.channel
-
-        exclusions, extras = await parse_mix_args(ctx)
+        combination_count, exclusions, extras = await parse_mix_args(ctx)
         members = get_mix_members(ctx, exclusions, extras)
-        if len(members) != 10:
-            await channel.send("There must be exactly 10 members (voice channel members minus exclusions plus extras) to start a mix.")
+        if len(members) < 2:
+            await channel.send("There are not enough members to form teams.")
+            return
+        
+        missing_members = [m for m in members if m.id not in user_levels]
+        if missing_members:
+            missing_names = ", ".join(m.display_name for m in missing_members)
+            await channel.send("The following members do not have a level set: " + missing_names)
             return
 
         partitions = generate_valid_partitions(members)
@@ -184,36 +211,70 @@ async def mix_teams(ctx):
             await channel.send("No valid team partitions available with the current constraints.")
             return
 
-        diff, team1, team2 = select_best_partition(partitions)
-        await send_mix_result(channel, team1, team2)
+        partitions.sort(key=lambda x: x[0])
+        combination_count = min(combination_count, len(partitions))
+        messages = []
+        for i in range(combination_count):
+            diff, team1, team2 = partitions[i]
+            message = f"**Combination #{i+1}:**\n" + build_team_message(team1, team2)
+            messages.append(message)
+        
+        for message in messages:
+            await channel.send(message)
     finally:
         mix_in_progress = False
 
+@bot.command(name="arere")
+async def arere(ctx):
+    """
+    !arere
+    Randomly splits all non‑bot members from your current voice channel into two teams.
+    """
+    if ctx.author.voice is None:
+        await ctx.send("You need to be in a voice channel to use this command.")
+        return
+
+    members = [member for member in ctx.author.voice.channel.members if not member.bot]
+    if len(members) < 2:
+        await ctx.send("Not enough members in the voice channel to mix teams.")
+        return
+
+    random.shuffle(members)
+    mid = len(members) // 2
+    team1 = members[:mid]
+    team2 = members[mid:]
+    
+    team1_text = "\n".join(member.mention for member in team1)
+    team2_text = "\n".join(member.mention for member in team2)
+    message = (
+        "**Random Team Assignment:**\n\n"
+        f"**Team 1:**\n{team1_text}\n\n"
+        f"**Team 2:**\n{team2_text}"
+    )
+    
+    await ctx.send(message)
+
 @bot.command(name="clear")
-@commands.check(is_bot_admin)
+@commands.check(lambda ctx: ctx.author.id in BOT_ADMINS)
 @commands.has_permissions(manage_messages=True)
 async def clear(ctx):
     """
     !clear
-
     Clears all (non-pinned) messages from the current channel.
     (Requires Manage Messages permission; Bot Admins only.)
     """
-    # Use the current channel instead of a dedicated one.
     channel = ctx.channel
     deleted = await channel.purge(limit=None)
     confirmation = await channel.send(f"Cleared {len(deleted)} messages from this channel.")
     await asyncio.sleep(5)
     await confirmation.delete()
 
-@bot.command(name="setlevel2")
-@commands.check(is_bot_admin)
+@bot.command(name="setlevel")
+@commands.check(lambda ctx: ctx.author.id in BOT_ADMINS)
 async def set_level(ctx, member: discord.Member, level: int):
     """
     !setlevel @User <level>
-
-    Permanently updates a member's level.
-    Updates the in-memory user_levels data and writes the change to members.json.
+    Permanently updates a member's level and saves the change to the Lightsail bucket.
     (Bot Admins only.)
     """
     global user_levels
@@ -221,18 +282,15 @@ async def set_level(ctx, member: discord.Member, level: int):
         "level": level,
         "nickname": member.display_name
     }
-    with open(MEMBERS_FILE, "w", encoding="utf-8") as f:
-        json.dump({str(uid): info for uid, info in user_levels.items()}, f, indent=4)
+    save_user_levels(user_levels)
     await ctx.send(f"Updated {member.mention}'s level to {level}.")
 
-@bot.command(name="addtemp2")
-@commands.check(is_bot_admin)
+@bot.command(name="addtemp")
+@commands.check(lambda ctx: ctx.author.id in BOT_ADMINS)
 async def add_temp(ctx, member: discord.Member, level: int):
     """
     !addtemp @User <level>
-
-    Adds a temporary level for a member (in-memory only).
-    If the member is already in the list, advises using !setlevel.
+    Temporarily adds a member with a given level (in-memory only).
     (Bot Admins only.)
     """
     global user_levels
@@ -245,11 +303,10 @@ async def add_temp(ctx, member: discord.Member, level: int):
     }
     await ctx.send(f"Temporarily added {member.mention} with level {level}.")
 
-@bot.command(name="players2")
+@bot.command(name="players")
 async def players(ctx):
     """
     !players
-
     Displays the list of all users in the system along with their levels and nicknames.
     """
     if not user_levels:
@@ -267,36 +324,36 @@ async def players(ctx):
     else:
         await ctx.send(help_message)
 
-@bot.command(name="help2")
+@bot.command(name="help")
 async def help_command(ctx):
     """
     !help
-
     Displays the list of available bot commands.
     """
     help_text = (
         "**Bot Commands:**\n"
-        "**!mix [--exclude @User ...] [--extra @User ...]**\n"
-        "   - Generates two balanced teams from exactly 10 non-bot members. It starts with all voice channel members, \n"
-        "     removes those specified after --exclude, and adds those specified after --extra.\n"
+        "**!mix [<number>] [--exclude @User ...] [--extra @User ...]**\n"
+        "   - Generates one or more balanced team partitions from non‑bot members.\n"
+        "     (If any member does not have a level set, their name will be reported.)\n"
+        "**!arere**\n"
+        "   - Randomly splits voice channel members into two teams.\n"
         "**!clear**\n"
-        "   - Clears all (non-pinned) messages from the current channel. (Requires Manage Messages permission; Bot Admins only.)\n"
+        "   - Clears all (non-pinned) messages from the current channel. (Requires Manage Messages; Bot Admins only.)\n"
         "**!setlevel @User <level>**\n"
-        "   - Permanently updates a member's level and writes the change to members.json. (Bot Admins only.)\n"
+        "   - Permanently updates a member's level and saves the change to the Lightsail bucket. (Bot Admins only.)\n"
         "**!addtemp @User <level>**\n"
         "   - Temporarily adds a member with a given level (in-memory only). (Bot Admins only.)\n"
         "**!players**\n"
         "   - Displays the current list of players along with their levels and nicknames.\n"
         "**!botadmins**\n"
-        "   - Displays the current list of BotAdmins along with their levels and nicknames."
+        "   - Displays the current list of Bot Admins along with their nicknames and levels."
     )
     await ctx.send(help_text)
 
-@bot.command(name="botadmins2")
+@bot.command(name="botadmins")
 async def botadmins(ctx):
     """
     !botadmins
-
     Displays the list of bot admins along with their nicknames and levels.
     """
     msg_lines = ["**Bot Admins:**"]
@@ -308,8 +365,19 @@ async def botadmins(ctx):
             msg_lines.append(f"<@{admin_id}> - No info available.")
     await ctx.send("\n".join(msg_lines))
 
-# --- Initialization ---
-user_levels = load_user_levels()
+@bot.event
+async def on_ready():
+    print(f"Logged in as {bot.user.name} (ID: {bot.user.id})")
+    print("------")
+    for guild in bot.guilds:
+        print(f"Server: {guild.name} (ID: {guild.id})")
+        bot_member = guild.me
+        permissions = bot_member.guild_permissions
+        print("Bot Permissions:")
+        for perm, value in permissions:
+            print(f"- {perm}: {value}")
+        print("------")
+
 if __name__ == '__main__':
     TOKEN = getpass.getpass("Enter your Discord token: ")
     bot.run(TOKEN)
