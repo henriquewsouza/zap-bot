@@ -1,82 +1,103 @@
 {
     "142072454750142464": {
-        "nickname": "ali bah bah",
-        "level": 21
+      "nickname": "ali bah bah",
+      "level": 21,
+      "gc": 54490
     },
     "475993131121377280": {
-        "nickname": "N\u00c3O\u00c9",
-        "level": 18
+      "nickname": "NÃOÉ",
+      "level": 18,
+      "gc": 120920
     },
     "702663153355456693": {
-        "nickname": "Rick",
-        "level": 18
+      "nickname": "Rick",
+      "level": 18,
+      "gc": 2258342
     },
     "329050091165974528": {
-        "nickname": "LKS!",
-        "level": 18
+      "nickname": "LKS!",
+      "level": 18,
+      "gc": 1315017
     },
     "331633865552560128": {
-        "nickname": "gebas m0nstr0",
-        "level": 18
+      "nickname": "gebas m0nstr0",
+      "level": 18,
+      "gc": 1844317
     },
     "794744511439699989": {
-        "nickname": "gspp",
-        "level": 16
+      "nickname": "gspp",
+      "level": 16,
+      "gc": 1760648
     },
     "752645666857156609": {
-        "nickname": "BV",
-        "level": 16
+      "nickname": "BV",
+      "level": 16,
+      "gc": 1712862
     },
     "692595982378074222": {
-        "nickname": "JOTALHA",
-        "level": 14
+      "nickname": "JOTALHA",
+      "level": 14,
+      "gc": 1563533
     },
     "289036375196565504": {
-        "nickname": "RafiusK",
-        "level": 14
+      "nickname": "RafiusK",
+      "level": 14,
+      "gc": 1053145
     },
     "291617683416285194": {
-        "nickname": "Zapdos",
-        "level": 14
+      "nickname": "Zapdos",
+      "level": 14,
+      "gc": 829311
     },
     "701661704844738580": {
-        "nickname": "TcH\u00eaCo",
-        "level": 13
+      "nickname": "TcHêCo",
+      "level": 13,
+      "gc": 1400278
     },
     "258625313150468116": {
-        "nickname": "dgo tipster",
-        "level": 11
+      "nickname": "dgo tipster",
+      "level": 11,
+      "gc": 36170
     },
     "398559865997361155": {
-        "nickname": "aLC",
-        "level": 12
+      "nickname": "aLC",
+      "level": 12,
+      "gc": 22568
     },
     "695401276162310206": {
-        "nickname": "spr1",
-        "level": 10
+      "nickname": "spr1",
+      "level": 10,
+      "gc": 1564938
     },
     "798315813676253224": {
-        "nickname": "lemp",
-        "level": 10
+      "nickname": "lemp",
+      "level": 10,
+      "gc": 1760886
     },
     "360083696981770240": {
-        "level": 10,
-        "nickname": "salamezinhoinho"
+      "nickname": "salamezinhoinho",
+      "level": 10,
+      "gc": 2512160
     },
     "360903672902975490": {
-        "nickname": "Prinz",
-        "level": 8
+      "nickname": "Prinz",
+      "level": 8,
+      "gc": null
     },
     "693238178781462640": {
-        "nickname": "\u2460 Chapolin",
-        "level": 6
+      "nickname": "① Chapolin",
+      "level": 6,
+      "gc": 1323034
     },
     "641046283259215878": {
-        "nickname": "Tweny",
-        "level": 6
+      "nickname": "Tweny",
+      "level": 6,
+      "gc": 1323020
     },
     "693255159484121179": {
-        "nickname": "Kvc0 KiT BoTa",
-        "level": 2
+      "nickname": "Kvc0 KiT BoTa",
+      "level": 2,
+      "gc": 1612047
     }
-}
+  }
+  

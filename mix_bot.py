@@ -7,6 +7,7 @@ import json
 import asyncio
 import random
 import boto3
+from datetime import datetime
 from botocore.exceptions import ClientError
 
 # ---------------------------
@@ -54,7 +55,6 @@ def save_user_levels(user_levels):
     s3.put_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY, Body=data.encode("utf-8"))
 
 # Global in-memory user_levels loaded from the bucket
-user_levels = load_user_levels()
 
 # ---------------------------
 # Discord Bot Setup
@@ -365,6 +365,402 @@ async def botadmins(ctx):
             msg_lines.append(f"<@{admin_id}> - No info available.")
     await ctx.send("\n".join(msg_lines))
 
+@bot.command(name="stats")
+async def stats(ctx, member: discord.Member):
+    """
+    !stats @Player
+    Retrieves aggregated stats for the mentioned player for the current month.
+    Overall stats include total matches, wins, losses, win rate, kills, deaths,
+    overall KDR, overall ADR, total first kills, average first kills per match, and HS%.
+    Per-map stats include the number of matches, win rate, KDR, and ADR for each map.
+    """
+    # Load the members.json file from the root folder.
+    try:
+        with open("members.json", "r") as f:
+            members_data = json.load(f)
+    except Exception as e:
+        await ctx.send("Error loading members data.")
+        return
+
+    discord_id_str = str(member.id)
+    if discord_id_str not in members_data:
+        await ctx.send(f"{member.display_name} is not in the members list.")
+        return
+
+    # Retrieve the GC id for the member.
+    gc_id = members_data[discord_id_str].get("gc")
+    if not gc_id:
+        await ctx.send(f"{member.display_name} does not have a valid GC id set.")
+        return
+
+    from datetime import datetime
+    month_year = datetime.now().strftime("%Y-%m")
+    # Construct the stats file path (e.g., players/829311/stats-2025-03.json)
+    stats_path = os.path.join("players", str(gc_id), f"stats-{month_year}.json")
+    if not os.path.exists(stats_path):
+        await ctx.send(f"Stats for {member.display_name} for {month_year} are not available.")
+        return
+
+    try:
+        with open(stats_path, "r") as f:
+            stats_data = json.load(f)
+    except Exception as e:
+        await ctx.send("Error loading the stats file.")
+        return
+
+    # Build an embed message to display the overall stats.
+    embed = discord.Embed(
+        title=f"Stats for {member.display_name} - {month_year}",
+        color=0x00ff00
+    )
+    embed.add_field(name="Total Matches", value=stats_data.get("total_matches", 0), inline=True)
+    embed.add_field(name="Wins", value=stats_data.get("total_wins", 0), inline=True)
+    embed.add_field(name="Losses", value=stats_data.get("total_losses", 0), inline=True)
+    embed.add_field(name="Overall Win Rate", value=f"{stats_data.get('overall_win_rate', 0):.2f}%", inline=True)
+    embed.add_field(name="Total Kills", value=stats_data.get("total_kills", 0), inline=True)
+    embed.add_field(name="Total Deaths", value=stats_data.get("total_deaths", 0), inline=True)
+    embed.add_field(name="KDR", value=f"{stats_data.get('KDR', 0):.2f}", inline=True)
+    embed.add_field(name="ADR", value=f"{stats_data.get('ADR', 0):.2f}", inline=True)
+    embed.add_field(name="Total First Kills", value=stats_data.get("total_first_kills", 0), inline=True)
+    embed.add_field(name="Avg First Kills/Match", value=f"{stats_data.get('average_first_kills_per_match', 0):.2f}", inline=True)
+    embed.add_field(name="HS%", value=f"{stats_data.get('HS_percent', 0):.2f}%", inline=True)
+
+    # Build per-map stats.
+    # It expects stats_data["per_map"] to be a dict where each key is a map name and its value is another dict with:
+    # "matches", "wins", "kills", "deaths", "damage", and "rounds".
+    per_map_data = stats_data.get("per_map", {})
+    per_map_str = ""
+    if per_map_data:
+        for map_name, mstats in per_map_data.items():
+            matches = mstats.get("matches", 0)
+            wins = mstats.get("wins", 0)
+            win_rate = (wins / matches * 100) if matches > 0 else 0
+
+            kills = mstats.get("kills", 0)
+            deaths = mstats.get("deaths", 0)
+            damage = mstats.get("damage", 0)
+            rounds = mstats.get("rounds", 0)
+
+            # Calculate per-map KDR and ADR
+            kdr = kills / deaths if deaths > 0 else kills
+            adr = damage / rounds if rounds > 0 else 0
+
+            per_map_str += (
+                f"**{map_name}**: Matches: {matches}, Win Rate: {win_rate:.2f}%, "
+                f"KDR: {kdr:.2f}, ADR: {adr:.2f}\n"
+            )
+    else:
+        per_map_str = "No per-map stats available."
+
+    embed.add_field(name="Per Map Stats", value=per_map_str, inline=False)
+    await ctx.send(embed=embed)
+
+@bot.command(name="update")
+async def update(ctx, member: discord.Member):
+    """
+    !update @Member
+    Updates the stats for the mentioned member for the current month.
+    This command will:
+      1. Retrieve the member's match history.
+      2. Download full match stats for each match.
+      3. Aggregate the match stats.
+    The data is saved under /players/{GC id}/.
+    """
+    import os, json, asyncio
+    from datetime import datetime
+    from match_history import get_match_history
+    from load_match_stats import load_match_stats
+    from aggregate_player_stats import aggregate_stats
+
+    # Load members.json from the root folder.
+    members_file = "members.json"
+    if not os.path.exists(members_file):
+        await ctx.send("members.json not found in root folder.")
+        return
+
+    with open(members_file, "r") as f:
+        members_data = json.load(f)
+
+    discord_id_str = str(member.id)
+    if discord_id_str not in members_data:
+        await ctx.send(f"{member.display_name} is not in the members list.")
+        return
+
+    gc_id = members_data[discord_id_str].get("gc")
+    if not gc_id:
+        await ctx.send(f"{member.display_name} does not have a GC id set.")
+        return
+
+    # Get current month and year (YYYY-MM)
+    month_year = datetime.now().strftime("%Y-%m")
+    await ctx.send(f"Updating stats for {member.mention} (GC: {gc_id}) for {month_year} ...")
+
+    # Define a blocking function that processes the member.
+    def process_member(gc_id, month_year):
+        history_file = get_match_history(gc_id, month_year)
+        load_match_stats(history_file)
+        aggregate_stats(gc_id, month_year)
+
+    # Run the blocking processing in a separate thread.
+    await asyncio.to_thread(process_member, gc_id, month_year)
+
+    await ctx.send(f"Update complete for {member.mention}.")
+
+
+
+@bot.command(name="ranking")
+async def ranking(ctx):
+    """
+    !ranking
+    Displays a ranking of members (from members.json) for the current month,
+    based on overall KDR, ADR, average first kills per match, and overall win rate.
+    Each ranking shows the member's nickname, metric value, and total matches played.
+    """
+    import os, json
+    from datetime import datetime
+
+    # Load members.json from the root folder
+    try:
+        with open("members.json", "r") as f:
+            members_data = json.load(f)
+    except Exception as e:
+        await ctx.send("Error loading members data.")
+        return
+
+    # Get current month and year (YYYY-MM)
+    month_year = datetime.now().strftime("%Y-%m")
+    
+    # List to store stats for each member with an aggregated file
+    stats_list = []
+    
+    for discord_id, info in members_data.items():
+        gc_id = info.get("gc")
+        if not gc_id:
+            continue
+        # Construct path to aggregated stats file
+        stats_path = os.path.join("players", str(gc_id), f"stats-{month_year}.json")
+        if not os.path.exists(stats_path):
+            continue
+        try:
+            with open(stats_path, "r") as f:
+                stats = json.load(f)
+        except Exception as e:
+            continue
+        
+        # Extract overall metrics
+        kdr = stats.get("KDR", 0)
+        adr = stats.get("ADR", 0)
+        avg_first = stats.get("average_first_kills_per_match", 0)
+        win_rate = stats.get("overall_win_rate", 0)
+        total_matches = stats.get("total_matches", 0)
+        nickname = info.get("nickname", "Unknown")
+        
+        stats_list.append({
+            "discord_id": discord_id,
+            "nickname": nickname,
+            "kdr": kdr,
+            "adr": adr,
+            "avg_first": avg_first,
+            "win_rate": win_rate,
+            "matches": total_matches
+        })
+    
+    if not stats_list:
+        await ctx.send("No aggregated stats found for this month.")
+        return
+
+    # For each metric, sort the list in descending order (higher is better)
+    kdr_sorted = sorted(stats_list, key=lambda x: x["kdr"], reverse=True)
+    adr_sorted = sorted(stats_list, key=lambda x: x["adr"], reverse=True)
+    first_sorted = sorted(stats_list, key=lambda x: x["avg_first"], reverse=True)
+    win_rate_sorted = sorted(stats_list, key=lambda x: x["win_rate"], reverse=True)
+
+    # Helper function to build a ranking string
+    def build_ranking_str(sorted_list, metric_key, metric_name):
+        lines = []
+        for idx, stat in enumerate(sorted_list, start=1):
+            value = stat[metric_key]
+            lines.append(f"{idx}. {stat['nickname']} - {metric_name}: {value:.2f} ({stat['matches']} matches)")
+        return "\n".join(lines)
+
+    ranking_kdr = build_ranking_str(kdr_sorted, "kdr", "KDR")
+    ranking_adr = build_ranking_str(adr_sorted, "adr", "ADR")
+    ranking_first = build_ranking_str(first_sorted, "avg_first", "Avg First Kills")
+    ranking_win = build_ranking_str(win_rate_sorted, "win_rate", "Win Rate")
+
+    # Create an embed with each ranking as a separate field.
+    embed = discord.Embed(
+        title=f"Member Rankings for {month_year}",
+        description="Rankings based on overall KDR, ADR, Average First Kills per Match, and Win Rate.",
+        color=0x3498db
+    )
+    embed.add_field(name="KDR Ranking", value=f"```{ranking_kdr}```", inline=False)
+    embed.add_field(name="ADR Ranking", value=f"```{ranking_adr}```", inline=False)
+    embed.add_field(name="Avg First Kills Ranking", value=f"```{ranking_first}```", inline=False)
+    embed.add_field(name="Win Rate Ranking", value=f"```{ranking_win}```", inline=False)
+
+    await ctx.send(embed=embed)
+
+
+@bot.command(name="arca")
+async def arca(ctx):
+    """
+    !arca
+    Aggregates the group’s performance on each map (for the current month) using match files in the
+    "matches" folder. Only matches that have at least 3 group players on one team are considered, and if group players appear on both teams, the match is skipped.
+    The command computes per-map win rate, KDR, and ADR.
+    """
+    import os, json
+    from datetime import datetime
+    from discord import Embed
+
+    # Load members.json and build a set of group GC ids.
+    members_file = "members.json"
+    if not os.path.exists(members_file):
+        await ctx.send("members.json not found in root folder.")
+        return
+
+    with open(members_file, "r") as f:
+        members_data = json.load(f)
+    group_gc_ids = set()
+    for discord_id, info in members_data.items():
+        gc = info.get("gc")
+        if gc:
+            group_gc_ids.add(str(gc))
+    if not group_gc_ids:
+        await ctx.send("No group GC ids found in members.json.")
+        return
+
+    # Get current month/year.
+    month_year = datetime.now().strftime("%Y-%m")
+
+    # Get unique match files from the "matches" folder.
+    matches_folder = "matches"
+    if not os.path.isdir(matches_folder):
+        await ctx.send("Matches folder not found.")
+        return
+    match_files = [os.path.join(matches_folder, f) for f in os.listdir(matches_folder) if f.endswith(".json")]
+
+    # We'll aggregate stats per map.
+    # For each map, we accumulate: matches, wins, kills, deaths, damage, rounds.
+    group_maps = {}
+    counted_matches = set()  # to ensure each match is counted only once
+
+    for file_path in match_files:
+        try:
+            with open(file_path, "r") as f:
+                match_data = json.load(f)
+        except Exception as e:
+            print(f"Error reading {file_path}: {e}")
+            continue
+
+        # Check match date (assumed in top-level "data" field with format "dd/mm/YYYY HH:MM")
+        match_date_str = match_data.get("data")
+        if not match_date_str:
+            continue
+        try:
+            match_date = datetime.strptime(match_date_str, "%d/%m/%Y %H:%M")
+        except Exception as e:
+            continue
+        if match_date.strftime("%Y-%m") != month_year:
+            continue
+
+        # Get unique match id from file or filename.
+        match_id = match_data.get("id") or match_data.get("match_id")
+        if not match_id:
+            match_id = os.path.splitext(os.path.basename(file_path))[0]
+        if match_id in counted_matches:
+            continue
+        counted_matches.add(match_id)
+
+        # In the match JSON, stats are under "jogos" -> "players"
+        jogos = match_data.get("jogos", {})
+        map_name = jogos.get("map_name", "unknown")
+        players_data = jogos.get("players", {})
+
+        # For each team, count how many players belong to our group.
+        team_group_counts = {}  # e.g., {"team_a": 0, "team_b": 0}
+        team_group_stats = {}   # aggregate stats for group players per team
+        for team in ["team_a", "team_b"]:
+            group_count = 0
+            stats_sum = {"kills": 0, "deaths": 0, "damage": 0, "rounds": 0}
+            for p in players_data.get(team, []):
+                # p.get("idplayer") is the GC id for that player.
+                if str(p.get("idplayer")) in group_gc_ids:
+                    group_count += 1
+                    try:
+                        stats_sum["kills"] += int(p.get("nb_kill", 0))
+                        stats_sum["deaths"] += int(p.get("death", 0))
+                        stats_sum["damage"] += int(p.get("damage", 0))
+                        stats_sum["rounds"] += int(p.get("rounds_played", 0))
+                    except Exception:
+                        pass
+            team_group_counts[team] = group_count
+            team_group_stats[team] = stats_sum
+
+        # Determine on which team the group is present.
+        teams_with_group = [team for team, count in team_group_counts.items() if count > 0]
+        # Skip match if group players are on both teams or not present at all.
+        if len(teams_with_group) != 1:
+            continue
+        team = teams_with_group[0]
+        # Only count match if there are at least 3 group players.
+        if team_group_counts[team] < 3:
+            continue
+
+        # Determine winning team using scores.
+        try:
+            score_a = int(jogos.get("score_a", "0"))
+            score_b = int(jogos.get("score_b", "0"))
+        except Exception:
+            score_a, score_b = 0, 0
+        winning_team = None
+        if score_a > score_b:
+            winning_team = "team_a"
+        elif score_b > score_a:
+            winning_team = "team_b"
+        match_win = 1 if (winning_team == team) else 0
+
+        # Aggregate stats for this match under the map.
+        if map_name not in group_maps:
+            group_maps[map_name] = {"matches": 0, "wins": 0, "kills": 0, "deaths": 0, "damage": 0, "rounds": 0}
+        group_maps[map_name]["matches"] += 1
+        group_maps[map_name]["wins"] += match_win
+        group_maps[map_name]["kills"] += team_group_stats[team]["kills"]
+        group_maps[map_name]["deaths"] += team_group_stats[team]["deaths"]
+        group_maps[map_name]["damage"] += team_group_stats[team]["damage"]
+        group_maps[map_name]["rounds"] += team_group_stats[team]["rounds"]
+
+    if not group_maps:
+        await ctx.send("No qualifying group matches found for this month.")
+        return
+
+    # Build the output: for each map, compute win rate, KDR, and ADR.
+    output_lines = []
+    for map_name, stats in group_maps.items():
+        matches = stats["matches"]
+        wins = stats["wins"]
+        win_rate = (wins / matches * 100) if matches > 0 else 0
+        kills = stats["kills"]
+        deaths = stats["deaths"]
+        damage = stats["damage"]
+        rounds = stats["rounds"]
+        kdr = kills / deaths if deaths > 0 else kills
+        adr = damage / rounds if rounds > 0 else 0
+        line = (f"**{map_name}**:\n"
+                f"Matches: {matches}, Wins: {wins} (Win Rate: {win_rate:.2f}%)\n"
+                f"KDR: {kdr:.2f}, ADR: {adr:.2f}\n")
+        output_lines.append(line)
+    output = "\n".join(output_lines)
+
+    embed = Embed(
+        title=f"Group (Arca) Performance on Each Map ({month_year})",
+        description=output,
+        color=0x1abc9c
+    )
+    await ctx.send(embed=embed)
+
+
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user.name} (ID: {bot.user.id})")
@@ -379,5 +775,5 @@ async def on_ready():
         print("------")
 
 if __name__ == '__main__':
-    TOKEN = getpass.getpass("Enter your Discord token: ")
+    TOKEN = ""
     bot.run(TOKEN)
