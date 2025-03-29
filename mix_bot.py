@@ -599,13 +599,19 @@ async def arca(ctx):
     """
     !arca
     Aggregates the group's performance on each map for the current month using match data stored in S3.
-    Only counts matches where group players (from members.json on S3) appear on exactly one team
-    and at least 3 are present on that team. Computes per-map win rate, KDR, and ADR.
+    Only counts matches where group players (from members.json on S3) appear on exactly one team and at least 3 are present.
+    Displays per-map win rate (with a bar), KDR, and ADR.
     """
     import json
     from datetime import datetime
     from discord import Embed
     from botocore.exceptions import ClientError
+
+    # Helper: Create a simple bar for a percentage.
+    def create_bar(percentage, length=10):
+        filled_length = int(round(length * percentage / 100))
+        bar = "█" * filled_length + "─" * (length - filled_length)
+        return bar
 
     # Load members.json from S3
     try:
@@ -616,7 +622,7 @@ async def arca(ctx):
         await ctx.send("Error loading members data from S3.")
         return
 
-    # Build set of group GC ids (as strings)
+    # Build a set of group GC ids (as strings)
     group_gc_ids = {str(info.get("gc")) for info in members_data.values() if info.get("gc")}
     if not group_gc_ids:
         await ctx.send("No group GC ids found in members data.")
@@ -624,20 +630,19 @@ async def arca(ctx):
 
     month_year = datetime.now().strftime("%Y-%m")
 
-    # List all match objects from S3 with the prefix "matches/"
+    # List match objects from S3 with prefix "matches/"
     try:
         list_response = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix="matches/")
     except Exception as e:
         await ctx.send("Error listing match objects from S3.")
         return
-
     objects = list_response.get("Contents", [])
     if not objects:
         await ctx.send("No match objects found in S3.")
         return
 
-    group_maps = {}  # To accumulate per-map stats
-    counted_matches = set()  # Ensure each match is counted once
+    group_maps = {}  # Will accumulate per-map stats
+    counted_matches = set()  # To ensure each match is counted only once
 
     for obj in objects:
         key = obj["Key"]
@@ -660,7 +665,7 @@ async def arca(ctx):
         if match_date.strftime("%Y-%m") != month_year:
             continue
 
-        # Determine unique match id (either from the JSON or the object key)
+        # Determine unique match id
         match_id = match_data.get("id") or match_data.get("match_id")
         if not match_id:
             match_id = key.split("/")[-1].split(".")[0]
@@ -673,7 +678,7 @@ async def arca(ctx):
         map_name = jogos.get("map_name", "unknown")
         players_data = jogos.get("players", {})
 
-        # For each team, count group players and sum their stats.
+        # Count group players and sum stats per team.
         team_group_counts = {}
         team_group_stats = {}
         for team in ["team_a", "team_b"]:
@@ -692,15 +697,15 @@ async def arca(ctx):
             team_group_counts[team] = count
             team_group_stats[team] = stats_sum
 
-        # Determine if group players appear on exactly one team.
-        teams_with_group = [team for team, cnt in team_group_counts.items() if cnt > 0]
+        # Only count if group players appear on exactly one team.
+        teams_with_group = [team for team, count in team_group_counts.items() if count > 0]
         if len(teams_with_group) != 1:
-            continue  # Skip if group players are on both teams or none.
+            continue
         team = teams_with_group[0]
         if team_group_counts[team] < 3:
-            continue  # Skip if fewer than 3 group players on that team.
+            continue
 
-        # Determine the winning team using scores.
+        # Determine winning team using scores.
         try:
             score_a = int(jogos.get("score_a", "0"))
             score_b = int(jogos.get("score_b", "0"))
@@ -713,7 +718,7 @@ async def arca(ctx):
             winning_team = "team_b"
         match_win = 1 if (winning_team == team) else 0
 
-        # Aggregate stats for this match under the map.
+        # Aggregate stats per map.
         if map_name not in group_maps:
             group_maps[map_name] = {"matches": 0, "wins": 0, "kills": 0, "deaths": 0, "damage": 0, "rounds": 0}
         group_maps[map_name]["matches"] += 1
@@ -727,9 +732,10 @@ async def arca(ctx):
         await ctx.send("No qualifying group matches found for this month.")
         return
 
-    # Build the output for each map.
+    # Sort maps by number of matches played (most played first)
+    sorted_maps = sorted(group_maps.items(), key=lambda x: x[1]["matches"], reverse=True)
     output_lines = []
-    for map_name, stats in group_maps.items():
+    for map_name, stats in sorted_maps:
         matches = stats["matches"]
         wins = stats["wins"]
         win_rate = (wins / matches * 100) if matches > 0 else 0
@@ -739,10 +745,13 @@ async def arca(ctx):
         rounds = stats["rounds"]
         kdr = kills / deaths if deaths > 0 else kills
         adr = damage / rounds if rounds > 0 else 0
+
+        # Create a win rate bar (length 10)
+        bar = create_bar(win_rate, length=10)
         line = (
             f"**{map_name}**:\n"
-            f"Matches: {matches}, Wins: {wins} (Win Rate: {win_rate:.2f}%)\n"
-            f"KDR: {kdr:.2f}, ADR: {adr:.2f}\n"
+            f"Matches: {matches} | Wins: {wins} (Win Rate: {win_rate:.2f}% {bar})\n"
+            f"KDR: {kdr:.2f} | ADR: {adr:.2f}\n"
         )
         output_lines.append(line)
     output = "\n".join(output_lines)
@@ -753,6 +762,7 @@ async def arca(ctx):
         color=0x1abc9c
     )
     await ctx.send(embed=embed)
+
 
 @bot.command(name="updateall")
 @commands.check(lambda ctx: ctx.author.id in BOT_ADMINS)
