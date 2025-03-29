@@ -65,6 +65,7 @@ intents.message_content = True
 intents.members = True
 intents.voice_states = True
 bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
+user_levels = load_user_levels()
 
 # Global flag to prevent concurrent mixes.
 mix_in_progress = False
@@ -775,5 +776,5 @@ async def on_ready():
         print("------")
 
 if __name__ == '__main__':
-    TOKEN = ""
+    TOKEN = getpass.getpass("Enter your Discord token: ")
     bot.run(TOKEN)

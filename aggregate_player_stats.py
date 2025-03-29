@@ -1,19 +1,22 @@
-# aggregate_player_stats.py
-import os
 import json
-import glob
+import boto3
 from datetime import datetime
+
+BUCKET_NAME = "bucket-6sk08y"
+ENDPOINT_URL = "https://s3.us-east-1.amazonaws.com"
+s3 = boto3.client("s3", endpoint_url=ENDPOINT_URL)
 
 def aggregate_stats(gc_id, month_year):
     """
     Aggregates match stats for the given GC id (player) for the specified month.
-    Reads match files from the 'matches' folder, filters by month, and
-    sums overall and per-map stats (kills, deaths, damage, rounds, etc.).
-    Saves aggregated stats to /players/{gc_id}/stats-{month_year}.json.
+    Reads match stat objects from S3 with prefix "matches/", filters by month,
+    sums overall and per-map stats, and uploads the aggregated stats to S3 under key:
+      players/{gc_id}/stats-{month_year}.json
     """
-    match_files = glob.glob(os.path.join("matches", "*.json"))
-
-    # Initialize overall aggregates
+    # List match objects from S3 with prefix "matches/"
+    response = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix="matches/")
+    objects = response.get("Contents", [])
+    
     total_matches = 0
     total_wins = 0
     total_kills = 0
@@ -22,32 +25,28 @@ def aggregate_stats(gc_id, month_year):
     total_rounds = 0
     total_first_kills = 0
     total_headshots = 0
-
-    # Per-map aggregates (including deaths, damage, rounds)
     per_map = {}
-
-    for file_path in match_files:
+    
+    for obj in objects:
+        key = obj["Key"]
+        match_response = s3.get_object(Bucket=BUCKET_NAME, Key=key)
+        contents = match_response["Body"].read().decode("utf-8")
         try:
-            with open(file_path, "r") as f:
-                data = json.load(f)
+            data = json.loads(contents)
         except Exception as e:
-            print(f"Error reading {file_path}: {e}")
+            print(f"Error parsing JSON for {key}: {e}")
             continue
-
         match_date_str = data.get("data")
         if not match_date_str:
             continue
-
         try:
             match_date = datetime.strptime(match_date_str, "%d/%m/%Y %H:%M")
         except Exception as e:
-            print(f"Error parsing date in {file_path}: {e}")
+            print(f"Error parsing date in {key}: {e}")
             continue
-
         if match_date.strftime("%Y-%m") != month_year:
             continue
-
-        # Find the player's stats in jogos -> players (GC id is used)
+        
         jogos = data.get("jogos", {})
         players_data = jogos.get("players", {})
         player_found = None
@@ -62,7 +61,7 @@ def aggregate_stats(gc_id, month_year):
                 break
         if not player_found:
             continue
-
+        
         total_matches += 1
         try:
             kills = int(player_found.get("nb_kill", 0))
@@ -72,22 +71,21 @@ def aggregate_stats(gc_id, month_year):
             first_kill = int(player_found.get("firstkill", 0))
             headshots = int(player_found.get("hs", 0))
         except Exception as e:
-            print(f"Error converting stats in {file_path}: {e}")
+            print(f"Error converting stats in {key}: {e}")
             continue
-
+        
         total_kills += kills
         total_deaths += deaths
         total_damage += damage
         total_rounds += rounds_played
         total_first_kills += first_kill
         total_headshots += headshots
-
+        
         try:
             score_a = int(jogos.get("score_a", "0"))
             score_b = int(jogos.get("score_b", "0"))
         except Exception:
             score_a, score_b = 0, 0
-
         winning_team = None
         if score_a > score_b:
             winning_team = "team_a"
@@ -96,7 +94,7 @@ def aggregate_stats(gc_id, month_year):
         win = (player_team == winning_team) if winning_team is not None else False
         if win:
             total_wins += 1
-
+        
         map_name = jogos.get("map_name", "unknown")
         if map_name not in per_map:
             per_map[map_name] = {
@@ -164,15 +162,12 @@ def aggregate_stats(gc_id, month_year):
         "HS_percent": overall_HS_percent,
         "per_map": per_map_stats
     }
-
-    players_folder = os.path.join("players", str(gc_id))
-    os.makedirs(players_folder, exist_ok=True)
-    stats_file = os.path.join(players_folder, f"stats-{month_year}.json")
-    with open(stats_file, "w") as f:
-        json.dump(aggregated_stats, f, indent=4)
-    print(f"Aggregated stats for {gc_id} saved to {stats_file}")
+    
+    s3_key = f"players/{gc_id}/stats-{month_year}.json"
+    s3.put_object(Bucket=BUCKET_NAME, Key=s3_key, Body=json.dumps(aggregated_stats, indent=4).encode("utf-8"))
+    print(f"Aggregated stats for {gc_id} saved to S3 key: {s3_key}")
 
 if __name__ == "__main__":
-    player_id = input("Enter the GC player id: ").strip()
+    gc_id = input("Enter the GC player id: ").strip()
     month_year = datetime.now().strftime("%Y-%m")
-    aggregate_stats(player_id, month_year)
+    aggregate_stats(gc_id, month_year)

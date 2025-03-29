@@ -1,4 +1,3 @@
-# aggregate_all_members.py
 import os
 import json
 from datetime import datetime
@@ -8,12 +7,12 @@ from aggregate_player_stats import aggregate_stats
 
 def process_member(gc_id, month_year):
     print(f"Processing member with GC id: {gc_id}")
-    history_file = get_match_history(gc_id, month_year)
-    load_match_stats(history_file)
+    history_key = get_match_history(gc_id, month_year)
+    load_match_stats(history_key)
     aggregate_stats(gc_id, month_year)
 
 def main():
-    members_file = "members.json"
+    members_file = "members.json"  # Assuming you still have a local copy; you might also fetch this from S3 if desired.
     if not os.path.exists(members_file):
         print("members.json not found in root folder.")
         return

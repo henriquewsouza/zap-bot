@@ -1,22 +1,26 @@
-# match_history.py
-import os
 import requests
 import time
 import random
 import json
 from datetime import datetime
+import boto3
+
+# S3 Configuration
+BUCKET_NAME = "bucket-6sk08y"
+ENDPOINT_URL = "https://s3.us-east-1.amazonaws.com"
+s3 = boto3.client("s3", endpoint_url=ENDPOINT_URL)
 
 def get_match_history(gc_id, month_year):
     """
-    Fetches match history for a given GC id and month (YYYY-MM).
-    Saves the history to /players/{gc_id}/{gc_id}-{month_year}-history.json
-    and returns the full file path.
+    Fetches match history for a given GC id and month (YYYY-MM) from the API.
+    Saves the history JSON to S3 under key:
+      players/{gc_id}/{gc_id}-{month_year}-history.json
+    Returns the S3 key.
     """
     file_name = f"{gc_id}-{month_year}-history.json"
-    players_folder = os.path.join("players", str(gc_id))
-    os.makedirs(players_folder, exist_ok=True)
-    file_path = os.path.join(players_folder, file_name)
-
+    s3_key = f"players/{gc_id}/{file_name}"
+    results = []
+    
     headers = {
         "accept": "application/json, text/plain, */*",
         "accept-language": "en-US,en;q=0.9,pt-BR;q=0.8,pt;q=0.7",
@@ -38,9 +42,8 @@ def get_match_history(gc_id, month_year):
         "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
         "Cookie": "gclubsess=6de293ceadbd014c40c4c7c84b34a8b53b5f16d7"
     }
-
+    
     page = 0
-    results = []
     while True:
         url = f"https://gamersclub.com.br/api/box/historyMatchesPage/{gc_id}/{month_year}/{page}"
         print(f"Fetching match history for GC {gc_id}, page {page}...")
@@ -65,8 +68,13 @@ def get_match_history(gc_id, month_year):
             print(f"Added match {match_id} ({match_map}) win: {win_status}")
         page += 1
         time.sleep(random.uniform(1, 2))
+    
+    json_data = json.dumps(results, indent=4)
+    s3.put_object(Bucket=BUCKET_NAME, Key=s3_key, Body=json_data.encode("utf-8"))
+    print(f"Match history for GC {gc_id} saved to S3 key: {s3_key}")
+    return s3_key
 
-    with open(file_path, "w") as f:
-        json.dump(results, f, indent=4)
-    print(f"Match history for GC {gc_id} saved to {file_path}")
-    return file_path
+if __name__ == "__main__":
+    gc_id = input("Enter GC id: ").strip()
+    month_year = datetime.now().strftime("%Y-%m")
+    get_match_history(gc_id, month_year)

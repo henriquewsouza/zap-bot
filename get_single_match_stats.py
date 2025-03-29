@@ -1,20 +1,27 @@
-# get_single_match_stats.py
-import os
 import requests
 import json
+import boto3
+
+# S3 Configuration
+BUCKET_NAME = "bucket-6sk08y"
+ENDPOINT_URL = "https://s3.us-east-1.amazonaws.com"
+s3 = boto3.client("s3", endpoint_url=ENDPOINT_URL)
 
 def fetch_match_stats(match_id):
     """
-    Fetches full match stats for the given match id.
-    Saves the stats to the 'matches' folder as {match_id}.json.
-    If the file exists, skips retrieval.
-    Returns the file path (or None on error).
+    Fetches full match stats for the given match id from the API.
+    Saves the JSON to S3 under key: matches/{match_id}.json.
+    If the object exists, skips retrieval.
+    Returns the S3 key.
     """
-    os.makedirs("matches", exist_ok=True)
-    match_file = os.path.join("matches", f"{match_id}.json")
-    if os.path.exists(match_file):
-        print(f"Stats for match {match_id} already exist. Skipping.")
-        return match_file
+    s3_key = f"matches/{match_id}.json"
+    try:
+        s3.head_object(Bucket=BUCKET_NAME, Key=s3_key)
+        print(f"Stats for match {match_id} already exist on S3. Skipping.")
+        return s3_key
+    except s3.exceptions.ClientError as e:
+        # Assume error indicates object doesn't exist.
+        pass
 
     url = f"https://gamersclub.com.br/lobby/match/{match_id}/1"
     headers = {
@@ -44,13 +51,12 @@ def fetch_match_stats(match_id):
         print(f"Error fetching match {match_id}: {response.status_code}")
         return None
     match_data = response.json()
-    with open(match_file, "w") as f:
-        json.dump(match_data, f, indent=4)
-    print(f"Saved stats for match {match_id} to {match_file}")
-    return match_file
+    json_data = json.dumps(match_data, indent=4)
+    s3.put_object(Bucket=BUCKET_NAME, Key=s3_key, Body=json_data.encode("utf-8"))
+    print(f"Saved stats for match {match_id} to S3 key: {s3_key}")
+    return s3_key
 
 if __name__ == "__main__":
-    # If run as a script, use command-line argument (not needed when called from another module)
     import sys
     if len(sys.argv) < 2:
         print("Usage: python get_single_match_stats.py <match_id>")
