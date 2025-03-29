@@ -370,17 +370,22 @@ async def botadmins(ctx):
 async def stats(ctx, member: discord.Member):
     """
     !stats @Player
-    Retrieves aggregated stats for the mentioned player for the current month.
+    Retrieves aggregated stats for the mentioned player for the current month from S3.
     Overall stats include total matches, wins, losses, win rate, kills, deaths,
     overall KDR, overall ADR, total first kills, average first kills per match, and HS%.
     Per-map stats include the number of matches, win rate, KDR, and ADR for each map.
     """
-    # Load the members.json file from the root folder.
+    import json
+    from datetime import datetime
+    from botocore.exceptions import ClientError
+
+    # Load members.json from S3
     try:
-        with open("members.json", "r") as f:
-            members_data = json.load(f)
+        response = s3.get_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY)
+        members_contents = response["Body"].read().decode("utf-8")
+        members_data = json.loads(members_contents)
     except Exception as e:
-        await ctx.send("Error loading members data.")
+        await ctx.send("Error loading members data from S3.")
         return
 
     discord_id_str = str(member.id)
@@ -394,22 +399,21 @@ async def stats(ctx, member: discord.Member):
         await ctx.send(f"{member.display_name} does not have a valid GC id set.")
         return
 
-    from datetime import datetime
     month_year = datetime.now().strftime("%Y-%m")
-    # Construct the stats file path (e.g., players/829311/stats-2025-03.json)
-    stats_path = os.path.join("players", str(gc_id), f"stats-{month_year}.json")
-    if not os.path.exists(stats_path):
-        await ctx.send(f"Stats for {member.display_name} for {month_year} are not available.")
-        return
-
+    # Construct the S3 key for the aggregated stats file (e.g., players/{gc_id}/stats-YYYY-MM.json)
+    stats_key = f"players/{gc_id}/stats-{month_year}.json"
     try:
-        with open(stats_path, "r") as f:
-            stats_data = json.load(f)
+        stats_response = s3.get_object(Bucket=BUCKET_NAME, Key=stats_key)
+        stats_contents = stats_response["Body"].read().decode("utf-8")
+        stats_data = json.loads(stats_contents)
+    except ClientError as e:
+        await ctx.send(f"Stats for {member.display_name} for {month_year} are not available on S3.")
+        return
     except Exception as e:
-        await ctx.send("Error loading the stats file.")
+        await ctx.send("Error loading the stats file from S3.")
         return
 
-    # Build an embed message to display the overall stats.
+    # Build an embed to display overall stats.
     embed = discord.Embed(
         title=f"Stats for {member.display_name} - {month_year}",
         color=0x00ff00
@@ -426,9 +430,7 @@ async def stats(ctx, member: discord.Member):
     embed.add_field(name="Avg First Kills/Match", value=f"{stats_data.get('average_first_kills_per_match', 0):.2f}", inline=True)
     embed.add_field(name="HS%", value=f"{stats_data.get('HS_percent', 0):.2f}%", inline=True)
 
-    # Build per-map stats.
-    # It expects stats_data["per_map"] to be a dict where each key is a map name and its value is another dict with:
-    # "matches", "wins", "kills", "deaths", "damage", and "rounds".
+    # Build per-map stats output.
     per_map_data = stats_data.get("per_map", {})
     per_map_str = ""
     if per_map_data:
@@ -442,7 +444,6 @@ async def stats(ctx, member: discord.Member):
             damage = mstats.get("damage", 0)
             rounds = mstats.get("rounds", 0)
 
-            # Calculate per-map KDR and ADR
             kdr = kills / deaths if deaths > 0 else kills
             adr = damage / rounds if rounds > 0 else 0
 
@@ -456,55 +457,47 @@ async def stats(ctx, member: discord.Member):
     embed.add_field(name="Per Map Stats", value=per_map_str, inline=False)
     await ctx.send(embed=embed)
 
+
 @bot.command(name="update")
+@commands.check(lambda ctx: ctx.author.id in BOT_ADMINS)
 async def update(ctx, member: discord.Member):
     """
     !update @Member
     Updates the stats for the mentioned member for the current month.
     This command will:
-      1. Retrieve the member's match history.
-      2. Download full match stats for each match.
-      3. Aggregate the match stats.
-    The data is saved under /players/{GC id}/.
+      1. Retrieve the member's match history from the API and upload it to S3.
+      2. Download full match stats for each match (ensuring they are stored on S3).
+      3. Aggregate the match stats and upload the aggregated file to S3.
     """
-    import os, json, asyncio
+    import asyncio
     from datetime import datetime
     from match_history import get_match_history
     from load_match_stats import load_match_stats
     from aggregate_player_stats import aggregate_stats
 
-    # Load members.json from the root folder.
-    members_file = "members.json"
-    if not os.path.exists(members_file):
-        await ctx.send("members.json not found in root folder.")
-        return
-
-    with open(members_file, "r") as f:
-        members_data = json.load(f)
-
-    discord_id_str = str(member.id)
-    if discord_id_str not in members_data:
+    # Use the global user_levels loaded from S3.
+    member_id = member.id
+    if member_id not in user_levels:
         await ctx.send(f"{member.display_name} is not in the members list.")
         return
 
-    gc_id = members_data[discord_id_str].get("gc")
+    gc_id = user_levels[member_id].get("gc")
     if not gc_id:
         await ctx.send(f"{member.display_name} does not have a GC id set.")
         return
 
-    # Get current month and year (YYYY-MM)
     month_year = datetime.now().strftime("%Y-%m")
     await ctx.send(f"Updating stats for {member.mention} (GC: {gc_id}) for {month_year} ...")
 
-    # Define a blocking function that processes the member.
     def process_member(gc_id, month_year):
-        history_file = get_match_history(gc_id, month_year)
-        load_match_stats(history_file)
+        # get_match_history uploads match history to S3 and returns the S3 key.
+        history_key = get_match_history(gc_id, month_year)
+        # load_match_stats downloads match stats for each match (via subprocess) using S3.
+        load_match_stats(history_key)
+        # aggregate_stats aggregates the match stats and uploads the aggregated JSON to S3.
         aggregate_stats(gc_id, month_year)
 
-    # Run the blocking processing in a separate thread.
     await asyncio.to_thread(process_member, gc_id, month_year)
-
     await ctx.send(f"Update complete for {member.mention}.")
 
 
@@ -513,39 +506,39 @@ async def update(ctx, member: discord.Member):
 async def ranking(ctx):
     """
     !ranking
-    Displays a ranking of members (from members.json) for the current month,
+    Displays a ranking of members (from members.json stored on S3) for the current month,
     based on overall KDR, ADR, average first kills per match, and overall win rate.
     Each ranking shows the member's nickname, metric value, and total matches played.
     """
-    import os, json
+    import json
     from datetime import datetime
+    from botocore.exceptions import ClientError
 
-    # Load members.json from the root folder
+    # Load members.json from S3
     try:
-        with open("members.json", "r") as f:
-            members_data = json.load(f)
+        response = s3.get_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY)
+        members_contents = response["Body"].read().decode("utf-8")
+        members_data = json.loads(members_contents)
     except Exception as e:
-        await ctx.send("Error loading members data.")
+        await ctx.send("Error loading members data from S3.")
         return
 
-    # Get current month and year (YYYY-MM)
     month_year = datetime.now().strftime("%Y-%m")
-    
-    # List to store stats for each member with an aggregated file
     stats_list = []
-    
+
+    # Iterate over each member in members.json
     for discord_id, info in members_data.items():
         gc_id = info.get("gc")
         if not gc_id:
             continue
-        # Construct path to aggregated stats file
-        stats_path = os.path.join("players", str(gc_id), f"stats-{month_year}.json")
-        if not os.path.exists(stats_path):
-            continue
+        stats_key = f"players/{gc_id}/stats-{month_year}.json"
         try:
-            with open(stats_path, "r") as f:
-                stats = json.load(f)
-        except Exception as e:
+            stats_response = s3.get_object(Bucket=BUCKET_NAME, Key=stats_key)
+            stats_contents = stats_response["Body"].read().decode("utf-8")
+            stats = json.loads(stats_contents)
+        except ClientError:
+            continue  # Skip members with no stats file
+        except Exception:
             continue
         
         # Extract overall metrics
@@ -570,13 +563,7 @@ async def ranking(ctx):
         await ctx.send("No aggregated stats found for this month.")
         return
 
-    # For each metric, sort the list in descending order (higher is better)
-    kdr_sorted = sorted(stats_list, key=lambda x: x["kdr"], reverse=True)
-    adr_sorted = sorted(stats_list, key=lambda x: x["adr"], reverse=True)
-    first_sorted = sorted(stats_list, key=lambda x: x["avg_first"], reverse=True)
-    win_rate_sorted = sorted(stats_list, key=lambda x: x["win_rate"], reverse=True)
-
-    # Helper function to build a ranking string
+    # Helper: Build ranking string from a sorted list
     def build_ranking_str(sorted_list, metric_key, metric_name):
         lines = []
         for idx, stat in enumerate(sorted_list, start=1):
@@ -584,12 +571,17 @@ async def ranking(ctx):
             lines.append(f"{idx}. {stat['nickname']} - {metric_name}: {value:.2f} ({stat['matches']} matches)")
         return "\n".join(lines)
 
+    # Sort members by each metric (descending: higher is better)
+    kdr_sorted = sorted(stats_list, key=lambda x: x["kdr"], reverse=True)
+    adr_sorted = sorted(stats_list, key=lambda x: x["adr"], reverse=True)
+    first_sorted = sorted(stats_list, key=lambda x: x["avg_first"], reverse=True)
+    win_rate_sorted = sorted(stats_list, key=lambda x: x["win_rate"], reverse=True)
+
     ranking_kdr = build_ranking_str(kdr_sorted, "kdr", "KDR")
     ranking_adr = build_ranking_str(adr_sorted, "adr", "ADR")
     ranking_first = build_ranking_str(first_sorted, "avg_first", "Avg First Kills")
     ranking_win = build_ranking_str(win_rate_sorted, "win_rate", "Win Rate")
 
-    # Create an embed with each ranking as a separate field.
     embed = discord.Embed(
         title=f"Member Rankings for {month_year}",
         description="Rankings based on overall KDR, ADR, Average First Kills per Match, and Win Rate.",
@@ -599,96 +591,97 @@ async def ranking(ctx):
     embed.add_field(name="ADR Ranking", value=f"```{ranking_adr}```", inline=False)
     embed.add_field(name="Avg First Kills Ranking", value=f"```{ranking_first}```", inline=False)
     embed.add_field(name="Win Rate Ranking", value=f"```{ranking_win}```", inline=False)
-
+    
     await ctx.send(embed=embed)
-
 
 @bot.command(name="arca")
 async def arca(ctx):
     """
     !arca
-    Aggregates the group’s performance on each map (for the current month) using match files in the
-    "matches" folder. Only matches that have at least 3 group players on one team are considered, and if group players appear on both teams, the match is skipped.
-    The command computes per-map win rate, KDR, and ADR.
+    Aggregates the group's performance on each map for the current month using match data stored in S3.
+    Only counts matches where group players (from members.json on S3) appear on exactly one team
+    and at least 3 are present on that team. Computes per-map win rate, KDR, and ADR.
     """
-    import os, json
+    import json
     from datetime import datetime
     from discord import Embed
+    from botocore.exceptions import ClientError
 
-    # Load members.json and build a set of group GC ids.
-    members_file = "members.json"
-    if not os.path.exists(members_file):
-        await ctx.send("members.json not found in root folder.")
+    # Load members.json from S3
+    try:
+        response = s3.get_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY)
+        members_contents = response["Body"].read().decode("utf-8")
+        members_data = json.loads(members_contents)
+    except Exception as e:
+        await ctx.send("Error loading members data from S3.")
         return
 
-    with open(members_file, "r") as f:
-        members_data = json.load(f)
-    group_gc_ids = set()
-    for discord_id, info in members_data.items():
-        gc = info.get("gc")
-        if gc:
-            group_gc_ids.add(str(gc))
+    # Build set of group GC ids (as strings)
+    group_gc_ids = {str(info.get("gc")) for info in members_data.values() if info.get("gc")}
     if not group_gc_ids:
-        await ctx.send("No group GC ids found in members.json.")
+        await ctx.send("No group GC ids found in members data.")
         return
 
-    # Get current month/year.
     month_year = datetime.now().strftime("%Y-%m")
 
-    # Get unique match files from the "matches" folder.
-    matches_folder = "matches"
-    if not os.path.isdir(matches_folder):
-        await ctx.send("Matches folder not found.")
+    # List all match objects from S3 with the prefix "matches/"
+    try:
+        list_response = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix="matches/")
+    except Exception as e:
+        await ctx.send("Error listing match objects from S3.")
         return
-    match_files = [os.path.join(matches_folder, f) for f in os.listdir(matches_folder) if f.endswith(".json")]
 
-    # We'll aggregate stats per map.
-    # For each map, we accumulate: matches, wins, kills, deaths, damage, rounds.
-    group_maps = {}
-    counted_matches = set()  # to ensure each match is counted only once
+    objects = list_response.get("Contents", [])
+    if not objects:
+        await ctx.send("No match objects found in S3.")
+        return
 
-    for file_path in match_files:
+    group_maps = {}  # To accumulate per-map stats
+    counted_matches = set()  # Ensure each match is counted once
+
+    for obj in objects:
+        key = obj["Key"]
         try:
-            with open(file_path, "r") as f:
-                match_data = json.load(f)
+            obj_response = s3.get_object(Bucket=BUCKET_NAME, Key=key)
+            contents = obj_response["Body"].read().decode("utf-8")
+            match_data = json.loads(contents)
         except Exception as e:
-            print(f"Error reading {file_path}: {e}")
+            print(f"Error reading {key}: {e}")
             continue
 
-        # Check match date (assumed in top-level "data" field with format "dd/mm/YYYY HH:MM")
+        # Filter by match date (assumed in top-level "data" field with format "dd/mm/YYYY HH:MM")
         match_date_str = match_data.get("data")
         if not match_date_str:
             continue
         try:
             match_date = datetime.strptime(match_date_str, "%d/%m/%Y %H:%M")
-        except Exception as e:
+        except Exception:
             continue
         if match_date.strftime("%Y-%m") != month_year:
             continue
 
-        # Get unique match id from file or filename.
+        # Determine unique match id (either from the JSON or the object key)
         match_id = match_data.get("id") or match_data.get("match_id")
         if not match_id:
-            match_id = os.path.splitext(os.path.basename(file_path))[0]
+            match_id = key.split("/")[-1].split(".")[0]
         if match_id in counted_matches:
             continue
         counted_matches.add(match_id)
 
-        # In the match JSON, stats are under "jogos" -> "players"
+        # Get players data from "jogos" -> "players"
         jogos = match_data.get("jogos", {})
         map_name = jogos.get("map_name", "unknown")
         players_data = jogos.get("players", {})
 
-        # For each team, count how many players belong to our group.
-        team_group_counts = {}  # e.g., {"team_a": 0, "team_b": 0}
-        team_group_stats = {}   # aggregate stats for group players per team
+        # For each team, count group players and sum their stats.
+        team_group_counts = {}
+        team_group_stats = {}
         for team in ["team_a", "team_b"]:
-            group_count = 0
+            count = 0
             stats_sum = {"kills": 0, "deaths": 0, "damage": 0, "rounds": 0}
             for p in players_data.get(team, []):
-                # p.get("idplayer") is the GC id for that player.
                 if str(p.get("idplayer")) in group_gc_ids:
-                    group_count += 1
+                    count += 1
                     try:
                         stats_sum["kills"] += int(p.get("nb_kill", 0))
                         stats_sum["deaths"] += int(p.get("death", 0))
@@ -696,20 +689,18 @@ async def arca(ctx):
                         stats_sum["rounds"] += int(p.get("rounds_played", 0))
                     except Exception:
                         pass
-            team_group_counts[team] = group_count
+            team_group_counts[team] = count
             team_group_stats[team] = stats_sum
 
-        # Determine on which team the group is present.
-        teams_with_group = [team for team, count in team_group_counts.items() if count > 0]
-        # Skip match if group players are on both teams or not present at all.
+        # Determine if group players appear on exactly one team.
+        teams_with_group = [team for team, cnt in team_group_counts.items() if cnt > 0]
         if len(teams_with_group) != 1:
-            continue
+            continue  # Skip if group players are on both teams or none.
         team = teams_with_group[0]
-        # Only count match if there are at least 3 group players.
         if team_group_counts[team] < 3:
-            continue
+            continue  # Skip if fewer than 3 group players on that team.
 
-        # Determine winning team using scores.
+        # Determine the winning team using scores.
         try:
             score_a = int(jogos.get("score_a", "0"))
             score_b = int(jogos.get("score_b", "0"))
@@ -736,7 +727,7 @@ async def arca(ctx):
         await ctx.send("No qualifying group matches found for this month.")
         return
 
-    # Build the output: for each map, compute win rate, KDR, and ADR.
+    # Build the output for each map.
     output_lines = []
     for map_name, stats in group_maps.items():
         matches = stats["matches"]
@@ -748,9 +739,11 @@ async def arca(ctx):
         rounds = stats["rounds"]
         kdr = kills / deaths if deaths > 0 else kills
         adr = damage / rounds if rounds > 0 else 0
-        line = (f"**{map_name}**:\n"
-                f"Matches: {matches}, Wins: {wins} (Win Rate: {win_rate:.2f}%)\n"
-                f"KDR: {kdr:.2f}, ADR: {adr:.2f}\n")
+        line = (
+            f"**{map_name}**:\n"
+            f"Matches: {matches}, Wins: {wins} (Win Rate: {win_rate:.2f}%)\n"
+            f"KDR: {kdr:.2f}, ADR: {adr:.2f}\n"
+        )
         output_lines.append(line)
     output = "\n".join(output_lines)
 
@@ -760,6 +753,58 @@ async def arca(ctx):
         color=0x1abc9c
     )
     await ctx.send(embed=embed)
+
+@bot.command(name="updateall")
+@commands.check(lambda ctx: ctx.author.id in BOT_ADMINS)
+async def updateall(ctx):
+    """
+    !updateall
+    Updates the stats for all players listed in members.json.
+    For each member, it:
+      1. Retrieves the member's match history from the API and uploads it to S3.
+      2. Downloads full match stats for each match (ensuring they're stored on S3).
+      3. Aggregates the match stats and uploads the aggregated file to S3.
+    This command is restricted to bot admins.
+    """
+    import json, asyncio
+    from datetime import datetime
+    from match_history import get_match_history
+    from load_match_stats import load_match_stats
+    from aggregate_player_stats import aggregate_stats
+
+    await ctx.send("Starting update for all players. This may take a while...")
+
+    # Load members.json from S3
+    try:
+        response = s3.get_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY)
+        members_contents = response["Body"].read().decode("utf-8")
+        members_data = json.loads(members_contents)
+    except Exception as e:
+        await ctx.send("Error loading members data from S3.")
+        return
+
+    month_year = datetime.now().strftime("%Y-%m")
+    
+    # Process each member sequentially
+    for discord_id, info in members_data.items():
+        gc_id = info.get("gc")
+        if not gc_id:
+            continue  # Skip if no GC id is set
+        await ctx.send(f"Updating stats for GC id: {gc_id}...")
+        
+        def process_member(gc_id, month_year):
+            # Retrieve match history from API and upload to S3.
+            history_key = get_match_history(gc_id, month_year)
+            # For each match in the history, ensure full match stats are on S3.
+            load_match_stats(history_key)
+            # Aggregate the match stats and upload the aggregated data to S3.
+            aggregate_stats(gc_id, month_year)
+        
+        # Run blocking operations in a background thread.
+        await asyncio.to_thread(process_member, gc_id, month_year)
+    
+    await ctx.send("Update complete for all players.")
+
 
 
 @bot.event
