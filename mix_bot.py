@@ -216,6 +216,9 @@ Não evite termos provocativos.
     except Exception as e:
         logging.exception("Erro ao gerar o resumo com ChatGPT:")
         return "Erro ao gerar o resumo com o ChatGPT 🧠."
+    
+def split_string(text, chunk_size=1024):
+    return [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
 
 # ---------------------------
 # Bot Commands
@@ -577,7 +580,10 @@ async def stats(ctx, member: discord.Member):
     else:
         per_map_str = "No per-map stats available."
 
-    embed.add_field(name="Per Map Stats", value=per_map_str, inline=False)
+    per_map_chunks = split_string(per_map_str, 1024)
+    for i, chunk in enumerate(per_map_chunks):
+        field_name = "Per Map Stats" if i == 0 else f"Per Map Stats (cont.)"
+        embed.add_field(name=field_name, value=chunk, inline=False)
 
     all_stats = {}
     for discord_id, info in members_data.items():
