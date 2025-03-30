@@ -418,9 +418,7 @@ async def stats(ctx, member: discord.Member):
     """
     !stats @Player
     Retrieves aggregated stats for the mentioned player for the current month from S3.
-    Overall stats include total matches, wins, losses, win rate, kills, deaths,
-    overall KDR, overall ADR, total first kills, average first kills per match, and HS%.
-    Per-map stats include the number of matches, win rate, KDR, and ADR for each map.
+    Shows overall stats, per-map stats, and a ChatGPT-generated summary.
     """
     import json
     from datetime import datetime
@@ -431,53 +429,50 @@ async def stats(ctx, member: discord.Member):
         response = s3.get_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY)
         members_contents = response["Body"].read().decode("utf-8")
         members_data = json.loads(members_contents)
-    except Exception as e:
-        await ctx.send("Error loading members data from S3.")
+    except Exception:
+        await ctx.send("Erro ao carregar dados dos membros do S3.")
         return
 
     discord_id_str = str(member.id)
     if discord_id_str not in members_data:
-        await ctx.send(f"{member.display_name} is not in the members list.")
+        await ctx.send(f"{member.display_name} não está na lista de membros.")
         return
 
-    # Retrieve the GC id for the member.
     gc_id = members_data[discord_id_str].get("gc")
     if not gc_id:
-        await ctx.send(f"{member.display_name} does not have a valid GC id set.")
+        await ctx.send(f"{member.display_name} não tem GC ID definido.")
         return
 
     month_year = datetime.now().strftime("%Y-%m")
-    # Construct the S3 key for the aggregated stats file (e.g., players/{gc_id}/stats-YYYY-MM.json)
     stats_key = f"players/{gc_id}/stats-{month_year}.json"
     try:
         stats_response = s3.get_object(Bucket=BUCKET_NAME, Key=stats_key)
         stats_contents = stats_response["Body"].read().decode("utf-8")
         stats_data = json.loads(stats_contents)
-    except ClientError as e:
-        await ctx.send(f"Stats for {member.display_name} for {month_year} are not available on S3.")
+    except ClientError:
+        await ctx.send(f"Stats de {member.display_name} para {month_year} não disponíveis.")
         return
-    except Exception as e:
-        await ctx.send("Error loading the stats file from S3.")
+    except Exception:
+        await ctx.send("Erro ao carregar stats do S3.")
         return
 
-    # Build an embed to display overall stats.
     embed = discord.Embed(
-        title=f"Stats for {member.display_name} - {month_year}",
+        title=f"Stats de {member.display_name} - {month_year}",
         color=0x00ff00
     )
-    embed.add_field(name="Total Matches", value=stats_data.get("total_matches", 0), inline=True)
-    embed.add_field(name="Wins", value=stats_data.get("total_wins", 0), inline=True)
-    embed.add_field(name="Losses", value=stats_data.get("total_losses", 0), inline=True)
-    embed.add_field(name="Overall Win Rate", value=f"{stats_data.get('overall_win_rate', 0):.2f}%", inline=True)
-    embed.add_field(name="Total Kills", value=stats_data.get("total_kills", 0), inline=True)
-    embed.add_field(name="Total Deaths", value=stats_data.get("total_deaths", 0), inline=True)
+    embed.add_field(name="Partidas", value=stats_data.get("total_matches", 0), inline=True)
+    embed.add_field(name="Vitórias", value=stats_data.get("total_wins", 0), inline=True)
+    embed.add_field(name="Derrotas", value=stats_data.get("total_losses", 0), inline=True)
+    embed.add_field(name="Win Rate", value=f"{stats_data.get('overall_win_rate', 0):.2f}%", inline=True)
+    embed.add_field(name="Kills", value=stats_data.get("total_kills", 0), inline=True)
+    embed.add_field(name="Deaths", value=stats_data.get("total_deaths", 0), inline=True)
     embed.add_field(name="KDR", value=f"{stats_data.get('KDR', 0):.2f}", inline=True)
     embed.add_field(name="ADR", value=f"{stats_data.get('ADR', 0):.2f}", inline=True)
-    embed.add_field(name="Total First Kills", value=stats_data.get("total_first_kills", 0), inline=True)
-    embed.add_field(name="Avg First Kills/Match", value=f"{stats_data.get('average_first_kills_per_match', 0):.2f}", inline=True)
+    embed.add_field(name="First Kills", value=stats_data.get("total_first_kills", 0), inline=True)
+    embed.add_field(name="Avg FK/Match", value=f"{stats_data.get('average_first_kills_per_match', 0):.2f}", inline=True)
     embed.add_field(name="HS%", value=f"{stats_data.get('HS_percent', 0):.2f}%", inline=True)
 
-    # Build per-map stats output.
+    # Per-map stats
     per_map_data = stats_data.get("per_map", {})
     per_map_str = ""
     if per_map_data:
@@ -485,33 +480,25 @@ async def stats(ctx, member: discord.Member):
             matches = mstats.get("matches", 0)
             wins = mstats.get("wins", 0)
             win_rate = (wins / matches * 100) if matches > 0 else 0
-
             kills = mstats.get("kills", 0)
             deaths = mstats.get("deaths", 0)
             damage = mstats.get("damage", 0)
             rounds = mstats.get("rounds", 0)
-
             kdr = kills / deaths if deaths > 0 else kills
             adr = damage / rounds if rounds > 0 else 0
-
-            per_map_str += (
-                f"**{map_name}**: Matches: {matches}, Win Rate: {win_rate:.2f}%, "
-                f"KDR: {kdr:.2f}, ADR: {adr:.2f}\n"
-            )
+            per_map_str += f"**{map_name}**: Matches: {matches}, WR: {win_rate:.2f}%, KDR: {kdr:.2f}, ADR: {adr:.2f}\n"
     else:
-        per_map_str = "No per-map stats available."
+        per_map_str = "Sem dados por mapa."
 
-    per_map_chunks = split_string(per_map_str, 1024)
-    for i, chunk in enumerate(per_map_chunks):
-        field_name = "Per Map Stats" if i == 0 else f"Per Map Stats (cont.)"
-        embed.add_field(name=field_name, value=chunk, inline=False)
+    embed.add_field(name="Por mapa", value=per_map_str[:1024], inline=False)  # truncar se necessário
 
+    # Coletar stats dos outros jogadores
     all_stats = {}
-    for discord_id, info in members_data.items():
-        gc = info.get("gc")
-        if not gc or str(gc) == str(gc_id):
+    for other_id, info in members_data.items():
+        other_gc = info.get("gc")
+        if not other_gc or str(other_gc) == str(gc_id):
             continue
-        other_key = f"players/{gc}/stats-{month_year}.json"
+        other_key = f"players/{other_gc}/stats-{month_year}.json"
         try:
             other_response = s3.get_object(Bucket=BUCKET_NAME, Key=other_key)
             other_contents = other_response["Body"].read().decode("utf-8")
@@ -520,9 +507,20 @@ async def stats(ctx, member: discord.Member):
         except Exception:
             continue
 
+    # Resumo gerado pelo ChatGPT
     summary_text = generate_chatgpt_summary(stats_data, member.display_name, all_stats)
-    embed.add_field(name="🧠 ZapIA ", value=summary_text, inline=False)
+
+    # Enviar embed e depois o resumo em mensagens separadas (se for muito grande)
     await ctx.send(embed=embed)
+
+    if len(summary_text) <= 1024:
+        await ctx.send(embed=discord.Embed(title="🧠 ZapIA", description=summary_text, color=0x7289da))
+    else:
+        await ctx.send("🧠 **Resumo gerado por ZapIA:**")
+        chunks = [summary_text[i:i+1900] for i in range(0, len(summary_text), 1900)]
+        for chunk in chunks:
+            await ctx.send(f"```{chunk}```")
+
 
 
 @bot.command(name="update")
