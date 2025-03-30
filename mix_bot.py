@@ -593,12 +593,10 @@ Use comparações entre os membros sempre que possível.
 
     try:
         logging.debug("Enviando prompt para ChatGPT: %s", prompt)
-        response = openai.ChatCompletion.create(
+        response = client.responses.create(
             model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "Você é um analista de estatísticas de CS, conciso, sarcástico e provocador."},
-                {"role": "user", "content": prompt}
-            ]
+            instructions="Você é um analista de estatísticas de CS, conciso, sarcástico e provocador.",
+            input=prompt
         )
         answer = response.choices[0].message.content.strip()
         logging.debug("Resposta do ChatGPT: %s", answer)
