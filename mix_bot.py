@@ -9,6 +9,7 @@ import random
 import boto3
 from datetime import datetime
 from botocore.exceptions import ClientError
+import openai
 
 # ---------------------------
 # Configuration
@@ -25,6 +26,7 @@ ENDPOINT_URL = "https://s3.us-east-1.amazonaws.com"
 
 # Create an S3 client using the custom endpoint
 s3 = boto3.client("s3", endpoint_url=ENDPOINT_URL)
+openai.api_key = None  # Será definido depois
 
 # ---------------------------
 # Persistence Functions
@@ -175,6 +177,37 @@ def get_mix_members(ctx, exclusions, extras):
         if all(member.id != m.id for m in members):
             members.append(member)
     return members
+
+
+def generate_chatgpt_summary(stats_data, player_name, all_players_data):
+    """
+    Gera um resumo engraçado/roast com base nos stats do player usando o ChatGPT.
+    """
+    # Monta prompt com stats
+    prompt = f"""
+Você é um analista de estatiscas de CS. Escreva um resumo sobre o jogador {player_name}.
+Baseado nos stats:
+
+- KDR: {stats_data.get('KDR', 0):.2f}
+- ADR: {stats_data.get('ADR', 0):.2f}
+- Win Rate: {stats_data.get('overall_win_rate', 0):.2f}%
+- First Kills por partida: {stats_data.get('average_first_kills_per_match', 0):.2f}
+- HS%: {stats_data.get('HS_percent', 0):.2f}%
+
+Compare com a média dos outros jogadores se achar relevante. Comente sobre stats relevantes e elogie onde ele foi bem de maneira séria(normal) e depois uma zoada sádica e irônica, principalmente nas áreas ruins.
+Não evite termos ofensivos, pode ser provocativo. Tente sempre usar comparações entre membros
+    """
+
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.9,
+            max_tokens=150,
+        )
+        return response.choices[0].message["content"]
+    except Exception as e:
+        return "Erro ao gerar o resumo com o ChatGPT 🧠."
 
 # ---------------------------
 # Bot Commands
@@ -455,6 +488,23 @@ async def stats(ctx, member: discord.Member):
         per_map_str = "No per-map stats available."
 
     embed.add_field(name="Per Map Stats", value=per_map_str, inline=False)
+
+    all_stats = {}
+    for discord_id, info in members_data.items():
+        gc = info.get("gc")
+        if not gc or str(gc) == str(gc_id):
+            continue
+        other_key = f"players/{gc}/stats-{month_year}.json"
+        try:
+            other_response = s3.get_object(Bucket=BUCKET_NAME, Key=other_key)
+            other_contents = other_response["Body"].read().decode("utf-8")
+            other_stats = json.loads(other_contents)
+            all_stats[info.get("nickname", "Unknown")] = other_stats
+        except Exception:
+            continue
+
+    summary_text = generate_chatgpt_summary(stats_data, member.display_name, all_stats)
+    embed.add_field(name="🧠 ChatGPT Summary", value=summary_text, inline=False)
     await ctx.send(embed=embed)
 
 
@@ -1074,4 +1124,6 @@ async def on_ready():
 
 if __name__ == '__main__':
     TOKEN = getpass.getpass("Enter your Discord token: ")
+    OPENAI_API_KEY = getpass.getpass("Enter your OpenAI API key: ")
+    openai.api_key = OPENAI_API_KEY
     bot.run(TOKEN)
