@@ -598,7 +598,7 @@ Use comparações entre os membros sempre que possível.
             instructions="Você é um analista de estatísticas de CS, conciso, sarcástico e provocador.",
             input=prompt
         )
-        answer = response.choices[0].message.content.strip()
+        answer = response.output_text.strip()
         logging.debug("Resposta do ChatGPT: %s", answer)
     except Exception as e:
         logging.exception("Erro ao consultar o ChatGPT:")
