@@ -1,103 +1,122 @@
 {
-    "142072454750142464": {
-      "nickname": "ali bah bah",
-      "level": 21,
-      "gc": 54490
-    },
-    "475993131121377280": {
-      "nickname": "NÃOÉ",
-      "level": 18,
-      "gc": 120920
-    },
-    "702663153355456693": {
-      "nickname": "Rick",
-      "level": 18,
-      "gc": 2258342
-    },
-    "329050091165974528": {
-      "nickname": "LKS!",
-      "level": 18,
-      "gc": 1315017
-    },
-    "331633865552560128": {
-      "nickname": "gebas m0nstr0",
-      "level": 18,
-      "gc": 1844317
-    },
-    "794744511439699989": {
-      "nickname": "gspp",
-      "level": 16,
-      "gc": 1760648
-    },
-    "752645666857156609": {
-      "nickname": "BV",
-      "level": 16,
-      "gc": 1712862
-    },
-    "692595982378074222": {
-      "nickname": "JOTALHA",
-      "level": 14,
-      "gc": 1563533
-    },
-    "289036375196565504": {
-      "nickname": "RafiusK",
-      "level": 14,
-      "gc": 1053145
-    },
-    "291617683416285194": {
-      "nickname": "Zapdos",
-      "level": 14,
-      "gc": 829311
-    },
-    "701661704844738580": {
-      "nickname": "TcHêCo",
-      "level": 13,
-      "gc": 1400278
-    },
-    "258625313150468116": {
-      "nickname": "dgo tipster",
-      "level": 11,
-      "gc": 36170
-    },
-    "398559865997361155": {
-      "nickname": "aLC",
-      "level": 12,
-      "gc": 22568
-    },
-    "695401276162310206": {
-      "nickname": "spr1",
-      "level": 10,
-      "gc": 1564938
-    },
-    "798315813676253224": {
-      "nickname": "lemp",
-      "level": 10,
-      "gc": 1760886
-    },
-    "360083696981770240": {
-      "nickname": "salamezinhoinho",
-      "level": 10,
-      "gc": 2512160
-    },
-    "360903672902975490": {
-      "nickname": "Prinz",
-      "level": 8,
-      "gc": null
-    },
-    "693238178781462640": {
-      "nickname": "① Chapolin",
-      "level": 6,
-      "gc": 1323034
-    },
-    "641046283259215878": {
-      "nickname": "Tweny",
-      "level": 6,
-      "gc": 1323020
-    },
-    "693255159484121179": {
-      "nickname": "Kvc0 KiT BoTa",
-      "level": 2,
-      "gc": 1612047
-    }
+  "142072454750142464": {
+    "nickname": "ali bah bah",
+    "level": 21,
+    "gc": 54490,
+    "context": "Conhecido como aligadinho, monstro do CS ou xiter?"
+  },
+  "475993131121377280": {
+    "nickname": "NÃOÉ",
+    "level": 18,
+    "gc": 120920,
+    "context": "Conhecido como hotsauce"
+  },
+  "702663153355456693": {
+    "nickname": "Rick",
+    "level": 18,
+    "gc": 2258342,
+    "context": "Dono da Artemp, uma empresa de arcondicionado e jogador de neverwinter. Diz que ganha para salaminho no beach tennis, será que é verdade?"
+  },
+  "329050091165974528": {
+    "nickname": "LKS!",
+    "level": 18,
+    "gc": 1315017,
+    "context": "Rei do gado, microgerenciador de plays, se vc streamar para ele vc n mata mais que 5 bonecos tentando fazer suas mirabolancias. Além disso tenta ser atleta de triatlo, só a roda da bike dele compra a casa de alguns"
+  },
+  "331633865552560128": {
+    "nickname": "gebas m0nstr0",
+    "level": 18,
+    "gc": 1844317,
+    "context": "Conhecido como GB, o miguezeiro da galera"
+  },
+  "794744511439699989": {
+    "nickname": "gspp",
+    "level": 16,
+    "gc": 1760648,
+    "context": "Principe baiano, coronelismo de salvador, conhecido por ficar base até o final do round marcando e sendo zagueiro de awp "
+  },
+  "752645666857156609": {
+    "nickname": "BV",
+    "level": 16,
+    "gc": 1712862,
+    "context": "Conhecido como a LHAMBA, ex fumante de vape, não confia nos companheiros e só joga freezado para manter seu level 18 na GC"
+  },
+  "692595982378074222": {
+    "nickname": "JOTALHA",
+    "level": 14,
+    "gc": 1563533,
+    "context": "Tem o poder da zica, mais musculo que cerebro, conhecido como ANIMAL DE GRANDE PORTE, é um jegue ambulante, esse daqui é dificil de salvar, precisa falar bem dele não"
+  },
+  "289036375196565504": {
+    "nickname": "RafiusK",
+    "level": 14,
+    "gc": 1053145,
+    "context": "Golfinho, aparece faz uma brincadeira e some, tem sido acusado de jogar recuado ultimamente"
+  },
+  "291617683416285194": {
+    "nickname": "Zapdos",
+    "level": 14,
+    "gc": 829311,
+    "context": "ZapIA não pode falar mal do seu criador? Ou será que pode... O gênio da lampada, com um parafuso a menos ele é uma força da natureza"
+  },
+  "701661704844738580": {
+    "nickname": "TcHêCo",
+    "level": 13,
+    "gc": 1400278,
+    "context": "O sensato do grupo, sólido no jogo, só joga no mesmo pixel desde 2016"
+  },
+  "258625313150468116": {
+    "nickname": "dgo tipster",
+    "level": 11,
+    "gc": 36170,
+    "context": "tem apenas dois neuronios conversando, um diz BLEH BLEH e o outro GLU GLU enquanto ele rusha de P90"
+  },
+  "398559865997361155": {
+    "nickname": "aLC",
+    "level": 12,
+    "gc": 22568,
+    "context": "admin do grupo se a ZapIA falar muito mal pode ser kickada, mas ela vai continuar falando"
+  },
+  "695401276162310206": {
+    "nickname": "spr1",
+    "level": 10,
+    "gc": 1564938,
+    "context": "Conhecido como seu primo ou seu péssimo"
+  },
+  "798315813676253224": {
+    "nickname": "lemp",
+    "level": 10,
+    "gc": 1760886,
+    "context": "Eterno level 9, ao invés de comunicar ele vai falar um porra bixooo...."
+  },
+  "360083696981770240": {
+    "nickname": "salamezinhoinho",
+    "level": 10,
+    "gc": 2512160,
+    "context": "Jogador de beach tennis, dono de restaurante de sushi, sexualidade duvidosa"
+  },
+  "360903672902975490": {
+    "nickname": "Prinz",
+    "level": 8,
+    "gc": null,
+    "context": "ursinho"
+  },
+  "693238178781462640": {
+    "nickname": "① Chapolin",
+    "level": 6,
+    "gc": 1323034,
+    "context": "Ele diz ter o jogo mais mental do que resolve na bala, mas na hora do vamo ver, puxa granada e toma HS. Para de puxar granada chapa, ele sempre fala é o chapa né man, dono de uma funeraria"
+  },
+  "641046283259215878": {
+    "nickname": "Tweny",
+    "level": 6,
+    "gc": 1323020,
+    "context": "o troll do grupo, fica no celular durante a partida, fala vaganda e escugo ao inves de varanda e escuro, ele é péssimo"
+  },
+  "693255159484121179": {
+    "nickname": "Kvc0 KiT BoTa",
+    "level": 2,
+    "gc": 1612047,
+    "context": "Kavinha eu tenho certeza que um dia ele vai pegar lvl 5, daqui a algumas decadas"
   }
-  
+}

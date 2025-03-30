@@ -186,7 +186,7 @@ def get_mix_members(ctx, exclusions, extras):
 import logging
 import os
 
-def generate_chatgpt_summary(stats_data, player_name, leaderboard_summary):
+def generate_chatgpt_summary(stats_data, player_name, leaderboard_summary, context):
     """
     Gera um resumo conciso (com elogios e roast) baseado nos stats do jogador,
     comparando-os com os dados gerais (leaderboard_summary).
@@ -201,8 +201,9 @@ Você é um analista de estatísticas de CS. Escreva um resumo conciso sobre o j
 
 Compare esses números com a média do grupo (leaderboard):
 {leaderboard_summary}
+Contexto do jogador: {context}
 
-Se os números forem bons, elogie de forma sincera; se forem ruins, faça uma zoada extremamente ofensiva, usando termos chulos, provocativa, irônica e incisiva. Seja breve e direto. Os roast precisam ter comparações com outros membros. Não compare sempre com os bons, foque nos ruins também, "Olha ai, até tal player é melhor que vc nisso!", use criatividade. Veja sempre onde a pessoa está nas médias, por exemplo first kills abaixo de 2.3 normalmente é ruim! não precisa bater stats por stats, escreva um resumo livre! Não compare somente com o primeiro e o ultimo das listas, faça com jogadores do meio também
+Se os números forem bons, elogie de forma sincera; se forem ruins, faça uma zoada extremamente ofensiva, usando termos chulos, provocativa, irônica e incisiva. Seja breve e direto. Os roast precisam ter comparações com outros membros. Não compare sempre com os bons, foque nos ruins também, "Olha ai, até tal player é melhor que vc nisso!", use criatividade. Veja sempre onde a pessoa está nas médias, por exemplo first kills abaixo de 2.3 normalmente é ruim! não precisa bater stats por stats, escreva um resumo livre! Não compare somente com o primeiro e o ultimo das listas, faça com jogadores do meio também. Seja criativo no uso do context para que não fique repetitivo ao gerar outras vezes.
     """
     try:
         logging.debug("Enviando prompt para ChatGPT: %s", prompt)
@@ -442,6 +443,9 @@ async def stats(ctx, member: discord.Member):
         await ctx.send(f"{member.display_name} não tem GC ID definido.")
         return
 
+    # Extrai o campo context do membro (pode estar vazio)
+    context_field = members_data[discord_id_str].get("context", "")
+
     month_year = datetime.now().strftime("%Y-%m")
     stats_key = f"players/{gc_id}/stats-{month_year}.json"
     try:
@@ -486,13 +490,12 @@ async def stats(ctx, member: discord.Member):
             rounds = mstats.get("rounds", 0)
             kdr = kills / deaths if deaths > 0 else kills
             adr = damage / rounds if rounds > 0 else 0
-            per_map_str += f"**{map_name}**: Partidas: {matches}, WR: {win_rate:.2f}%, KDR: {kdr:.2f}, ADR: {adr:.2f}\n"
+            per_map_str += f"**{map_name}**: {matches} part., WR: {win_rate:.2f}%, KDR: {kdr:.2f}, ADR: {adr:.2f}\n"
     else:
         per_map_str = "Sem dados por mapa."
-    # Se o texto ultrapassar 1024 caracteres, trunca (poderia ser dividido em vários campos)
     embed.add_field(name="Por mapa", value=per_map_str[:1024], inline=False)
 
-    # Construir o leaderboard_summary a partir dos stats dos demais jogadores
+    # Gerar o leaderboard_summary com os stats dos demais jogadores
     leaderboard_data = []
     for other_id, info in members_data.items():
         other_gc = info.get("gc")
@@ -500,18 +503,15 @@ async def stats(ctx, member: discord.Member):
             continue
         other_key = f"players/{other_gc}/stats-{month_year}.json"
         try:
-            other_response = s3.get_object(Bucket=BUCKET_NAME, Key=other_key)
-            other_contents = other_response["Body"].read().decode("utf-8")
-            other_stats = json.loads(other_contents)
+            other_stats = json.loads(s3.get_object(Bucket=BUCKET_NAME, Key=other_key)["Body"].read().decode("utf-8"))
             leaderboard_data.append((info.get("nickname", "Unknown"), other_stats.get("KDR", 0)))
         except Exception:
             continue
     leaderboard_data.sort(key=lambda x: x[1], reverse=True)
-    
     leaderboard_summary = "Top jogadores: " + ", ".join([f"{n} (KDR: {kdr:.2f})" for n, kdr in leaderboard_data])
     
-    # Gerar resumo com ChatGPT usando o leaderboard_summary
-    summary_text = generate_chatgpt_summary(stats_data, member.display_name, leaderboard_summary)
+    # Gerar resumo com ChatGPT passando o campo context
+    summary_text = generate_chatgpt_summary(stats_data, member.display_name, leaderboard_summary, context_field)
 
     await ctx.send(embed=embed)
 
@@ -520,8 +520,7 @@ async def stats(ctx, member: discord.Member):
         await ctx.send(embed=discord.Embed(title="🧠 ZapIA", description=summary_text, color=0x7289da))
     else:
         await ctx.send("🧠 **Resumo gerado por ZapIA:**")
-        chunks = [summary_text[i:i+1900] for i in range(0, len(summary_text), 1900)]
-        for chunk in chunks:
+        for chunk in [summary_text[i:i+1900] for i in range(0, len(summary_text), 1900)]:
             await ctx.send(f"```{chunk}```")
 
 
@@ -530,7 +529,8 @@ async def zap_ia(ctx, *, question: str):
     """
     !zapIA <pergunta>
     Consulta o ChatGPT com as estatísticas agregadas de todos os jogadores (mês atual),
-    incluindo desempenho por mapa, e retorna uma resposta provocativa com elogios e roasting.
+    incluindo desempenho por mapa e informações de contexto (context) dos membros.
+    Retorna uma resposta provocativa com elogios e roast.
     """
     import json
     from datetime import datetime
@@ -538,7 +538,7 @@ async def zap_ia(ctx, *, question: str):
 
     await ctx.send("Processando dados dos jogadores e consultando o ZapIA... 🤖")
 
-    # Carregar members.json do S3
+    # Carrega members.json do S3
     try:
         response = s3.get_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY)
         members_contents = response["Body"].read().decode("utf-8")
@@ -571,7 +571,7 @@ async def zap_ia(ctx, *, question: str):
         await ctx.send("Nenhum dado agregado encontrado para os jogadores este mês.")
         return
 
-    # Gerar um resumo rápido do leaderboard usando, por exemplo, os top 3 por KDR
+    # Gerar um resumo rápido do leaderboard usando os top 3 por KDR
     leaderboard_data = []
     for nickname, stats in aggregated_stats.items():
         kdr = stats.get("KDR", 0)
@@ -580,17 +580,29 @@ async def zap_ia(ctx, *, question: str):
     top3 = leaderboard_data[:3]
     leaderboard_summary = "Top jogadores: " + ", ".join([f"{n} (KDR: {kdr:.2f})" for n, kdr in top3])
 
-    # Construir o prompt para o ChatGPT
+    # Gerar um resumo de contextos dos membros
+    context_list = []
+    for info in members_data.values():
+        nickname = info.get("nickname", "Unknown")
+        context_field = info.get("context", "")
+        if context_field:
+            context_list.append(f"{nickname}: {context_field}")
+    context_summary = "\n".join(context_list)
+    if not context_summary:
+        context_summary = "Sem informações de contexto."
+
+    # Construir o prompt para o ChatGPT, incluindo o context_summary
     prompt = f"""
-Você é um analista de estatísticas de CS. Baseando-se nos dados agregados dos jogadores do grupo para o mês {month_year},
-responda à seguinte pergunta: {question}
+Contexto geral dos membros:
+{context_summary}
 
-Utilize os seguintes dados resumidos do leaderboard para comparação: {leaderboard_summary}
+Dados agregados do grupo para o mês {month_year}:
+{leaderboard_summary}
 
-Responda de forma concisa e provocativa, elogiando onde o jogador se sobressai e fazendo um roast ofensivo e irônico nas áreas fracas.
-Use comparações entre os membros sempre que possível.
+Pergunta: {question}
+
+Responda de forma concisa e provocativa, elogiando onde os números estão bons e fazendo um roast extremamente ofensivo e irônico nas áreas fracas, com comparações entre os jogadores.
     """
-
     try:
         logging.debug("Enviando prompt para ChatGPT: %s", prompt)
         response = client.responses.create(
@@ -611,6 +623,7 @@ Use comparações entre os membros sempre que possível.
             await ctx.send(f"```{answer[i:i+1900]}```")
     else:
         await ctx.send(f"```{answer}```")
+
 
 
 
