@@ -186,31 +186,32 @@ def get_mix_members(ctx, exclusions, extras):
 import logging
 import os
 
-def generate_chatgpt_summary(stats_data, player_name, all_players_data):
+def generate_chatgpt_summary(stats_data, player_name, leaderboard_summary):
     """
-    Gera um resumo (com elogios e roasting) baseado nos stats do player usando a nova interface da API do OpenAI.
+    Gera um resumo conciso (com elogios e roast) baseado nos stats do jogador,
+    comparando-os com os dados gerais (leaderboard_summary).
     """
     prompt = f"""
-Você é um analista de estatísticas de CS. Escreva um resumo sobre o jogador {player_name}.
-Baseado nos stats:
-
+Você é um analista de estatísticas de CS. Escreva um resumo conciso sobre o jogador {player_name} com base nos seguintes stats:
 - KDR: {stats_data.get('KDR', 0):.2f}
 - ADR: {stats_data.get('ADR', 0):.2f}
 - Win Rate: {stats_data.get('overall_win_rate', 0):.2f}%
 - First Kills por partida: {stats_data.get('average_first_kills_per_match', 0):.2f}
-- HS%: {stats_data.get('HS_percent', 0):.2f}%
+- HS%: {stats_data.get('HS_percent', 0):.2f}
 
-Compare com a média dos outros jogadores se achar relevante.
-Comente sobre os pontos fortes e fracos, elogie quando for adequado e faça uma zoada sádica e irônica, principalmente nas áreas que estão ruins.
-Não evite termos provocativos.
+Compare esses números com a média do grupo (leaderboard):
+{leaderboard_summary}
+
+Se os números forem bons, elogie de forma sincera; se forem ruins, faça uma zoada extremamente ofensiva, usando termos chulos, provocativa, irônica e incisiva. Seja breve e direto. Os roast precisam ter comparações com outros membros.
     """
-    
     try:
         logging.debug("Enviando prompt para ChatGPT: %s", prompt)
         response = client.responses.create(
             model="gpt-4o",
-            instructions="Você é um analista de estatísticas de CS, sarcástico e provocador.",
-            input=prompt
+            instructions="Você é um analista de estatísticas de CS, conciso, sarcástico e provocador.",
+            input=prompt,
+            temperature=0.9,
+            max_tokens=500,
         )
         logging.debug("Resposta recebida: %s", response)
         return response.output_text.strip()
@@ -218,9 +219,9 @@ Não evite termos provocativos.
         logging.exception("Erro ao gerar o resumo com ChatGPT:")
         return "Erro ao gerar o resumo com o ChatGPT 🧠."
 
-
 def split_string(text, chunk_size=1024):
     return [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
+
 
 
 # ---------------------------
