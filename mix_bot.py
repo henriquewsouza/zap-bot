@@ -530,7 +530,7 @@ async def zap_ia(ctx, *, question: str):
     !zapIA <pergunta>
     Consulta o ChatGPT com as estatísticas agregadas de todos os jogadores (mês atual),
     incluindo desempenho por mapa e informações de contexto (context) dos membros.
-    Retorna uma resposta provocativa com elogios e roast.
+    Retorna uma resposta provocativa com elogios e roast. Use o contexto de forma bem discreta, se não toda vez que eu gerar perguntas vc vai ficar repetindo, apenas detalhes sutis do concept devem ser utilizados.
     """
     import json
     from datetime import datetime
