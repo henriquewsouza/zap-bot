@@ -9,7 +9,8 @@ import random
 import boto3
 from datetime import datetime
 from botocore.exceptions import ClientError
-import openai
+import os
+from openai import OpenAI
 import logging
 
 # ---------------------------
@@ -181,6 +182,9 @@ def get_mix_members(ctx, exclusions, extras):
 
 
 
+import logging
+import os
+
 def generate_chatgpt_summary(stats_data, player_name, all_players_data):
     """
     Gera um resumo (com elogios e roasting) baseado nos stats do player usando a nova interface da API do OpenAI.
@@ -202,23 +206,23 @@ Não evite termos provocativos.
     
     try:
         logging.debug("Enviando prompt para ChatGPT: %s", prompt)
-        response = openai.ChatCompletion.create(
+        response = client.responses.create(
             model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "Você é um analista de estatísticas de CS, sarcástico e provocador."},
-                {"role": "user", "content": prompt}
-            ],
+            instructions="Você é um analista de estatísticas de CS, sarcástico e provocador.",
+            input=prompt,
             temperature=0.9,
-            max_tokens=1500,
+            max_tokens=1500
         )
         logging.debug("Resposta recebida: %s", response)
-        return response.choices[0].message.content.strip()
+        return response.output_text.strip()
     except Exception as e:
         logging.exception("Erro ao gerar o resumo com ChatGPT:")
         return "Erro ao gerar o resumo com o ChatGPT 🧠."
-    
+
+
 def split_string(text, chunk_size=1024):
     return [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
+
 
 # ---------------------------
 # Bot Commands
@@ -1221,5 +1225,8 @@ async def on_ready():
 if __name__ == '__main__':
     TOKEN = getpass.getpass("Enter your Discord token: ")
     OPENAI_API_KEY = getpass.getpass("Enter your OpenAI API key: ")
-    openai.api_key = OPENAI_API_KEY
+    client = OpenAI(
+    # This is the default and can be omitted
+    api_key=os.environ.get("OPENAI_API_KEY"),
+    )
     bot.run(TOKEN)
