@@ -210,9 +210,7 @@ Não evite termos provocativos.
         response = client.responses.create(
             model="gpt-4o",
             instructions="Você é um analista de estatísticas de CS, sarcástico e provocador.",
-            input=prompt,
-            temperature=0.9,
-            max_tokens=1500
+            input=prompt
         )
         logging.debug("Resposta recebida: %s", response)
         return response.output_text.strip()
