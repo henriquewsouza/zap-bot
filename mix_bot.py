@@ -598,9 +598,7 @@ Use comparações entre os membros sempre que possível.
             messages=[
                 {"role": "system", "content": "Você é um analista de estatísticas de CS, conciso, sarcástico e provocador."},
                 {"role": "user", "content": prompt}
-            ],
-            temperature=0.9,
-            max_tokens=500
+            ]
         )
         answer = response.choices[0].message.content.strip()
         logging.debug("Resposta do ChatGPT: %s", answer)
