@@ -202,7 +202,7 @@ Você é um analista de estatísticas de CS. Escreva um resumo conciso sobre o j
 Compare esses números com a média do grupo (leaderboard):
 {leaderboard_summary}
 
-Se os números forem bons, elogie de forma sincera; se forem ruins, faça uma zoada extremamente ofensiva, usando termos chulos, provocativa, irônica e incisiva. Seja breve e direto. Os roast precisam ter comparações com outros membros. Não compare sempre com os bons, foque nos ruins também, "Olha ai, até tal player é melhor que vc nisso!", use criatividade. Veja sempre onde a pessoa está nas médias, por exemplo first kills abaixo de 2.3 normalmente é ruim! não precisa bater stats por stats, escreva um resumo livre!
+Se os números forem bons, elogie de forma sincera; se forem ruins, faça uma zoada extremamente ofensiva, usando termos chulos, provocativa, irônica e incisiva. Seja breve e direto. Os roast precisam ter comparações com outros membros. Não compare sempre com os bons, foque nos ruins também, "Olha ai, até tal player é melhor que vc nisso!", use criatividade. Veja sempre onde a pessoa está nas médias, por exemplo first kills abaixo de 2.3 normalmente é ruim! não precisa bater stats por stats, escreva um resumo livre! Não compare somente com o primeiro e o ultimo das listas, faça com jogadores do meio também
     """
     try:
         logging.debug("Enviando prompt para ChatGPT: %s", prompt)
@@ -523,6 +523,99 @@ async def stats(ctx, member: discord.Member):
         chunks = [summary_text[i:i+1900] for i in range(0, len(summary_text), 1900)]
         for chunk in chunks:
             await ctx.send(f"```{chunk}```")
+
+
+@bot.command(name="zapIA")
+async def zap_ia(ctx, *, question: str):
+    """
+    !zapIA <pergunta>
+    Consulta o ChatGPT com as estatísticas agregadas de todos os jogadores (mês atual),
+    incluindo desempenho por mapa, e retorna uma resposta provocativa com elogios e roasting.
+    """
+    import json
+    from datetime import datetime
+    from botocore.exceptions import ClientError
+
+    await ctx.send("Processando dados dos jogadores e consultando o ZapIA... 🤖")
+
+    # Carregar members.json do S3
+    try:
+        response = s3.get_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY)
+        members_contents = response["Body"].read().decode("utf-8")
+        members_data = json.loads(members_contents)
+    except Exception:
+        await ctx.send("Erro ao carregar dados dos membros do S3.")
+        return
+
+    month_year = datetime.now().strftime("%Y-%m")
+    aggregated_stats = {}  # {nickname: stats}
+
+    # Coleta os stats agregados de cada jogador
+    for discord_id, info in members_data.items():
+        gc_id = info.get("gc")
+        nickname = info.get("nickname", "Unknown")
+        if not gc_id:
+            continue
+        stats_key = f"players/{gc_id}/stats-{month_year}.json"
+        try:
+            stats_response = s3.get_object(Bucket=BUCKET_NAME, Key=stats_key)
+            stats_contents = stats_response["Body"].read().decode("utf-8")
+            stats = json.loads(stats_contents)
+            aggregated_stats[nickname] = stats
+        except ClientError:
+            continue
+        except Exception:
+            continue
+
+    if not aggregated_stats:
+        await ctx.send("Nenhum dado agregado encontrado para os jogadores este mês.")
+        return
+
+    # Gerar um resumo rápido do leaderboard usando, por exemplo, os top 3 por KDR
+    leaderboard_data = []
+    for nickname, stats in aggregated_stats.items():
+        kdr = stats.get("KDR", 0)
+        leaderboard_data.append((nickname, kdr))
+    leaderboard_data.sort(key=lambda x: x[1], reverse=True)
+    top3 = leaderboard_data[:3]
+    leaderboard_summary = "Top jogadores: " + ", ".join([f"{n} (KDR: {kdr:.2f})" for n, kdr in top3])
+
+    # Construir o prompt para o ChatGPT
+    prompt = f"""
+Você é um analista de estatísticas de CS. Baseando-se nos dados agregados dos jogadores do grupo para o mês {month_year},
+responda à seguinte pergunta: {question}
+
+Utilize os seguintes dados resumidos do leaderboard para comparação: {leaderboard_summary}
+
+Responda de forma concisa e provocativa, elogiando onde o jogador se sobressai e fazendo um roast ofensivo e irônico nas áreas fracas.
+Use comparações entre os membros sempre que possível.
+    """
+
+    try:
+        logging.debug("Enviando prompt para ChatGPT: %s", prompt)
+        response = openai.ChatCompletion.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "Você é um analista de estatísticas de CS, conciso, sarcástico e provocador."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.9,
+            max_tokens=500
+        )
+        answer = response.choices[0].message.content.strip()
+        logging.debug("Resposta do ChatGPT: %s", answer)
+    except Exception as e:
+        logging.exception("Erro ao consultar o ChatGPT:")
+        await ctx.send("Erro ao consultar o ChatGPT.")
+        return
+
+    # Enviar a resposta (dividindo se necessário)
+    if len(answer) > 1900:
+        for i in range(0, len(answer), 1900):
+            await ctx.send(f"```{answer[i:i+1900]}```")
+    else:
+        await ctx.send(f"```{answer}```")
+
 
 
 
