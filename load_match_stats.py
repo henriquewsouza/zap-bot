@@ -1,6 +1,7 @@
 import json
 import subprocess
 import boto3
+import sys
 
 BUCKET_NAME = "bucket-6sk08y"
 ENDPOINT_URL = "https://s3.us-east-1.amazonaws.com"
@@ -19,5 +20,5 @@ def load_match_stats(history_s3_key):
         if not match_id:
             continue
         print(f"Processing match {match_id}...")
-        subprocess.run(["python", "get_single_match_stats.py", str(match_id)])
+        subprocess.run([sys.executable, "get_single_match_stats.py", str(match_id)])
     print("Finished processing all matches.")
