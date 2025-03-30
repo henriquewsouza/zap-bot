@@ -1146,6 +1146,6 @@ if __name__ == '__main__':
     OPENAI_API_KEY = getpass.getpass("Enter your OpenAI API key: ")
     client = OpenAI(
     # This is the default and can be omitted
-    api_key=os.environ.get("OPENAI_API_KEY"),
+    api_key=OPENAI_API_KEY,
     )
     bot.run(TOKEN)
