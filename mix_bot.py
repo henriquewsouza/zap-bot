@@ -202,16 +202,14 @@ Você é um analista de estatísticas de CS. Escreva um resumo conciso sobre o j
 Compare esses números com a média do grupo (leaderboard):
 {leaderboard_summary}
 
-Se os números forem bons, elogie de forma sincera; se forem ruins, faça uma zoada extremamente ofensiva, usando termos chulos, provocativa, irônica e incisiva. Seja breve e direto. Os roast precisam ter comparações com outros membros.
+Se os números forem bons, elogie de forma sincera; se forem ruins, faça uma zoada extremamente ofensiva, usando termos chulos, provocativa, irônica e incisiva. Seja breve e direto. Os roast precisam ter comparações com outros membros. Não compare sempre com os bons, foque nos ruins também, "Olha ai, até tal player é melhor que vc nisso!", use criatividade.
     """
     try:
         logging.debug("Enviando prompt para ChatGPT: %s", prompt)
         response = client.responses.create(
             model="gpt-4o",
             instructions="Você é um analista de estatísticas de CS, conciso, sarcástico e provocador.",
-            input=prompt,
-            temperature=0.9,
-            max_tokens=500,
+            input=prompt
         )
         logging.debug("Resposta recebida: %s", response)
         return response.output_text.strip()
@@ -418,14 +416,14 @@ async def botadmins(ctx):
 async def stats(ctx, member: discord.Member):
     """
     !stats @Player
-    Retrieves aggregated stats for the mentioned player for the current month from S3.
-    Shows overall stats, per-map stats, and a ChatGPT-generated summary.
+    Recupera as estatísticas agregadas para o jogador mencionado para o mês atual (dados armazenados no S3).
+    Exibe estatísticas gerais, por mapa e um resumo gerado pelo ChatGPT que compara os stats do jogador com o leaderboard.
     """
     import json
     from datetime import datetime
     from botocore.exceptions import ClientError
 
-    # Load members.json from S3
+    # Carregar members.json do S3
     try:
         response = s3.get_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY)
         members_contents = response["Body"].read().decode("utf-8")
@@ -451,12 +449,13 @@ async def stats(ctx, member: discord.Member):
         stats_contents = stats_response["Body"].read().decode("utf-8")
         stats_data = json.loads(stats_contents)
     except ClientError:
-        await ctx.send(f"Stats de {member.display_name} para {month_year} não disponíveis.")
+        await ctx.send(f"Stats de {member.display_name} para {month_year} não disponíveis no S3.")
         return
     except Exception:
         await ctx.send("Erro ao carregar stats do S3.")
         return
 
+    # Criação do embed com estatísticas gerais
     embed = discord.Embed(
         title=f"Stats de {member.display_name} - {month_year}",
         color=0x00ff00
@@ -473,7 +472,7 @@ async def stats(ctx, member: discord.Member):
     embed.add_field(name="Avg FK/Match", value=f"{stats_data.get('average_first_kills_per_match', 0):.2f}", inline=True)
     embed.add_field(name="HS%", value=f"{stats_data.get('HS_percent', 0):.2f}%", inline=True)
 
-    # Per-map stats
+    # Estatísticas por mapa
     per_map_data = stats_data.get("per_map", {})
     per_map_str = ""
     if per_map_data:
@@ -487,14 +486,14 @@ async def stats(ctx, member: discord.Member):
             rounds = mstats.get("rounds", 0)
             kdr = kills / deaths if deaths > 0 else kills
             adr = damage / rounds if rounds > 0 else 0
-            per_map_str += f"**{map_name}**: Matches: {matches}, WR: {win_rate:.2f}%, KDR: {kdr:.2f}, ADR: {adr:.2f}\n"
+            per_map_str += f"**{map_name}**: Partidas: {matches}, WR: {win_rate:.2f}%, KDR: {kdr:.2f}, ADR: {adr:.2f}\n"
     else:
         per_map_str = "Sem dados por mapa."
+    # Se o texto ultrapassar 1024 caracteres, trunca (poderia ser dividido em vários campos)
+    embed.add_field(name="Por mapa", value=per_map_str[:1024], inline=False)
 
-    embed.add_field(name="Por mapa", value=per_map_str[:1024], inline=False)  # truncar se necessário
-
-    # Coletar stats dos outros jogadores
-    all_stats = {}
+    # Construir o leaderboard_summary a partir dos stats dos demais jogadores
+    leaderboard_data = []
     for other_id, info in members_data.items():
         other_gc = info.get("gc")
         if not other_gc or str(other_gc) == str(gc_id):
@@ -504,16 +503,19 @@ async def stats(ctx, member: discord.Member):
             other_response = s3.get_object(Bucket=BUCKET_NAME, Key=other_key)
             other_contents = other_response["Body"].read().decode("utf-8")
             other_stats = json.loads(other_contents)
-            all_stats[info.get("nickname", "Unknown")] = other_stats
+            leaderboard_data.append((info.get("nickname", "Unknown"), other_stats.get("KDR", 0)))
         except Exception:
             continue
+    leaderboard_data.sort(key=lambda x: x[1], reverse=True)
+    
+    leaderboard_summary = "Top jogadores: " + ", ".join([f"{n} (KDR: {kdr:.2f})" for n, kdr in leaderboard_data])
+    
+    # Gerar resumo com ChatGPT usando o leaderboard_summary
+    summary_text = generate_chatgpt_summary(stats_data, member.display_name, leaderboard_summary)
 
-    # Resumo gerado pelo ChatGPT
-    summary_text = generate_chatgpt_summary(stats_data, member.display_name, all_stats)
-
-    # Enviar embed e depois o resumo em mensagens separadas (se for muito grande)
     await ctx.send(embed=embed)
 
+    # Se o resumo for curto, envia em embed; caso contrário, envia em partes
     if len(summary_text) <= 1024:
         await ctx.send(embed=discord.Embed(title="🧠 ZapIA", description=summary_text, color=0x7289da))
     else:
@@ -521,6 +523,7 @@ async def stats(ctx, member: discord.Member):
         chunks = [summary_text[i:i+1900] for i in range(0, len(summary_text), 1900)]
         for chunk in chunks:
             await ctx.send(f"```{chunk}```")
+
 
 
 
