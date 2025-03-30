@@ -10,8 +10,8 @@ import boto3
 from datetime import datetime
 from botocore.exceptions import ClientError
 import os
-from openai import OpenAI
 import logging
+import openai
 
 # ---------------------------
 # Configuration
