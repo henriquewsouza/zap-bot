@@ -12,6 +12,7 @@ from botocore.exceptions import ClientError
 import os
 import logging
 import openai
+from openai import OpenAI
 
 # ---------------------------
 # Configuration
