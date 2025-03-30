@@ -589,7 +589,7 @@ async def stats(ctx, member: discord.Member):
             continue
 
     summary_text = generate_chatgpt_summary(stats_data, member.display_name, all_stats)
-    embed.add_field(name="🧠 ChatGPT Summary", value=summary_text, inline=False)
+    embed.add_field(name="🧠 ZapIA ", value=summary_text, inline=False)
     await ctx.send(embed=embed)
 
 
