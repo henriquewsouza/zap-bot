@@ -815,6 +815,248 @@ async def updateall(ctx):
     
     await ctx.send("Update complete for all players.")
 
+@bot.command(name="ranking_mix")
+async def ranking_mix(ctx):
+    """
+    !ranking_mix
+    Generates leaderboards for matches where BOTH teams have at least 1 group player.
+    Only these matches count towards each player's stats (KDR, ADR, etc.).
+    Displays a ranking of group players by KDR, ADR, Avg First Kills, and Win Rate.
+    """
+    import json
+    from datetime import datetime
+    from botocore.exceptions import ClientError
+
+    # Step 1: Load members.json from S3
+    try:
+        response = s3.get_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY)
+        members_contents = response["Body"].read().decode("utf-8")
+        members_data = json.loads(members_contents)
+    except Exception as e:
+        await ctx.send("Error loading members data from S3.")
+        return
+
+    # Build a dictionary: {discord_id_str: gc_id_str}
+    discord_to_gc = {}
+    for discord_id_str, info in members_data.items():
+        gc_id = info.get("gc")
+        if gc_id:
+            discord_to_gc[discord_id_str] = str(gc_id)
+
+    if not discord_to_gc:
+        await ctx.send("No group GC ids found in members data.")
+        return
+
+    month_year = datetime.now().strftime("%Y-%m")
+
+    # Step 2: List match objects from S3 with prefix "matches/"
+    try:
+        list_response = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix="matches/")
+    except Exception as e:
+        await ctx.send("Error listing match objects from S3.")
+        return
+    objects = list_response.get("Contents", [])
+    if not objects:
+        await ctx.send("No match objects found in S3.")
+        return
+
+    # We'll accumulate stats per GC ID
+    # mix_stats[gc_id] = { "kills":0, "deaths":0, "damage":0, "rounds":0, "wins":0, "matches":0, "first_kills":0 }
+    mix_stats = {}
+
+    def ensure_player(gc):
+        """Helper to initialize a player's stats in mix_stats if not present."""
+        if gc not in mix_stats:
+            mix_stats[gc] = {
+                "kills": 0,
+                "deaths": 0,
+                "damage": 0,
+                "rounds": 0,
+                "wins": 0,
+                "matches": 0,
+                "first_kills": 0
+            }
+
+    counted_matches = set()
+
+    # Step 3: Parse each match object
+    for obj in objects:
+        key = obj["Key"]
+        try:
+            obj_response = s3.get_object(Bucket=BUCKET_NAME, Key=key)
+            contents = obj_response["Body"].read().decode("utf-8")
+            match_data = json.loads(contents)
+        except Exception as e:
+            print(f"Error reading {key}: {e}")
+            continue
+
+        # Filter by match date (top-level "data" field, format "dd/mm/YYYY HH:MM")
+        match_date_str = match_data.get("data")
+        if not match_date_str:
+            continue
+        try:
+            match_date = datetime.strptime(match_date_str, "%d/%m/%Y %H:%M")
+        except Exception:
+            continue
+
+        if match_date.strftime("%Y-%m") != month_year:
+            continue
+
+        match_id = match_data.get("id") or match_data.get("match_id")
+        if not match_id:
+            match_id = key.split("/")[-1].split(".")[0]
+        if match_id in counted_matches:
+            continue
+        counted_matches.add(match_id)
+
+        jogos = match_data.get("jogos", {})
+        players_data = jogos.get("players", {})
+        score_a = int(jogos.get("score_a", 0))
+        score_b = int(jogos.get("score_b", 0))
+        winning_team = None
+        if score_a > score_b:
+            winning_team = "team_a"
+        elif score_b > score_a:
+            winning_team = "team_b"
+
+        # Step 4: Check how many group players on team_a vs team_b
+        team_a_group = []
+        team_b_group = []
+        for p in players_data.get("team_a", []):
+            gc = str(p.get("idplayer"))
+            if gc in discord_to_gc.values():
+                team_a_group.append(p)
+        for p in players_data.get("team_b", []):
+            gc = str(p.get("idplayer"))
+            if gc in discord_to_gc.values():
+                team_b_group.append(p)
+
+        # We only consider matches if both teams have >= 1 group player
+        if not team_a_group or not team_b_group:
+            continue
+
+        # Step 5: For each group player in the match, accumulate stats
+        # If that player's team is the winner, increment wins
+        # Also accumulate kills, deaths, damage, rounds, first_kills
+        for p in team_a_group:
+            gc = str(p.get("idplayer"))
+            ensure_player(gc)
+            mix_stats[gc]["matches"] += 1
+            # Kills, deaths, damage, rounds, first kills
+            try:
+                mix_stats[gc]["kills"] += int(p.get("nb_kill", 0))
+                mix_stats[gc]["deaths"] += int(p.get("death", 0))
+                mix_stats[gc]["damage"] += int(p.get("damage", 0))
+                mix_stats[gc]["rounds"] += int(p.get("rounds_played", 0))
+                mix_stats[gc]["first_kills"] += int(p.get("firstkill", 0))
+            except Exception:
+                pass
+            if winning_team == "team_a":
+                mix_stats[gc]["wins"] += 1
+
+        for p in team_b_group:
+            gc = str(p.get("idplayer"))
+            ensure_player(gc)
+            mix_stats[gc]["matches"] += 1
+            # Kills, deaths, damage, rounds, first kills
+            try:
+                mix_stats[gc]["kills"] += int(p.get("nb_kill", 0))
+                mix_stats[gc]["deaths"] += int(p.get("death", 0))
+                mix_stats[gc]["damage"] += int(p.get("damage", 0))
+                mix_stats[gc]["rounds"] += int(p.get("rounds_played", 0))
+                mix_stats[gc]["first_kills"] += int(p.get("firstkill", 0))
+            except Exception:
+                pass
+            if winning_team == "team_b":
+                mix_stats[gc]["wins"] += 1
+
+    # Step 6: Build final ranking
+    # For each group player in mix_stats, compute KDR, ADR, average first kills, and overall win rate
+    if not mix_stats:
+        await ctx.send("No 'mix' matches found this month (where both teams had group players).")
+        return
+
+    # Build a list of players with computed metrics
+    players_list = []
+    for gc, data in mix_stats.items():
+        kills = data["kills"]
+        deaths = data["deaths"]
+        damage = data["damage"]
+        rounds = data["rounds"]
+        matches = data["matches"]
+        wins = data["wins"]
+        first_kills = data["first_kills"]
+
+        kdr = kills / deaths if deaths > 0 else float(kills)
+        adr = damage / rounds if rounds > 0 else 0
+        avg_first = first_kills / matches if matches > 0 else 0
+        win_rate = (wins / matches * 100) if matches > 0 else 0
+
+        # Find the matching discord_id to get nickname
+        # We do a reverse lookup of gc => discord_id from discord_to_gc
+        # Then we get the nickname from members_data
+        # or default to f"Unknown({gc})"
+        discord_id_found = None
+        for disc_id_str, info in members_data.items():
+            if str(info.get("gc")) == gc:
+                discord_id_found = disc_id_str
+                break
+
+        nickname = f"Unknown({gc})"
+        if discord_id_found and "nickname" in members_data[discord_id_found]:
+            nickname = members_data[discord_id_found]["nickname"]
+
+        players_list.append({
+            "gc_id": gc,
+            "discord_id": discord_id_found,
+            "nickname": nickname,
+            "kdr": kdr,
+            "adr": adr,
+            "avg_first": avg_first,
+            "win_rate": win_rate,
+            "matches": matches
+        })
+
+    if not players_list:
+        await ctx.send("No group player data found in mix matches this month.")
+        return
+
+    # Helper to build ranking string
+    def build_ranking_str(sorted_list, metric_key, metric_name):
+        lines = []
+        for idx, stat in enumerate(sorted_list, start=1):
+            value = stat[metric_key]
+            lines.append(f"{idx}. {stat['nickname']} - {metric_name}: {value:.2f} ({stat['matches']} matches)")
+        return "\n".join(lines)
+
+    # Sort by each metric in descending order
+    kdr_sorted = sorted(players_list, key=lambda x: x["kdr"], reverse=True)
+    adr_sorted = sorted(players_list, key=lambda x: x["adr"], reverse=True)
+    first_sorted = sorted(players_list, key=lambda x: x["avg_first"], reverse=True)
+    win_rate_sorted = sorted(players_list, key=lambda x: x["win_rate"], reverse=True)
+
+    ranking_kdr = build_ranking_str(kdr_sorted, "kdr", "KDR")
+    ranking_adr = build_ranking_str(adr_sorted, "adr", "ADR")
+    ranking_first = build_ranking_str(first_sorted, "avg_first", "Avg First Kills")
+    ranking_win = build_ranking_str(win_rate_sorted, "win_rate", "Win Rate")
+
+    embed = discord.Embed(
+        title=f"**Mix Ranking** - {month_year}",
+        description=(
+            "These stats are taken **only** from matches where both teams "
+            "had at least one group player.\n"
+            "Metrics: KDR, ADR, Average First Kills, and Win Rate."
+        ),
+        color=0x9b59b6
+    )
+    embed.add_field(name="KDR Ranking", value=f"```{ranking_kdr}```", inline=False)
+    embed.add_field(name="ADR Ranking", value=f"```{ranking_adr}```", inline=False)
+    embed.add_field(name="Avg First Kills Ranking", value=f"```{ranking_first}```", inline=False)
+    embed.add_field(name="Win Rate Ranking", value=f"```{ranking_win}```", inline=False)
+
+    await ctx.send(embed=embed)
+
+
 
 
 @bot.event
