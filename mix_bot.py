@@ -181,34 +181,39 @@ def get_mix_members(ctx, exclusions, extras):
     return members
 
 
+
 def generate_chatgpt_summary(stats_data, player_name, all_players_data):
     """
-    Gera um resumo engraçado/roast com base nos stats do player usando o ChatGPT.
+    Gera um resumo (com elogios e roasting) baseado nos stats do player usando a nova interface da API do OpenAI.
     """
     prompt = f"""
-    Você é um analista de estatísticas de CS. Escreva um resumo sobre o jogador {player_name}.
-    Baseado nos stats:
+Você é um analista de estatísticas de CS. Escreva um resumo sobre o jogador {player_name}.
+Baseado nos stats:
 
-    - KDR: {stats_data.get('KDR', 0):.2f}
-    - ADR: {stats_data.get('ADR', 0):.2f}
-    - Win Rate: {stats_data.get('overall_win_rate', 0):.2f}%
-    - First Kills por partida: {stats_data.get('average_first_kills_per_match', 0):.2f}
-    - HS%: {stats_data.get('HS_percent', 0):.2f}%
+- KDR: {stats_data.get('KDR', 0):.2f}
+- ADR: {stats_data.get('ADR', 0):.2f}
+- Win Rate: {stats_data.get('overall_win_rate', 0):.2f}%
+- First Kills por partida: {stats_data.get('average_first_kills_per_match', 0):.2f}
+- HS%: {stats_data.get('HS_percent', 0):.2f}%
 
-    Compare com a média dos outros jogadores se achar relevante. Comente sobre stats relevantes e elogie onde ele foi bem de maneira normal e, em seguida, faça uma zoada sádica e irônica, principalmente nas áreas ruins.
-    Não evite termos ofensivos; pode ser provocativo. Use comparações entre membros sempre que possível!
+Compare com a média dos outros jogadores se achar relevante.
+Comente sobre os pontos fortes e fracos, elogie quando for adequado e faça uma zoada sádica e irônica, principalmente nas áreas que estão ruins.
+Não evite termos provocativos.
     """
-
+    
     try:
         logging.debug("Enviando prompt para ChatGPT: %s", prompt)
         response = openai.ChatCompletion.create(
             model="gpt-4o",
-            messages=[{"role": "user", "content": prompt}],
+            messages=[
+                {"role": "system", "content": "Você é um analista de estatísticas de CS, sarcástico e provocador."},
+                {"role": "user", "content": prompt}
+            ],
             temperature=0.9,
             max_tokens=1500,
         )
         logging.debug("Resposta recebida: %s", response)
-        return response.choices[0].message["content"]
+        return response.choices[0].message.content.strip()
     except Exception as e:
         logging.exception("Erro ao gerar o resumo com ChatGPT:")
         return "Erro ao gerar o resumo com o ChatGPT 🧠."
