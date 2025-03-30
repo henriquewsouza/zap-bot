@@ -195,7 +195,7 @@ Baseado nos stats:
 - HS%: {stats_data.get('HS_percent', 0):.2f}%
 
 Compare com a média dos outros jogadores se achar relevante. Comente sobre stats relevantes e elogie onde ele foi bem de maneira séria(normal) e depois uma zoada sádica e irônica, principalmente nas áreas ruins.
-Não evite termos ofensivos, pode ser provocativo. Tente sempre usar comparações entre membros
+Não evite termos ofensivos, pode ser provocativo. Tente sempre usar comparações entre membros! Caso o player esteja com stats muito baixos em comparação aos outros, pode ser muito ofensivo, e nem precisa elogiar nada.
     """
 
     try:
