@@ -601,7 +601,7 @@ Dados agregados do grupo para o mês {month_year}:
 
 Pergunta: {question}
 
-Responda de forma concisa e provocativa, elogiando onde os números estão bons e fazendo um roast extremamente ofensivo e irônico nas áreas fracas, com comparações entre os jogadores.
+Responda de forma concisa e provocativa, elogiando onde os números estão bons e fazendo um roast extremamente ofensivo e irônico nas áreas fracas, com comparações entre os jogadores. Foque nos stats, o context deve ser apenas usados para detalhe, uma ou duas frases no máximo da resposta total.
     """
     try:
         logging.debug("Enviando prompt para ChatGPT: %s", prompt)
