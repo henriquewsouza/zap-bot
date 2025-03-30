@@ -28,7 +28,6 @@ ENDPOINT_URL = "https://s3.us-east-1.amazonaws.com"
 
 # Create an S3 client using the custom endpoint
 s3 = boto3.client("s3", endpoint_url=ENDPOINT_URL)
-openai.api_key = None  # Será definido depois
 
 # ---------------------------
 # Persistence Functions
@@ -1216,5 +1215,5 @@ async def on_ready():
 if __name__ == '__main__':
     TOKEN = getpass.getpass("Enter your Discord token: ")
     OPENAI_API_KEY = getpass.getpass("Enter your OpenAI API key: ")
-    openai.api_key = OPENAI_API_KEY
+    openai.api_key = os.getenv("OPENAI_API_KEY")
     bot.run(TOKEN)
