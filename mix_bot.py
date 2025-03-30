@@ -202,7 +202,7 @@ Você é um analista de estatísticas de CS. Escreva um resumo conciso sobre o j
 Compare esses números com a média do grupo (leaderboard):
 {leaderboard_summary}
 
-Se os números forem bons, elogie de forma sincera; se forem ruins, faça uma zoada extremamente ofensiva, usando termos chulos, provocativa, irônica e incisiva. Seja breve e direto. Os roast precisam ter comparações com outros membros. Não compare sempre com os bons, foque nos ruins também, "Olha ai, até tal player é melhor que vc nisso!", use criatividade.
+Se os números forem bons, elogie de forma sincera; se forem ruins, faça uma zoada extremamente ofensiva, usando termos chulos, provocativa, irônica e incisiva. Seja breve e direto. Os roast precisam ter comparações com outros membros. Não compare sempre com os bons, foque nos ruins também, "Olha ai, até tal player é melhor que vc nisso!", use criatividade. Veja sempre onde a pessoa está nas médias, por exemplo first kills abaixo de 2.3 normalmente é ruim! não precisa bater stats por stats, escreva um resumo livre!
     """
     try:
         logging.debug("Enviando prompt para ChatGPT: %s", prompt)
