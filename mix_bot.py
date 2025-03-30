@@ -17,6 +17,7 @@ import openai
 
 # Discord Bot Configuration
 BOT_ADMINS = [291617683416285194, 701661704844738580]
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Lightsail Bucket (S3‑compatible) Configuration
 BUCKET_NAME = "bucket-6sk08y"       # Your Lightsail bucket name
@@ -183,30 +184,32 @@ def generate_chatgpt_summary(stats_data, player_name, all_players_data):
     """
     Gera um resumo engraçado/roast com base nos stats do player usando o ChatGPT.
     """
-    # Monta prompt com stats
     prompt = f"""
-Você é um analista de estatiscas de CS. Escreva um resumo sobre o jogador {player_name}.
-Baseado nos stats:
+    Você é um analista de estatísticas de CS. Escreva um resumo sobre o jogador {player_name}.
+    Baseado nos stats:
 
-- KDR: {stats_data.get('KDR', 0):.2f}
-- ADR: {stats_data.get('ADR', 0):.2f}
-- Win Rate: {stats_data.get('overall_win_rate', 0):.2f}%
-- First Kills por partida: {stats_data.get('average_first_kills_per_match', 0):.2f}
-- HS%: {stats_data.get('HS_percent', 0):.2f}%
+    - KDR: {stats_data.get('KDR', 0):.2f}
+    - ADR: {stats_data.get('ADR', 0):.2f}
+    - Win Rate: {stats_data.get('overall_win_rate', 0):.2f}%
+    - First Kills por partida: {stats_data.get('average_first_kills_per_match', 0):.2f}
+    - HS%: {stats_data.get('HS_percent', 0):.2f}%
 
-Compare com a média dos outros jogadores se achar relevante. Comente sobre stats relevantes e elogie onde ele foi bem de maneira séria(normal) e depois uma zoada sádica e irônica, principalmente nas áreas ruins.
-Não evite termos ofensivos, pode ser provocativo. Tente sempre usar comparações entre membros! Caso o player esteja com stats muito baixos em comparação aos outros, pode ser muito ofensivo, e nem precisa elogiar nada.
+    Compare com a média dos outros jogadores se achar relevante. Comente sobre stats relevantes e elogie onde ele foi bem de maneira normal e, em seguida, faça uma zoada sádica e irônica, principalmente nas áreas ruins.
+    Não evite termos ofensivos; pode ser provocativo. Use comparações entre membros sempre que possível!
     """
 
     try:
+        logging.debug("Enviando prompt para ChatGPT: %s", prompt)
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.9,
-            max_tokens=150,
+            max_tokens=1500,
         )
+        logging.debug("Resposta recebida: %s", response)
         return response.choices[0].message["content"]
     except Exception as e:
+        logging.exception("Erro ao gerar o resumo com ChatGPT:")
         return "Erro ao gerar o resumo com o ChatGPT 🧠."
 
 # ---------------------------
