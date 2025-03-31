@@ -243,9 +243,7 @@ Utilize comparações e um tom irônico, inclusive com provocações.
         response = client.responses.create(
             model="gpt-4o",
             instructions="Você é um analista esportivo de CS, provocativo e sarcástico.",
-            input=prompt,
-            temperature=0.9,
-            max_tokens=300,
+            input=prompt
         )
         logging.debug("Resposta da previsão: %s", response)
         return response.output_text.strip()
