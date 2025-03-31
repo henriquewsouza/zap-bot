@@ -227,16 +227,43 @@ def split_string(text, chunk_size=1024):
 # Bot Commands
 # ---------------------------
 
+def generate_match_prediction(team_message):
+    """
+    Gera uma previsão para a partida com base na composição dos times (team_message).
+    """
+    prompt = f"""
+Você é um analista esportivo de CS, provocativo, sarcástico e incisivo. Dada a seguinte composição de times:
+{team_message}
+
+Faça uma previsão concisa do resultado desta partida, indicando qual time tem mais chances de vencer e por quê.
+Utilize comparações e um tom irônico, inclusive com provocações.
+    """
+    try:
+        logging.debug("Enviando prompt para previsão: %s", prompt)
+        response = client.responses.create(
+            model="gpt-4o",
+            instructions="Você é um analista esportivo de CS, provocativo e sarcástico.",
+            input=prompt,
+            temperature=0.9,
+            max_tokens=300,
+        )
+        logging.debug("Resposta da previsão: %s", response)
+        return response.output_text.strip()
+    except Exception as e:
+        logging.exception("Erro ao gerar a previsão:")
+        return "Erro ao gerar a previsão da partida."
+
 @bot.command(name="mix")
 async def mix_teams(ctx):
     """
     !mix [<number>] [--exclude @User ...] [--extra @User ...]
-    Generates one or more balanced team partitions from non‑bot members.
-    If any member does not have a level set, their name is reported.
+    Gera uma ou mais combinações de times balanceados a partir dos membros do canal de voz.
+    Se algum membro não tiver nível definido, ele é reportado.
+    Ao final, é gerada uma previsão da partida com base na composição dos times.
     """
     global mix_in_progress
     if mix_in_progress:
-        await ctx.send("A team mix is already in progress. Please wait until it is finished.")
+        await ctx.send("Um mix de times já está em andamento. Por favor, aguarde.")
         return
 
     mix_in_progress = True
@@ -245,18 +272,18 @@ async def mix_teams(ctx):
         combination_count, exclusions, extras = await parse_mix_args(ctx)
         members = get_mix_members(ctx, exclusions, extras)
         if len(members) < 2:
-            await channel.send("There are not enough members to form teams.")
+            await channel.send("Não há membros suficientes para formar times.")
             return
         
         missing_members = [m for m in members if m.id not in user_levels]
         if missing_members:
             missing_names = ", ".join(m.display_name for m in missing_members)
-            await channel.send("The following members do not have a level set: " + missing_names)
+            await channel.send("Os seguintes membros não têm nível definido: " + missing_names)
             return
 
         partitions = generate_valid_partitions(members)
         if not partitions:
-            await channel.send("No valid team partitions available with the current constraints.")
+            await channel.send("Não há combinações válidas de times com os critérios atuais.")
             return
 
         partitions.sort(key=lambda x: x[0])
@@ -264,13 +291,21 @@ async def mix_teams(ctx):
         messages = []
         for i in range(combination_count):
             diff, team1, team2 = partitions[i]
-            message = f"**Combination #{i+1}:**\n" + build_team_message(team1, team2)
-            messages.append(message)
+            team_msg = f"**Combination #{i+1}:**\n" + build_team_message(team1, team2)
+            messages.append(team_msg)
         
-        for message in messages:
-            await channel.send(message)
+        # Envia todas as combinações geradas
+        for msg in messages:
+            await channel.send(msg)
+
+        # Gera a previsão da partida com base na melhor combinação (primeira)
+        if messages:
+            best_team_message = messages[0]
+            prediction = generate_match_prediction(best_team_message)
+            await channel.send(f"**Previsão da Partida:**\n{prediction}")
     finally:
         mix_in_progress = False
+
 
 @bot.command(name="arere")
 async def arere(ctx):
