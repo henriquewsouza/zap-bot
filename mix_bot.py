@@ -126,15 +126,15 @@ async def send_mix_result(channel, team1, team2):
     await channel.send("**Teams Generated:**\n" + message)
 
 # ---------------------------
-# Parsing Helpers for Mix Command
+# Parsing Helpers for Mix Command (Updated)
 # ---------------------------
 
 async def parse_mix_args(ctx):
     """
     Parse command arguments from ctx.message.content.
     Expected format:
-      !mix [<number>] [--exclude or -e] <member mentions> [--extra or -x] <member mentions>
-    Returns a tuple: (combination_count, exclusions, extras)
+      !mix [<number>] [--exclude or -e] <member mentions> [--extra or -x] <member mentions> [--duelo or -t] <member mentions>
+    Returns a tuple: (combination_count, exclusions, extras, duelo)
     """
     args = ctx.message.content.split()[1:]  # skip the command name
     combination_count = 1  # default value
@@ -145,12 +145,15 @@ async def parse_mix_args(ctx):
     mode = None
     exclusions = []
     extras = []
+    duelo = []
     converter = commands.MemberConverter()
     for arg in args:
         if arg.lower() in ("-e", "--exclude"):
             mode = "exclude"
         elif arg.lower() in ("-x", "--extra"):
             mode = "extra"
+        elif arg.lower() in ("-t", "--duelo"):
+            mode = "duelo"
         else:
             try:
                 member = await converter.convert(ctx, arg)
@@ -162,7 +165,9 @@ async def parse_mix_args(ctx):
                 exclusions.append(member)
             elif mode == "extra":
                 extras.append(member)
-    return combination_count, exclusions, extras
+            elif mode == "duelo":
+                duelo.append(member)
+    return combination_count, exclusions, extras, duelo
 
 def get_mix_members(ctx, exclusions, extras):
     """
@@ -230,9 +235,10 @@ def split_string(text, chunk_size=1024):
 @bot.command(name="mix")
 async def mix_teams(ctx):
     """
-    !mix [<number>] [--exclude @User ...] [--extra @User ...]
+    !mix [<number>] [--exclude @User ...] [--extra @User ...] [--duelo @User @User]
     Generates one or more balanced team partitions from non‑bot members.
-    If any member does not have a level set, their name is reported.
+    With --duelo flag, the two specified members will not be placed on the same team.
+    Additionally, if the requester is not a bot admin, they cannot be one of the duelo members.
     """
     global mix_in_progress
     if mix_in_progress:
@@ -242,7 +248,7 @@ async def mix_teams(ctx):
     mix_in_progress = True
     try:
         channel = ctx.channel
-        combination_count, exclusions, extras = await parse_mix_args(ctx)
+        combination_count, exclusions, extras, duelo = await parse_mix_args(ctx)
         members = get_mix_members(ctx, exclusions, extras)
         if len(members) < 2:
             await channel.send("There are not enough members to form teams.")
@@ -255,6 +261,30 @@ async def mix_teams(ctx):
             return
 
         partitions = generate_valid_partitions(members)
+        
+        # Apply the --duelo flag if provided
+        if duelo:
+            if len(duelo) != 2:
+                await channel.send("Please provide exactly 2 members for the --duelo flag.")
+                return
+            # Non-bot-admin users cannot include themselves as one of the duelo parameters.
+            if ctx.author.id not in BOT_ADMINS and any(member.id == ctx.author.id for member in duelo):
+                await channel.send("You cannot use --duelo flag with yourself as one of the parameters.")
+                return
+
+            # Helper function to check if a member is in a team (by comparing IDs).
+            def in_team(team, member):
+                return any(m.id == member.id for m in team)
+            
+            # Filter out partitions where both duelo members end up on the same team.
+            partitions = [
+                p for p in partitions 
+                if not (
+                    (in_team(p[1], duelo[0]) and in_team(p[1], duelo[1])) or 
+                    (in_team(p[2], duelo[0]) and in_team(p[2], duelo[1]))
+                )
+            ]
+
         if not partitions:
             await channel.send("No valid team partitions available with the current constraints.")
             return
