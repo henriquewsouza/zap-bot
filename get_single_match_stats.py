@@ -14,16 +14,19 @@ def fetch_match_stats(match_id):
         s3.head_object(Bucket=BUCKET_NAME, Key=s3_key)
         print(f"Stats for match {match_id} already exist on S3. Skipping.")
         return s3_key
-    except s3.exceptions.ClientError as e:
+    except s3.exceptions.ClientError:
         # Object not found; continue to fetch.
         pass
 
     url = f"https://gamersclub.com.br/lobby/match/{match_id}/1"
+    # Use the same headers as your working curl command.
     headers = {
         "accept": "application/json, text/javascript, */*; q=0.01",
         "accept-language": "en-US,en;q=0.9,pt-BR;q=0.8,pt;q=0.7",
         "priority": "u=1, i",
-        "referer": f"https://gamersclub.com.br/lobby/match/{match_id}",
+        # Use the fixed referer from your working curl command:
+        "referer": "https://gamersclub.com.br/lobby/match/23307626",
+        "origin": "https://gamersclub.com.br",
         "sec-ch-ua": "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\"",
         "sec-ch-ua-arch": "\"arm\"",
         "sec-ch-ua-bitness": "\"64\"",
@@ -50,8 +53,7 @@ def fetch_match_stats(match_id):
         return None
 
     print("Response status code:", response.status_code)
-    # Print first 500 characters to inspect the response
-    print("Response content (first 500 chars):", response.text[:50000])
+    print("Response content (first 500 chars):", response.text[:500])
     if response.status_code != 200:
         print(f"Error fetching match {match_id}: {response.status_code}")
         return None
