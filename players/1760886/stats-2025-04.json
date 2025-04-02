@@ -1,19 +1,31 @@
 {
     "player_id": 1760886,
     "month_year": "2025-04",
-    "total_matches": 0,
+    "total_matches": 1,
     "total_wins": 0,
-    "total_losses": 0,
-    "overall_win_rate": 0,
-    "total_kills": 0,
-    "total_deaths": 0,
-    "KDR": 0.0,
-    "total_damage": 0,
-    "total_rounds": 0,
-    "ADR": 0,
-    "total_first_kills": 0,
-    "average_first_kills_per_match": 0,
-    "total_headshots": 0,
-    "HS_percent": 0,
-    "per_map": {}
+    "total_losses": 1,
+    "overall_win_rate": 0.0,
+    "total_kills": 25,
+    "total_deaths": 23,
+    "KDR": 1.0869565217391304,
+    "total_damage": 2606,
+    "total_rounds": 30,
+    "ADR": 86.86666666666666,
+    "total_first_kills": 3,
+    "average_first_kills_per_match": 3.0,
+    "total_headshots": 6,
+    "HS_percent": 24.0,
+    "per_map": {
+        "de_inferno": {
+            "matches": 1,
+            "wins": 0,
+            "win_rate": 0.0,
+            "kills": 25,
+            "deaths": 23,
+            "damage": 2606,
+            "rounds": 30,
+            "kdr": 1.0869565217391304,
+            "adr": 86.86666666666666
+        }
+    }
 }
