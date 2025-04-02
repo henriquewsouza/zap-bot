@@ -1,12 +1,3 @@
-import requests
-import json
-import boto3
-
-# S3 Configuration
-BUCKET_NAME = "bucket-6sk08y"
-ENDPOINT_URL = "https://s3.us-east-1.amazonaws.com"
-s3 = boto3.client("s3", endpoint_url=ENDPOINT_URL)
-
 import cloudscraper
 import json
 
@@ -16,7 +7,7 @@ def fetch_match_stats(match_id):
         s3.head_object(Bucket=BUCKET_NAME, Key=s3_key)
         print(f"Stats for match {match_id} already exist on S3. Skipping.")
         return s3_key
-    except s3.exceptions.ClientError as e:
+    except s3.exceptions.ClientError:
         # Object does not exist; proceed with fetching.
         pass
 
@@ -25,7 +16,8 @@ def fetch_match_stats(match_id):
         "accept": "application/json, text/javascript, */*; q=0.01",
         "accept-language": "en-US,en;q=0.9,pt-BR;q=0.8,pt;q=0.7",
         "priority": "u=1, i",
-        "referer": "https://gamersclub.com.br/lobby/match/23307626",
+        # You might experiment with setting referer to the same match ID.
+        "referer": f"https://gamersclub.com.br/lobby/match/{match_id}",
         "sec-ch-ua": "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\"",
         "sec-ch-ua-arch": "\"arm\"",
         "sec-ch-ua-bitness": "\"64\"",
@@ -42,15 +34,36 @@ def fetch_match_stats(match_id):
         "x-requested-with": "XMLHttpRequest",
         "Cookie": "gclubsess=6de293ceadbd014c40c4c7c84b34a8b53b5f16d7"
     }
+
     print(f"Fetching stats for match {match_id} using cloudscraper...")
     scraper = cloudscraper.create_scraper()
-    response = scraper.get(url, headers=headers)
-    print("Response content:", response.text)
+    try:
+        response = scraper.get(url, headers=headers, timeout=15)
+    except Exception as e:
+        print("Error during scraper.get:", e)
+        return None
+
+    print("Response status code:", response.status_code)
+    # Print the first 500 characters to inspect the output
+    print("Response content (first 500 chars):", response.text[:500])
     if response.status_code != 200:
         print(f"Error fetching match {match_id}: {response.status_code}")
         return None
-    match_data = response.json()
+    try:
+        match_data = response.json()
+    except Exception as e:
+        print("Error decoding JSON:", e)
+        return None
+
     json_data = json.dumps(match_data, indent=4)
     s3.put_object(Bucket=BUCKET_NAME, Key=s3_key, Body=json_data.encode("utf-8"))
     print(f"Saved stats for match {match_id} to S3 key: {s3_key}")
     return s3_key
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) < 2:
+        print("Usage: python get_single_match_stats.py <match_id>")
+        sys.exit(1)
+    match_id = sys.argv[1]
+    fetch_match_stats(match_id)
