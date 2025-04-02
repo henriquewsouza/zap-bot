@@ -2,23 +2,20 @@ import requests
 import time
 import random
 import json
+import os
 from datetime import datetime
-import boto3
-
-# S3 Configuration
-BUCKET_NAME = "bucket-6sk08y"
-ENDPOINT_URL = "https://s3.us-east-1.amazonaws.com"
-s3 = boto3.client("s3", endpoint_url=ENDPOINT_URL)
 
 def get_match_history(gc_id, month_year):
     """
     Fetches match history for a given GC id and month (YYYY-MM) from the API.
-    Saves the history JSON to S3 under key:
-      players/{gc_id}/{gc_id}-{month_year}-history.json
-    Returns the S3 key.
+    Saves the history JSON to a local file under players/<gc_id>/<gc_id>-<month_year>-history.json.
+    Returns the local filename.
     """
     file_name = f"{gc_id}-{month_year}-history.json"
-    s3_key = f"players/{gc_id}/{file_name}"
+    dir_path = os.path.join("players", str(gc_id))
+    os.makedirs(dir_path, exist_ok=True)
+    local_file = os.path.join(dir_path, file_name)
+    
     results = []
     
     headers = {
@@ -70,9 +67,10 @@ def get_match_history(gc_id, month_year):
         time.sleep(random.uniform(1, 2))
     
     json_data = json.dumps(results, indent=4)
-    s3.put_object(Bucket=BUCKET_NAME, Key=s3_key, Body=json_data.encode("utf-8"))
-    print(f"Match history for GC {gc_id} saved to S3 key: {s3_key}")
-    return s3_key
+    with open(local_file, "w", encoding="utf-8") as f:
+        f.write(json_data)
+    print(f"Match history for GC {gc_id} saved to local file: {local_file}")
+    return local_file
 
 if __name__ == "__main__":
     gc_id = input("Enter GC id: ").strip()

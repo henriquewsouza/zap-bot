@@ -1,0 +1,27 @@
+[
+    {
+        "match_id": 23361181,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 23362706,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 23363081,
+        "map": "de_anubis",
+        "win": 0
+    },
+    {
+        "match_id": 23363526,
+        "map": "de_inferno",
+        "win": 1
+    },
+    {
+        "match_id": 23367983,
+        "map": "de_anubis",
+        "win": 0
+    }
+]
