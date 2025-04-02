@@ -1,10 +1,12 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.options import Options
 import time
 import json
 
 def fetch_match_stats_with_selenium(match_id):
     url = f"https://gamersclub.com.br/lobby/match/{match_id}/1"
+    driver = webdriver.Chrome(executable_path='/usr/bin/chromedriver', options=chrome_options)
     
     chrome_options = Options()
     chrome_options.add_argument("--headless")
