@@ -14,7 +14,6 @@ def fetch_match_stats_with_selenium(match_id):
     # Optionally add more arguments to mimic a real browser
     chrome_options.add_argument("--window-size=1920,1080")
     
-    driver = webdriver.Chrome(options=chrome_options)
     driver.get(url)
     
     # Wait for Cloudflare to process the challenge. Adjust sleep time if needed.
