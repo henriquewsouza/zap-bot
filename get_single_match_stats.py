@@ -51,7 +51,7 @@ def fetch_match_stats(match_id):
 
     print("Response status code:", response.status_code)
     # Print first 500 characters to inspect the response
-    print("Response content (first 500 chars):", response.text[:500])
+    print("Response content (first 500 chars):", response.text[:50000])
     if response.status_code != 200:
         print(f"Error fetching match {match_id}: {response.status_code}")
         return None
