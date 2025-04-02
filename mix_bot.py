@@ -13,6 +13,7 @@ import os
 import logging
 import openai
 from openai import OpenAI
+import json
 
 # ---------------------------
 # Configuration
@@ -1274,8 +1275,11 @@ async def on_ready():
         print("------")
 
 if __name__ == '__main__':
-    TOKEN = getpass.getpass("Enter your Discord token: ")
-    OPENAI_API_KEY = getpass.getpass("Enter your OpenAI API key: ")
+    with open("config.json", "r") as config_file:
+        config = json.load(config_file)
+
+    TOKEN = config["discord_token"]
+    OPENAI_API_KEY = config["openai_api_key"]
     client = OpenAI(
     # This is the default and can be omitted
     api_key=OPENAI_API_KEY,
