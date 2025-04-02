@@ -1,36 +1,28 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
+import undetected_chromedriver as uc
 import time
 import json
 
-def fetch_match_stats_with_selenium(match_id):
+def fetch_match_stats_with_uc(match_id):
     url = f"https://gamersclub.com.br/lobby/match/{match_id}/1"
     
-    # Configure Chrome options
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--window-size=1920,1080")
+    options = uc.ChromeOptions()
+    options.headless = True  # or set to False for testing
+    options.add_argument("--window-size=1920,1080")
     
-    # Create a Service object with the path to chromedriver
-    service = Service('/usr/bin/chromedriver')
-    
-    # Initialize the WebDriver with the service and options
-    driver = webdriver.Chrome(service=service, options=chrome_options)
+    driver = uc.Chrome(options=options)
     driver.get(url)
     
-    # Wait for Cloudflare to process the challenge. Adjust sleep time if needed.
     time.sleep(10)
     
-    # Get the page source once the challenge is solved
     page_source = driver.page_source
     driver.quit()
     
     try:
         data = json.loads(page_source)
+        print("Successfully loaded JSON data!")
     except Exception as e:
-        print("Error decoding JSON from Selenium response:", e)
+        print("Error decoding JSON from undetected_chromedriver response:", e)
+        print("Page source:", page_source[:500])
         return None
     
     local_filename = f"matches_{match_id}.json"
@@ -42,7 +34,7 @@ def fetch_match_stats_with_selenium(match_id):
 if __name__ == "__main__":
     import sys
     if len(sys.argv) < 2:
-        print("Usage: python get_single_match_stats_selenium.py <match_id>")
+        print("Usage: python get_single_match_stats_uc.py <match_id>")
         sys.exit(1)
     match_id = sys.argv[1]
-    fetch_match_stats_with_selenium(match_id)
+    fetch_match_stats_with_uc(match_id)
