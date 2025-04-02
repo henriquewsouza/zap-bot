@@ -47,9 +47,11 @@ def fetch_match_stats(match_id):
     }
     print(f"Fetching stats for match {match_id}...")
     response = requests.get(url, headers=headers)
+    print(f"Response content: {response.text}")
     if response.status_code != 200:
         print(f"Error fetching match {match_id}: {response.status_code}")
         return None
+
     match_data = response.json()
     json_data = json.dumps(match_data, indent=4)
     s3.put_object(Bucket=BUCKET_NAME, Key=s3_key, Body=json_data.encode("utf-8"))
