@@ -1,19 +1,18 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.options import Options
 import time
 import json
 
 def fetch_match_stats_with_selenium(match_id):
     url = f"https://gamersclub.com.br/lobby/match/{match_id}/1"
-    driver = webdriver.Chrome(executable_path='/usr/bin/chromedriver', options=chrome_options)
     
+    # Define and configure chrome_options before using it.
     chrome_options = Options()
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--disable-gpu")
-    # Optionally add more arguments to mimic a real browser
     chrome_options.add_argument("--window-size=1920,1080")
     
+    driver = webdriver.Chrome(executable_path='/usr/bin/chromedriver', options=chrome_options)
     driver.get(url)
     
     # Wait for Cloudflare to process the challenge. Adjust sleep time if needed.
