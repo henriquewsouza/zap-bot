@@ -1,14 +1,21 @@
 import cloudscraper
 import json
+import boto3
+
+# S3 Configuration
+BUCKET_NAME = "bucket-6sk08y"
+ENDPOINT_URL = "https://s3.us-east-1.amazonaws.com"
+s3 = boto3.client("s3", endpoint_url=ENDPOINT_URL)
 
 def fetch_match_stats(match_id):
     s3_key = f"matches/{match_id}.json"
     try:
+        # Check if the object already exists on S3
         s3.head_object(Bucket=BUCKET_NAME, Key=s3_key)
         print(f"Stats for match {match_id} already exist on S3. Skipping.")
         return s3_key
-    except s3.exceptions.ClientError:
-        # Object does not exist; proceed with fetching.
+    except s3.exceptions.ClientError as e:
+        # Object not found; continue to fetch.
         pass
 
     url = f"https://gamersclub.com.br/lobby/match/{match_id}/1"
@@ -16,7 +23,6 @@ def fetch_match_stats(match_id):
         "accept": "application/json, text/javascript, */*; q=0.01",
         "accept-language": "en-US,en;q=0.9,pt-BR;q=0.8,pt;q=0.7",
         "priority": "u=1, i",
-        # You might experiment with setting referer to the same match ID.
         "referer": f"https://gamersclub.com.br/lobby/match/{match_id}",
         "sec-ch-ua": "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\"",
         "sec-ch-ua-arch": "\"arm\"",
@@ -44,11 +50,12 @@ def fetch_match_stats(match_id):
         return None
 
     print("Response status code:", response.status_code)
-    # Print the first 500 characters to inspect the output
+    # Print first 500 characters to inspect the response
     print("Response content (first 500 chars):", response.text[:500])
     if response.status_code != 200:
         print(f"Error fetching match {match_id}: {response.status_code}")
         return None
+
     try:
         match_data = response.json()
     except Exception as e:
@@ -56,8 +63,13 @@ def fetch_match_stats(match_id):
         return None
 
     json_data = json.dumps(match_data, indent=4)
-    s3.put_object(Bucket=BUCKET_NAME, Key=s3_key, Body=json_data.encode("utf-8"))
-    print(f"Saved stats for match {match_id} to S3 key: {s3_key}")
+    try:
+        s3.put_object(Bucket=BUCKET_NAME, Key=s3_key, Body=json_data.encode("utf-8"))
+        print(f"Saved stats for match {match_id} to S3 key: {s3_key}")
+    except Exception as e:
+        print("Error saving to S3:", e)
+        return None
+
     return s3_key
 
 if __name__ == "__main__":
