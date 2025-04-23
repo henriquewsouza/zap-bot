@@ -8,5 +8,50 @@
         "match_id": 23362456,
         "map": "de_nuke",
         "win": 1
+    },
+    {
+        "match_id": 23369185,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 23375937,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 23396073,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 23396160,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 23398718,
+        "map": "de_nuke",
+        "win": 0
+    },
+    {
+        "match_id": 23462339,
+        "map": "de_ancient",
+        "win": 1
+    },
+    {
+        "match_id": 23509527,
+        "map": "de_cache_nova",
+        "win": 1
+    },
+    {
+        "match_id": 23510195,
+        "map": "de_anubis",
+        "win": 0
+    },
+    {
+        "match_id": 23518640,
+        "map": "de_ancient",
+        "win": 0
     }
 ]

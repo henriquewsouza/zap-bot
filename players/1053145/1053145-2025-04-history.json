@@ -23,5 +23,20 @@
         "match_id": 23363526,
         "map": "de_inferno",
         "win": 1
+    },
+    {
+        "match_id": 23369816,
+        "map": "de_ancient",
+        "win": 0
+    },
+    {
+        "match_id": 23370148,
+        "map": "de_anubis",
+        "win": 1
+    },
+    {
+        "match_id": 23370473,
+        "map": "de_dust2",
+        "win": 0
     }
 ]
