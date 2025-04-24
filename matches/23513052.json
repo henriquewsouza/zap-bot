@@ -18,7 +18,7 @@
     "game": "cs2",
     "prob_win_b": 50.2,
     "prob_win_a": 49.8,
-    "timeAfterEnd": 2611,
+    "timeAfterEnd": 2827,
     "season": {
         "startDate": "2025-02-07 09:00:00",
         "endDate": "2025-05-11 21:00:00",
@@ -141,7 +141,7 @@
                         "type": "premium",
                         "avatarHtml": "<div class=\"gc-avatar medium\">\n    <span class=\"gc-avatar-frame\" style=\"background-image: url();\"></span>\n    <svg viewBox=\"0 0 42 42\" class=\"gc-avatar-donut\">\n        <circle class=\"donut-hole\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\"></circle>\n        <circle class=\"donut-ring\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\" stroke=\"#92AA00\"></circle>\n        <circle class=\"donut-segment\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\" stroke=\"#000\" stroke-opacity=\".7\" stroke-width=\"1\" stroke-dasharray=\"0 100\" stroke-dashoffset=\"25\"></circle>\n    </svg>\n    <img\n        class=\"gc-avatar-image\"\n        src=\"https://static.gamersclub.com.br/players/avatar/2192781/2192781_medium.jpg\"\n        alt=\"---\"\n        onerror=\"this.style.display = 'none';this.setAttribute('error', true);\" />\n    <span class=\"gc-avatar-fallback\"></span>\n</div>\n",
                         "levelHtml": "\n\n  <span class=\"new-badge-level new-badge-level-18\">\n    \n          <span class=\"badge-level-value\">18</span>\n      </span>\n\n",
-                        "leaderboardPosition": 12832,
+                        "leaderboardPosition": 12845,
                         "showLeaderboardPosition": false,
                         "leaderboardClassName": "topall"
                     },
@@ -249,7 +249,7 @@
                         "type": "premium",
                         "avatarHtml": "<div class=\"gc-avatar medium\">\n    <span class=\"gc-avatar-frame\" style=\"background-image: url();\"></span>\n    <svg viewBox=\"0 0 42 42\" class=\"gc-avatar-donut\">\n        <circle class=\"donut-hole\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\"></circle>\n        <circle class=\"donut-ring\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\" stroke=\"#92AA00\"></circle>\n        <circle class=\"donut-segment\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\" stroke=\"#000\" stroke-opacity=\".7\" stroke-width=\"1\" stroke-dasharray=\"0 100\" stroke-dashoffset=\"25\"></circle>\n    </svg>\n    <img\n        class=\"gc-avatar-image\"\n        src=\"https://static.gamersclub.com.br/players/avatar/1712862/1712862_medium.jpg\"\n        alt=\"bvb\"\n        onerror=\"this.style.display = 'none';this.setAttribute('error', true);\" />\n    <span class=\"gc-avatar-fallback\"></span>\n</div>\n",
                         "levelHtml": "\n\n  <span class=\"new-badge-level new-badge-level-17\">\n    \n          <span class=\"badge-level-value\">17</span>\n      </span>\n\n",
-                        "leaderboardPosition": 14701,
+                        "leaderboardPosition": 14704,
                         "showLeaderboardPosition": false,
                         "leaderboardClassName": "topall"
                     },
@@ -357,7 +357,7 @@
                         "type": "plus",
                         "avatarHtml": "<div class=\"gc-avatar medium\">\n    <span class=\"gc-avatar-frame\" style=\"background-image: url();\"></span>\n    <svg viewBox=\"0 0 42 42\" class=\"gc-avatar-donut\">\n        <circle class=\"donut-hole\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\"></circle>\n        <circle class=\"donut-ring\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\" stroke=\"#92AA00\"></circle>\n        <circle class=\"donut-segment\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\" stroke=\"#000\" stroke-opacity=\".7\" stroke-width=\"1\" stroke-dasharray=\"0 100\" stroke-dashoffset=\"25\"></circle>\n    </svg>\n    <img\n        class=\"gc-avatar-image\"\n        src=\"https://static.gamersclub.com.br/players/avatar/157877/157877_medium.jpg\"\n        alt=\"Davizera\"\n        onerror=\"this.style.display = 'none';this.setAttribute('error', true);\" />\n    <span class=\"gc-avatar-fallback\"></span>\n</div>\n",
                         "levelHtml": "\n\n  <span class=\"new-badge-level new-badge-level-18\">\n    \n          <span class=\"badge-level-value\">18</span>\n      </span>\n\n",
-                        "leaderboardPosition": 12987,
+                        "leaderboardPosition": 12995,
                         "showLeaderboardPosition": false,
                         "leaderboardClassName": "topall"
                     },
@@ -465,7 +465,7 @@
                         "type": "premium",
                         "avatarHtml": "<div class=\"gc-avatar medium\">\n    <span class=\"gc-avatar-frame\" style=\"background-image: url();\"></span>\n    <svg viewBox=\"0 0 42 42\" class=\"gc-avatar-donut\">\n        <circle class=\"donut-hole\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\"></circle>\n        <circle class=\"donut-ring\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\" stroke=\"#92AA00\"></circle>\n        <circle class=\"donut-segment\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\" stroke=\"#000\" stroke-opacity=\".7\" stroke-width=\"1\" stroke-dasharray=\"0 100\" stroke-dashoffset=\"25\"></circle>\n    </svg>\n    <img\n        class=\"gc-avatar-image\"\n        src=\"https://static.gamersclub.com.br/players/avatar/1579748/1579748_medium.jpg\"\n        alt=\"dvzn- entry n tem kd alto\"\n        onerror=\"this.style.display = 'none';this.setAttribute('error', true);\" />\n    <span class=\"gc-avatar-fallback\"></span>\n</div>\n",
                         "levelHtml": "\n\n  <span class=\"new-badge-level new-badge-level-18\">\n    \n          <span class=\"badge-level-value\">18</span>\n      </span>\n\n",
-                        "leaderboardPosition": 7724,
+                        "leaderboardPosition": 7725,
                         "showLeaderboardPosition": false,
                         "leaderboardClassName": "topall"
                     },
@@ -573,7 +573,7 @@
                         "type": "plus",
                         "avatarHtml": "<div class=\"gc-avatar medium\">\n    <span class=\"gc-avatar-frame\" style=\"background-image: url();\"></span>\n    <svg viewBox=\"0 0 42 42\" class=\"gc-avatar-donut\">\n        <circle class=\"donut-hole\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\"></circle>\n        <circle class=\"donut-ring\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\" stroke=\"#92AA00\"></circle>\n        <circle class=\"donut-segment\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\" stroke=\"#000\" stroke-opacity=\".7\" stroke-width=\"1\" stroke-dasharray=\"0 100\" stroke-dashoffset=\"25\"></circle>\n    </svg>\n    <img\n        class=\"gc-avatar-image\"\n        src=\"https://static.gamersclub.com.br/players/avatar/943970/943970_medium.jpg\"\n        alt=\"nicolove\"\n        onerror=\"this.style.display = 'none';this.setAttribute('error', true);\" />\n    <span class=\"gc-avatar-fallback\"></span>\n</div>\n",
                         "levelHtml": "\n\n  <span class=\"new-badge-level new-badge-level-16\">\n    \n          <span class=\"badge-level-value\">16</span>\n      </span>\n\n",
-                        "leaderboardPosition": 15846,
+                        "leaderboardPosition": 15860,
                         "showLeaderboardPosition": false,
                         "leaderboardClassName": "topall"
                     },
@@ -683,7 +683,7 @@
                         "type": "plus",
                         "avatarHtml": "<div class=\"gc-avatar medium\">\n    <span class=\"gc-avatar-frame\" style=\"background-image: url();\"></span>\n    <svg viewBox=\"0 0 42 42\" class=\"gc-avatar-donut\">\n        <circle class=\"donut-hole\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\"></circle>\n        <circle class=\"donut-ring\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\" stroke=\"#92AA00\"></circle>\n        <circle class=\"donut-segment\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\" stroke=\"#000\" stroke-opacity=\".7\" stroke-width=\"1\" stroke-dasharray=\"0 100\" stroke-dashoffset=\"25\"></circle>\n    </svg>\n    <img\n        class=\"gc-avatar-image\"\n        src=\"https://static.gamersclub.com.br/players/avatar/396372/396372_medium.jpg\"\n        alt=\"BRN #1TAP\"\n        onerror=\"this.style.display = 'none';this.setAttribute('error', true);\" />\n    <span class=\"gc-avatar-fallback\"></span>\n</div>\n",
                         "levelHtml": "\n\n  <span class=\"new-badge-level new-badge-level-16\">\n    \n          <span class=\"badge-level-value\">16</span>\n      </span>\n\n",
-                        "leaderboardPosition": 17289,
+                        "leaderboardPosition": 17528,
                         "showLeaderboardPosition": false,
                         "leaderboardClassName": "topall"
                     },
@@ -791,7 +791,7 @@
                         "type": "plus",
                         "avatarHtml": "<div class=\"gc-avatar medium\">\n    <span class=\"gc-avatar-frame\" style=\"background-image: url();\"></span>\n    <svg viewBox=\"0 0 42 42\" class=\"gc-avatar-donut\">\n        <circle class=\"donut-hole\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\"></circle>\n        <circle class=\"donut-ring\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\" stroke=\"#92AA00\"></circle>\n        <circle class=\"donut-segment\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\" stroke=\"#000\" stroke-opacity=\".7\" stroke-width=\"1\" stroke-dasharray=\"0 100\" stroke-dashoffset=\"25\"></circle>\n    </svg>\n    <img\n        class=\"gc-avatar-image\"\n        src=\"https://static.gamersclub.com.br/players/avatar/2034353/2034353_medium.jpg\"\n        alt=\"ozz\"\n        onerror=\"this.style.display = 'none';this.setAttribute('error', true);\" />\n    <span class=\"gc-avatar-fallback\"></span>\n</div>\n",
                         "levelHtml": "\n\n  <span class=\"new-badge-level new-badge-level-17\">\n    \n          <span class=\"badge-level-value\">17</span>\n      </span>\n\n",
-                        "leaderboardPosition": 16133,
+                        "leaderboardPosition": 16162,
                         "showLeaderboardPosition": false,
                         "leaderboardClassName": "topall"
                     },
@@ -899,7 +899,7 @@
                         "type": "plus",
                         "avatarHtml": "<div class=\"gc-avatar medium\">\n    <span class=\"gc-avatar-frame\" style=\"background-image: url();\"></span>\n    <svg viewBox=\"0 0 42 42\" class=\"gc-avatar-donut\">\n        <circle class=\"donut-hole\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\"></circle>\n        <circle class=\"donut-ring\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\" stroke=\"#92AA00\"></circle>\n        <circle class=\"donut-segment\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\" stroke=\"#000\" stroke-opacity=\".7\" stroke-width=\"1\" stroke-dasharray=\"0 100\" stroke-dashoffset=\"25\"></circle>\n    </svg>\n    <img\n        class=\"gc-avatar-image\"\n        src=\"https://static.gamersclub.com.br/players/avatar/1618894/1618894_medium.jpg\"\n        alt=\"bbyg\"\n        onerror=\"this.style.display = 'none';this.setAttribute('error', true);\" />\n    <span class=\"gc-avatar-fallback\"></span>\n</div>\n",
                         "levelHtml": "\n\n  <span class=\"new-badge-level new-badge-level-18\">\n    \n          <span class=\"badge-level-value\">18</span>\n      </span>\n\n",
-                        "leaderboardPosition": 11697,
+                        "leaderboardPosition": 11695,
                         "showLeaderboardPosition": false,
                         "leaderboardClassName": "topall"
                     },
@@ -1007,7 +1007,7 @@
                         "type": "plus",
                         "avatarHtml": "<div class=\"gc-avatar medium\">\n    <span class=\"gc-avatar-frame\" style=\"background-image: url();\"></span>\n    <svg viewBox=\"0 0 42 42\" class=\"gc-avatar-donut\">\n        <circle class=\"donut-hole\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\"></circle>\n        <circle class=\"donut-ring\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\" stroke=\"#92AA00\"></circle>\n        <circle class=\"donut-segment\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\" stroke=\"#000\" stroke-opacity=\".7\" stroke-width=\"1\" stroke-dasharray=\"0 100\" stroke-dashoffset=\"25\"></circle>\n    </svg>\n    <img\n        class=\"gc-avatar-image\"\n        src=\"https://static.gamersclub.com.br/players/avatar/228455/228455_medium.jpg\"\n        alt=\"Denubi\"\n        onerror=\"this.style.display = 'none';this.setAttribute('error', true);\" />\n    <span class=\"gc-avatar-fallback\"></span>\n</div>\n",
                         "levelHtml": "\n\n  <span class=\"new-badge-level new-badge-level-18\">\n    \n          <span class=\"badge-level-value\">18</span>\n      </span>\n\n",
-                        "leaderboardPosition": 14240,
+                        "leaderboardPosition": 14251,
                         "showLeaderboardPosition": false,
                         "leaderboardClassName": "topall"
                     },
@@ -1115,7 +1115,7 @@
                         "type": "plus",
                         "avatarHtml": "<div class=\"gc-avatar medium\">\n    <span class=\"gc-avatar-frame\" style=\"background-image: url();\"></span>\n    <svg viewBox=\"0 0 42 42\" class=\"gc-avatar-donut\">\n        <circle class=\"donut-hole\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\"></circle>\n        <circle class=\"donut-ring\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\" stroke=\"#92AA00\"></circle>\n        <circle class=\"donut-segment\" cx=\"21\" cy=\"21\" r=\"15.91549430918954\" fill=\"transparent\" stroke=\"#000\" stroke-opacity=\".7\" stroke-width=\"1\" stroke-dasharray=\"0 100\" stroke-dashoffset=\"25\"></circle>\n    </svg>\n    <img\n        class=\"gc-avatar-image\"\n        src=\"https://static.gamersclub.com.br/players/avatar/480870/480870_medium.jpg\"\n        alt=\"zandoNadi\"\n        onerror=\"this.style.display = 'none';this.setAttribute('error', true);\" />\n    <span class=\"gc-avatar-fallback\"></span>\n</div>\n",
                         "levelHtml": "\n\n  <span class=\"new-badge-level new-badge-level-18\">\n    \n          <span class=\"badge-level-value\">18</span>\n      </span>\n\n",
-                        "leaderboardPosition": 9869,
+                        "leaderboardPosition": 9859,
                         "showLeaderboardPosition": false,
                         "leaderboardClassName": "topall"
                     },

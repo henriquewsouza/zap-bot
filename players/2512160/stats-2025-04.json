@@ -1,31 +1,31 @@
 {
     "player_id": 2512160,
     "month_year": "2025-04",
-    "total_matches": 111,
-    "total_wins": 52,
-    "total_losses": 59,
-    "overall_win_rate": 46.846846846846844,
-    "total_kills": 1744,
-    "total_deaths": 1741,
-    "KDR": 1.0017231476163124,
-    "total_damage": 189418,
-    "total_rounds": 2359,
-    "ADR": 80.29588808817296,
-    "total_first_kills": 303,
-    "average_first_kills_per_match": 2.72972972972973,
-    "total_headshots": 723,
-    "HS_percent": 41.456422018348626,
+    "total_matches": 115,
+    "total_wins": 55,
+    "total_losses": 60,
+    "overall_win_rate": 47.82608695652174,
+    "total_kills": 1795,
+    "total_deaths": 1800,
+    "KDR": 0.9972222222222222,
+    "total_damage": 195384,
+    "total_rounds": 2440,
+    "ADR": 80.07540983606557,
+    "total_first_kills": 313,
+    "average_first_kills_per_match": 2.7217391304347824,
+    "total_headshots": 736,
+    "HS_percent": 41.00278551532033,
     "per_map": {
         "de_dust2": {
-            "matches": 37,
-            "wins": 22,
-            "win_rate": 59.45945945945946,
-            "kills": 540,
-            "deaths": 576,
-            "damage": 60094,
-            "rounds": 776,
-            "kdr": 0.9375,
-            "adr": 77.44072164948453
+            "matches": 39,
+            "wins": 24,
+            "win_rate": 61.53846153846154,
+            "kills": 567,
+            "deaths": 611,
+            "damage": 63275,
+            "rounds": 822,
+            "kdr": 0.9279869067103109,
+            "adr": 76.97688564476886
         },
         "de_inferno": {
             "matches": 7,
@@ -61,15 +61,15 @@
             "adr": 81.4009900990099
         },
         "de_anubis": {
-            "matches": 22,
+            "matches": 23,
             "wins": 9,
-            "win_rate": 40.909090909090914,
-            "kills": 379,
-            "deaths": 382,
-            "damage": 40706,
-            "rounds": 520,
-            "kdr": 0.9921465968586387,
-            "adr": 78.28076923076924
+            "win_rate": 39.130434782608695,
+            "kills": 390,
+            "deaths": 400,
+            "damage": 42207,
+            "rounds": 541,
+            "kdr": 0.975,
+            "adr": 78.01663585951941
         },
         "de_cache_nova": {
             "matches": 2,
@@ -105,15 +105,15 @@
             "adr": 53.458333333333336
         },
         "de_train": {
-            "matches": 3,
-            "wins": 1,
-            "win_rate": 33.33333333333333,
-            "kills": 49,
-            "deaths": 47,
-            "damage": 5891,
-            "rounds": 57,
-            "kdr": 1.0425531914893618,
-            "adr": 103.35087719298245
+            "matches": 4,
+            "wins": 2,
+            "win_rate": 50.0,
+            "kills": 62,
+            "deaths": 53,
+            "damage": 7175,
+            "rounds": 71,
+            "kdr": 1.169811320754717,
+            "adr": 101.05633802816901
         }
     }
 }

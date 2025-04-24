@@ -168,5 +168,20 @@
         "match_id": 23518640,
         "map": "de_ancient",
         "win": 0
+    },
+    {
+        "match_id": 23524272,
+        "map": "de_mirage",
+        "win": 1
+    },
+    {
+        "match_id": 23524623,
+        "map": "de_train",
+        "win": 1
+    },
+    {
+        "match_id": 23524871,
+        "map": "de_dust2",
+        "win": 1
     }
 ]

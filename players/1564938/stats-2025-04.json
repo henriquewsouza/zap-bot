@@ -1,20 +1,20 @@
 {
     "player_id": 1564938,
     "month_year": "2025-04",
-    "total_matches": 7,
-    "total_wins": 5,
-    "total_losses": 2,
-    "overall_win_rate": 71.42857142857143,
-    "total_kills": 85,
-    "total_deaths": 98,
-    "KDR": 0.8673469387755102,
-    "total_damage": 9609,
-    "total_rounds": 143,
-    "ADR": 67.1958041958042,
-    "total_first_kills": 12,
-    "average_first_kills_per_match": 1.7142857142857142,
-    "total_headshots": 46,
-    "HS_percent": 54.11764705882353,
+    "total_matches": 9,
+    "total_wins": 6,
+    "total_losses": 3,
+    "overall_win_rate": 66.66666666666666,
+    "total_kills": 102,
+    "total_deaths": 128,
+    "KDR": 0.796875,
+    "total_damage": 11571,
+    "total_rounds": 182,
+    "ADR": 63.57692307692308,
+    "total_first_kills": 14,
+    "average_first_kills_per_match": 1.5555555555555556,
+    "total_headshots": 54,
+    "HS_percent": 52.94117647058824,
     "per_map": {
         "de_ancient": {
             "matches": 1,
@@ -28,26 +28,26 @@
             "adr": 80.05882352941177
         },
         "de_anubis": {
-            "matches": 2,
+            "matches": 3,
             "wins": 1,
-            "win_rate": 50.0,
-            "kills": 27,
-            "deaths": 28,
-            "damage": 2817,
-            "rounds": 42,
-            "kdr": 0.9642857142857143,
-            "adr": 67.07142857142857
+            "win_rate": 33.33333333333333,
+            "kills": 36,
+            "deaths": 46,
+            "damage": 3873,
+            "rounds": 63,
+            "kdr": 0.782608695652174,
+            "adr": 61.476190476190474
         },
         "de_dust2": {
-            "matches": 4,
-            "wins": 4,
+            "matches": 5,
+            "wins": 5,
             "win_rate": 100.0,
-            "kills": 48,
-            "deaths": 56,
-            "damage": 5431,
-            "rounds": 84,
-            "kdr": 0.8571428571428571,
-            "adr": 64.6547619047619
+            "kills": 56,
+            "deaths": 68,
+            "damage": 6337,
+            "rounds": 102,
+            "kdr": 0.8235294117647058,
+            "adr": 62.127450980392155
         }
     }
 }

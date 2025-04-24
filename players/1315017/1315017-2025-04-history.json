@@ -53,5 +53,10 @@
         "match_id": 23518640,
         "map": "de_ancient",
         "win": 0
+    },
+    {
+        "match_id": 23524272,
+        "map": "de_mirage",
+        "win": 1
     }
 ]
