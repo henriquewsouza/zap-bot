@@ -193,5 +193,25 @@
         "match_id": 23525902,
         "map": "de_dust2",
         "win": 1
+    },
+    {
+        "match_id": 23531257,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 23531650,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 23532044,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 23532508,
+        "map": "de_anubis",
+        "win": 1
     }
 ]

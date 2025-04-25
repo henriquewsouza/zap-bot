@@ -573,5 +573,15 @@
         "match_id": 23525317,
         "map": "de_anubis",
         "win": 0
+    },
+    {
+        "match_id": 23535533,
+        "map": "de_anubis",
+        "win": 0
+    },
+    {
+        "match_id": 23535793,
+        "map": "de_train",
+        "win": 1
     }
 ]

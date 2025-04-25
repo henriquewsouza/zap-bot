@@ -313,5 +313,10 @@
         "match_id": 23525902,
         "map": "de_dust2",
         "win": 1
+    },
+    {
+        "match_id": 23529783,
+        "map": "de_dust2",
+        "win": 0
     }
 ]
