@@ -1,20 +1,20 @@
 {
     "player_id": 829311,
     "month_year": "2025-04",
-    "total_matches": 50,
+    "total_matches": 52,
     "total_wins": 22,
-    "total_losses": 28,
-    "overall_win_rate": 44.0,
-    "total_kills": 907,
-    "total_deaths": 841,
-    "KDR": 1.0784780023781213,
-    "total_damage": 93945,
-    "total_rounds": 1131,
-    "ADR": 83.06366047745358,
-    "total_first_kills": 159,
-    "average_first_kills_per_match": 3.18,
-    "total_headshots": 341,
-    "HS_percent": 37.59647188533627,
+    "total_losses": 30,
+    "overall_win_rate": 42.30769230769231,
+    "total_kills": 930,
+    "total_deaths": 871,
+    "KDR": 1.0677382319173363,
+    "total_damage": 96550,
+    "total_rounds": 1171,
+    "ADR": 82.45089666951324,
+    "total_first_kills": 164,
+    "average_first_kills_per_match": 3.1538461538461537,
+    "total_headshots": 348,
+    "HS_percent": 37.41935483870968,
     "per_map": {
         "de_dust2": {
             "matches": 19,
@@ -38,6 +38,17 @@
             "kdr": 1.0572916666666667,
             "adr": 77.76045627376426
         },
+        "de_nuke": {
+            "matches": 6,
+            "wins": 2,
+            "win_rate": 33.33333333333333,
+            "kills": 84,
+            "deaths": 93,
+            "damage": 8889,
+            "rounds": 123,
+            "kdr": 0.9032258064516129,
+            "adr": 72.26829268292683
+        },
         "de_mirage": {
             "matches": 9,
             "wins": 5,
@@ -60,16 +71,16 @@
             "kdr": 1.6666666666666667,
             "adr": 116.31818181818181
         },
-        "de_nuke": {
-            "matches": 5,
-            "wins": 2,
-            "win_rate": 40.0,
-            "kills": 71,
-            "deaths": 80,
-            "damage": 7599,
-            "rounds": 102,
-            "kdr": 0.8875,
-            "adr": 74.5
+        "de_cache_nova": {
+            "matches": 1,
+            "wins": 0,
+            "win_rate": 0.0,
+            "kills": 10,
+            "deaths": 17,
+            "damage": 1315,
+            "rounds": 19,
+            "kdr": 0.5882352941176471,
+            "adr": 69.21052631578948
         },
         "de_ancient": {
             "matches": 2,
