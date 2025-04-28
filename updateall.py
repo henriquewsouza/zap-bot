@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import os
 import json
 import subprocess
@@ -10,72 +9,50 @@ from match_history import get_match_history
 from load_match_stats import load_match_stats
 from aggregate_player_stats import aggregate_stats
 
-# How many members to process in parallel
 MAX_WORKERS = 4
 
-def process_member(gc_id: str, month_year: str) -> None:
-    """Fetch history, load match stats, and aggregate stats for one GC member."""
+def process_member(gc_id, month_year):
     print(f"[{gc_id}] fetching history…")
-    history_file = get_match_history(gc_id, month_year)
-
+    hist = get_match_history(gc_id, month_year)
     print(f"[{gc_id}] loading match stats…")
-    load_match_stats(history_file)
-
+    load_match_stats(hist)
     print(f"[{gc_id}] aggregating stats…")
     aggregate_stats(gc_id, month_year)
-
     print(f"[{gc_id}] done.")
 
-def git_commit_and_push(message: str = "new stats") -> bool:
-    """Stage all changes, commit, and push. Returns True on success."""
-    commands = [
-        ["git", "add", "."],
-        ["git", "commit", "-m", message],
-        ["git", "push"],
-    ]
-    for cmd in commands:
-        print(f"Running: {' '.join(cmd)}")
-        result = subprocess.run(cmd, capture_output=True, text=True)
-        if result.returncode != 0:
-            print(f"⚠️ Command failed: {' '.join(cmd)}")
-            print("STDOUT:", result.stdout.strip())
-            print("STDERR:", result.stderr.strip())
+def git_commit_and_push(msg="new stats"):
+    for cmd in (["git","add","."], ["git","commit","-m",msg], ["git","push"]):
+        print("→", " ".join(cmd))
+        r = subprocess.run(cmd, capture_output=True, text=True)
+        if r.returncode != 0:
+            print("✖", r.stderr.strip())
             return False
     return True
 
-def main() -> None:
-    members_file = "members.json"
-    if not os.path.exists(members_file):
-        print("members.json not found in the root folder.")
-        return
+def main():
+    if not os.path.exists("members.json"):
+        return print("members.json missing")
 
-    with open(members_file, encoding="utf-8") as f:
-        members_data = json.load(f)
+    data = json.load(open("members.json", encoding="utf-8"))
+    mon  = datetime.now().strftime("%Y-%m")
 
-    month_year = datetime.now().strftime("%Y-%m")
-
-    # 1) Parallel processing of all members
-    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
         futures = {
-            executor.submit(process_member, info["gc"], month_year): discord_id
-            for discord_id, info in members_data.items()
-            if info.get("gc")
+            ex.submit(process_member, info["gc"], mon): dc
+            for dc, info in data.items() if info.get("gc")
         }
-
         for fut in as_completed(futures):
-            dc_id = futures[fut]
-            try:
-                fut.result()
+            dc = futures[fut]
+            try: fut.result()
             except Exception as e:
-                print(f"⚠️ Error for Discord ID {dc_id}: {e}")
+                print(f"⚠️ {dc} failed:", e)
 
-    print("✅ Update complete for all members.")
+    print("✅ All members done.")
 
-    # 2) Commit & push any changes to Git
-    if git_commit_and_push("new stats"):
-        print("✅ Changes committed and pushed.")
+    if git_commit_and_push():
+        print("✅ Pushed to repo")
     else:
-        print("❌ Git push failed; please check the errors above.")
+        print("❌ Git steps failed, please check above")
 
 if __name__ == "__main__":
     main()
