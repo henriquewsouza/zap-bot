@@ -53,5 +53,30 @@
         "match_id": 23517857,
         "map": "de_anubis",
         "win": 0
+    },
+    {
+        "match_id": 23544655,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 23544848,
+        "map": "de_ancient",
+        "win": 1
+    },
+    {
+        "match_id": 23544966,
+        "map": "de_anubis",
+        "win": 1
+    },
+    {
+        "match_id": 23552954,
+        "map": "de_nuke",
+        "win": 0
+    },
+    {
+        "match_id": 23555293,
+        "map": "de_nuke",
+        "win": 1
     }
 ]

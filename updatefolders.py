@@ -1,63 +1,101 @@
 import os
 import boto3
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# S3 Configuration
-BUCKET_NAME = "bucket-6sk08y"
+BUCKET_NAME  = "bucket-6sk08y"
 ENDPOINT_URL = "https://s3.us-east-1.amazonaws.com"
 s3 = boto3.client("s3", endpoint_url=ENDPOINT_URL)
 
+MAX_WORKERS = 10
+
+
 def delete_folder(prefix):
     """Delete all objects in S3 bucket with the given prefix."""
-    print(f"Deleting objects under prefix '{prefix}' from bucket '{BUCKET_NAME}'...")
     paginator = s3.get_paginator('list_objects_v2')
-    pages = paginator.paginate(Bucket=BUCKET_NAME, Prefix=prefix)
-    
-    keys_to_delete = []
-    for page in pages:
-        if 'Contents' in page:
-            for obj in page['Contents']:
-                keys_to_delete.append({'Key': obj['Key']})
-    
-    if keys_to_delete:
-        response = s3.delete_objects(
-            Bucket=BUCKET_NAME,
-            Delete={'Objects': keys_to_delete}
-        )
-        print(f"Deleted {len(keys_to_delete)} objects under '{prefix}'.")
+    to_delete = []
+    for page in paginator.paginate(Bucket=BUCKET_NAME, Prefix=prefix):
+        for obj in page.get('Contents', []):
+            to_delete.append({'Key': obj['Key']})
+    if to_delete:
+        s3.delete_objects(Bucket=BUCKET_NAME, Delete={'Objects': to_delete})
+        print(f"➖ Deleted {len(to_delete)} objects under '{prefix}'")
     else:
-        print(f"No objects found under prefix '{prefix}'.")
+        print(f"⚪ No objects to delete under '{prefix}'")
+
+
+def list_existing_keys(prefix):
+    """Return a set of all object keys under the given prefix."""
+    paginator = s3.get_paginator("list_objects_v2")
+    existing = set()
+    for page in paginator.paginate(Bucket=BUCKET_NAME, Prefix=prefix):
+        for obj in page.get("Contents", []):
+            existing.add(obj["Key"])
+    return existing
+
+
+def _upload_file(local_path, s3_key):
+    """Helper to upload one file."""
+    try:
+        s3.upload_file(local_path, BUCKET_NAME, s3_key)
+        return f"✅ Uploaded: {s3_key}"
+    except Exception as e:
+        return f"❗ Error uploading {s3_key}: {e}"
+
 
 def upload_folder(local_folder, s3_prefix):
-    """
-    Uploads all files in the local folder (and subfolders) to S3,
-    using the specified s3_prefix as the root key.
-    """
-    print(f"Uploading local folder '{local_folder}' to S3 prefix '{s3_prefix}'...")
+    """Upload every file under local_folder to s3_prefix, in parallel."""
+    tasks = []
     for root, _, files in os.walk(local_folder):
-        for file in files:
-            local_path = os.path.join(root, file)
-            # Compute the S3 key by removing the local folder part and adding s3_prefix.
-            relative_path = os.path.relpath(local_path, local_folder)
-            s3_key = os.path.join(s3_prefix, relative_path).replace("\\", "/")
-            print(f"Uploading {local_path} as {s3_key}...")
-            s3.upload_file(local_path, BUCKET_NAME, s3_key)
-    print(f"Upload of '{local_folder}' complete.")
+        for fn in files:
+            local_path = os.path.join(root, fn)
+            rel_path   = os.path.relpath(local_path, local_folder).replace("\\","/")
+            s3_key     = f"{s3_prefix.rstrip('/')}/{rel_path}"
+            tasks.append((local_path, s3_key))
+
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
+        futures = {pool.submit(_upload_file, lp, key): key for lp, key in tasks}
+        for fut in as_completed(futures):
+            print(fut.result())
+
+
+def upload_new_only(local_folder, s3_prefix):
+    """Upload only files not already present under s3_prefix, in parallel."""
+    existing = list_existing_keys(s3_prefix)
+    tasks = []
+    for root, _, files in os.walk(local_folder):
+        for fn in files:
+            local_path = os.path.join(root, fn)
+            rel_path   = os.path.relpath(local_path, local_folder).replace("\\","/")
+            s3_key     = f"{s3_prefix.rstrip('/')}/{rel_path}"
+            if s3_key not in existing:
+                tasks.append((local_path, s3_key))
+
+    if not tasks:
+        print("⚪ No new match files to upload.")
+        return
+
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
+        futures = {pool.submit(_upload_file, lp, key): key for lp, key in tasks}
+        for fut in as_completed(futures):
+            print(fut.result())
+
 
 def main():
-    # Delete existing "folders" on S3
-    delete_folder("matches/")
+    # 1) Full replace players/
     delete_folder("players/")
-    
-    # Upload local folders to S3
-    if os.path.isdir("matches"):
-        upload_folder("matches", "matches/")
-    else:
-        print("Local folder 'matches' not found.")
-    
     if os.path.isdir("players"):
+        print("📂 Syncing players/ (full refresh)…")
         upload_folder("players", "players/")
     else:
-        print("Local folder 'players' not found.")
+        print("⚠️ Local 'players/' folder not found.")
+
+    # 2) Append-only matches/
+    if os.path.isdir("matches"):
+        print("📂 Syncing matches/ (incremental)…")
+        upload_new_only("matches", "matches/")
+    else:
+        print("⚠️ Local 'matches/' folder not found.")
+
 
 if __name__ == "__main__":
     main()

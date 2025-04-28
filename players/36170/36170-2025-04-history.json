@@ -68,5 +68,10 @@
         "match_id": 23531650,
         "map": "de_mirage",
         "win": 0
+    },
+    {
+        "match_id": 23562456,
+        "map": "de_nuke",
+        "win": 0
     }
 ]

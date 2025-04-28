@@ -248,5 +248,15 @@
         "match_id": 23532508,
         "map": "de_anubis",
         "win": 1
+    },
+    {
+        "match_id": 23552954,
+        "map": "de_nuke",
+        "win": 0
+    },
+    {
+        "match_id": 23553088,
+        "map": "de_cache_nova",
+        "win": 0
     }
 ]

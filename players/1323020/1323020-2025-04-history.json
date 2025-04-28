@@ -158,5 +158,25 @@
         "match_id": 23524272,
         "map": "de_mirage",
         "win": 1
+    },
+    {
+        "match_id": 23552954,
+        "map": "de_nuke",
+        "win": 0
+    },
+    {
+        "match_id": 23553088,
+        "map": "de_cache_nova",
+        "win": 0
+    },
+    {
+        "match_id": 23555293,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 23555757,
+        "map": "de_dust2",
+        "win": 1
     }
 ]
