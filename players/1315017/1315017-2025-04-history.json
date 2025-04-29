@@ -103,5 +103,20 @@
         "match_id": 23569981,
         "map": "de_mirage",
         "win": 1
+    },
+    {
+        "match_id": 23571495,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 23571834,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 23572330,
+        "map": "de_anubis",
+        "win": 1
     }
 ]
