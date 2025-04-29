@@ -258,5 +258,30 @@
         "match_id": 23553088,
         "map": "de_cache_nova",
         "win": 0
+    },
+    {
+        "match_id": 23563895,
+        "map": "de_anubis",
+        "win": 1
+    },
+    {
+        "match_id": 23564632,
+        "map": "de_ancient",
+        "win": 0
+    },
+    {
+        "match_id": 23565040,
+        "map": "de_overpass",
+        "win": 0
+    },
+    {
+        "match_id": 23569876,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 23569981,
+        "map": "de_mirage",
+        "win": 1
     }
 ]

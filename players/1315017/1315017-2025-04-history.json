@@ -88,5 +88,20 @@
         "match_id": 23562456,
         "map": "de_nuke",
         "win": 0
+    },
+    {
+        "match_id": 23564174,
+        "map": "de_ancient",
+        "win": 0
+    },
+    {
+        "match_id": 23569876,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 23569981,
+        "map": "de_mirage",
+        "win": 1
     }
 ]
