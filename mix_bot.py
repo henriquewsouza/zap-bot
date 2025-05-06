@@ -470,7 +470,7 @@ async def botadmins(ctx):
     await ctx.send("\n".join(msg_lines))
 
 @bot.command(name="stats")
-async def stats(ctx, member: discord.Member):
+async def stats(ctx, member: discord.Member, month: str = None):
     """
     !stats @Player
     Recupera as estatísticas agregadas para o jogador mencionado para o mês atual (dados armazenados no S3).
@@ -502,7 +502,15 @@ async def stats(ctx, member: discord.Member):
     # Extrai o campo context do membro (pode estar vazio)
     context_field = members_data[discord_id_str].get("context", "")
 
-    month_year = datetime.now().strftime("%Y-%m")
+    if month:
+        try:
+            datetime.strptime(month, "%Y-%m")
+            month_year = month
+        except ValueError:
+            await ctx.send("Use YYYY-MM format, e.g. `!ranking 2025-04`")
+            return
+    else:
+        month_year = datetime.now().strftime("%Y-%m")
     stats_key = f"players/{gc_id}/stats-{month_year}.json"
     try:
         stats_response = s3.get_object(Bucket=BUCKET_NAME, Key=stats_key)
@@ -830,7 +838,7 @@ async def ranking(ctx, month: str = None):
     await ctx.send(embed=embed)
 
 @bot.command(name="arca")
-async def arca(ctx):
+async def arca(ctx, month: str = None):
     """
     !arca
     Aggregates the group's performance on each map for the current month using match data stored in S3.
@@ -863,7 +871,15 @@ async def arca(ctx):
         await ctx.send("No group GC ids found in members data.")
         return
 
-    month_year = datetime.now().strftime("%Y-%m")
+    if month:
+        try:
+            datetime.strptime(month, "%Y-%m")
+            month_year = month
+        except ValueError:
+            await ctx.send("Use YYYY-MM format, e.g. `!ranking 2025-04`")
+            return
+    else:
+        month_year = datetime.now().strftime("%Y-%m")
 
     # List match objects from S3 with prefix "matches/"
     try:
