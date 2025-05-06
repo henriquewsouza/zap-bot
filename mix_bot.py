@@ -116,7 +116,6 @@ def build_team_message(team1, team2):
     message = (
         f"**Team 1:**\n{team1_text}\n\n"
         f"**Team 2:**\n{team2_text}\n\n"
-        f"**Difference:** {abs(total_team1 - total_team2)}\n\n"
         f"**Lembre-se: Se vc sacanear o Zap é melhor esperar que ele não descubra seu IP**"
     )
     return message
