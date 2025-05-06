@@ -723,7 +723,7 @@ async def update(ctx, member: discord.Member):
 
 
 @bot.command(name="ranking")
-async def ranking(ctx):
+async def ranking(ctx, month: str = None):
     """
     !ranking
     Displays a ranking of members (from members.json stored on S3) for the current month,
@@ -743,7 +743,15 @@ async def ranking(ctx):
         await ctx.send("Error loading members data from S3.")
         return
 
-    month_year = datetime.now().strftime("%Y-%m")
+    if month:
+        try:
+            datetime.strptime(month, "%Y-%m")
+            month_year = month
+        except ValueError:
+            await ctx.send("Use YYYY-MM format, e.g. `!ranking 2025-04`")
+            return
+    else:
+        month_year = datetime.now().strftime("%Y-%m")
     stats_list = []
 
     # Iterate over each member in members.json
@@ -1036,7 +1044,7 @@ async def updateall(ctx):
     await ctx.send("Update complete for all players.")
 
 @bot.command(name="ranking_mix")
-async def ranking_mix(ctx):
+async def ranking_mix(ctx, month: str = None):
     """
     !ranking_mix
     Generates leaderboards for matches where BOTH teams have at least 1 group player.
@@ -1067,7 +1075,16 @@ async def ranking_mix(ctx):
         await ctx.send("No group GC ids found in members data.")
         return
 
-    month_year = datetime.now().strftime("%Y-%m")
+    if month:
+        try:
+            # validate format
+            datetime.strptime(month, "%Y-%m")
+            month_year = month
+        except ValueError:
+            await ctx.send("Use YYYY-MM format, e.g. `!ranking 2025-04`")
+            return
+    else:
+        month_year = datetime.now().strftime("%Y-%m")
 
     # Step 2: List match objects from S3 with prefix "matches/"
     try:
