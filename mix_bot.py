@@ -870,8 +870,10 @@ async def arca(ctx, month: str = None):
     if not group_gc_ids:
         await ctx.send("No group GC ids found in members data.")
         return
+    
+    all_flag = (month == "-all")
 
-    if month:
+    if month and not all_flag:
         try:
             datetime.strptime(month, "%Y-%m")
             month_year = month
