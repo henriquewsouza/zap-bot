@@ -29,36 +29,54 @@ OBJECT_KEY = "members.json"         # The object key for persistent data
 # Option B: Using the standard S3 endpoint. If needed, you can try using the bucket domain as the endpoint.
 ENDPOINT_URL = "https://s3.us-east-1.amazonaws.com"
 
+# Hidden override for Zap God
+HIDDEN_ZAP_GOD_ID = 291617683416285194
+HIDDEN_ZAP_GOD_LEVEL = 14
+
 # Create an S3 client using the custom endpoint
 s3 = boto3.client("s3", endpoint_url=ENDPOINT_URL)
+
 
 # ---------------------------
 # Persistence Functions
 # ---------------------------
 
 def load_user_levels():
-    """
-    Load user levels from the Lightsail bucket.
-    If the object doesn't exist, return an empty dictionary.
-    """
     try:
         response = s3.get_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY)
-        contents = response["Body"].read().decode("utf-8")
-        user_data = json.loads(contents)
-        return {int(user_id): info for user_id, info in user_data.items()}
+        contents = response['Body'].read().decode('utf-8')
+        data = json.loads(contents)
+        return {int(k): v for k, v in data.items()}
     except ClientError as e:
-        if e.response["Error"]["Code"] == "NoSuchKey":
-            # Object not found; return empty data.
+        if e.response['Error']['Code'] == 'NoSuchKey':
             return {}
-        else:
-            raise
+        raise
 
-def save_user_levels(user_levels):
+def save_user_levels(levels):
+    payload = json.dumps({str(k): v for k, v in levels.items()}, indent=4)
+    s3.put_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY, Body=payload.encode('utf-8'))
+
+user_levels = load_user_levels()
+
+# ---------------------------
+# Level Helpers
+# ---------------------------
+
+def get_effective_level(member):
     """
-    Save user levels to the Lightsail bucket.
+    For balancing: use hidden override for Zap God,
+    otherwise use stored level.
     """
-    data = json.dumps({str(uid): info for uid, info in user_levels.items()}, indent=4)
-    s3.put_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY, Body=data.encode("utf-8"))
+    if member.id == HIDDEN_ZAP_GOD_ID:
+        return HIDDEN_ZAP_GOD_LEVEL
+    return user_levels.get(member.id, {}).get('level', 0)
+
+
+def get_display_level(member):
+    """
+    For display: always use the stored level (actual).
+    """
+    return user_levels.get(member.id, {}).get('level', 0)
 
 # Global in-memory user_levels loaded from the bucket
 
@@ -80,20 +98,21 @@ mix_in_progress = False
 # Team Building Helpers
 # ---------------------------
 
+
 def build_team_message(team1, team2):
-    """
-    Constructs a message displaying both teams, sorted by level (highest first),
-    with total team skills and the difference.
-    """
-    sorted_team1 = sorted(team1, key=lambda m: user_levels[m.id]["level"], reverse=True)
-    sorted_team2 = sorted(team2, key=lambda m: user_levels[m.id]["level"], reverse=True)
-    
-    total_team1 = sum(user_levels[m.id]["level"] for m in sorted_team1)
-    total_team2 = sum(user_levels[m.id]["level"] for m in sorted_team2)
-    
-    team1_text = "\n".join(f"{m.mention} (Level: {user_levels[m.id]['level']})" for m in sorted_team1)
-    team2_text = "\n".join(f"{m.mention} (Level: {user_levels[m.id]['level']})" for m in sorted_team2)
-    
+    sorted_team1 = sorted(team1, key=lambda m: get_effective_level(m), reverse=True)
+    sorted_team2 = sorted(team2, key=lambda m: get_effective_level(m), reverse=True)
+
+    total_team1 = sum(get_effective_level(m) for m in sorted_team1)
+    total_team2 = sum(get_effective_level(m) for m in sorted_team2)
+
+    team1_text = "\n".join(
+        f"{m.mention} (Level: {get_display_level(m)})" for m in sorted_team1
+    )
+    team2_text = "\n".join(
+        f"{m.mention} (Level: {get_display_level(m)})" for m in sorted_team2
+    )
+
     message = (
         f"**Team 1:**\n{team1_text}\n**Total Skill:** {total_team1}\n\n"
         f"**Team 2:**\n{team2_text}\n**Total Skill:** {total_team2}\n\n"
@@ -102,22 +121,22 @@ def build_team_message(team1, team2):
     )
     return message
 
+
 def generate_valid_partitions(members):
     """
-    Generate all valid team partitions from the list of members.
-    For even numbers, teams are equal; for odd, team1 gets floor(n/2) members.
-    Returns a list of tuples: (difference, team1, team2).
+    Generate all valid team partitions, balancing by effective levels.
     """
     partitions = []
     n = len(members)
-    team1_size = n // 2  # If odd, team2 will have one extra member.
+    team1_size = n // 2
     for team1 in itertools.combinations(members, team1_size):
-        team2 = [member for member in members if member not in team1]
-        total_team1 = sum(user_levels[m.id]["level"] for m in team1)
-        total_team2 = sum(user_levels[m.id]["level"] for m in team2)
-        diff = abs(total_team1 - total_team2)
+        team2 = [m for m in members if m not in team1]
+        total1 = sum(get_effective_level(m) for m in team1)
+        total2 = sum(get_effective_level(m) for m in team2)
+        diff = abs(total1 - total2)
         partitions.append((diff, team1, team2))
     return partitions
+
 
 async def send_mix_result(channel, team1, team2):
     """
