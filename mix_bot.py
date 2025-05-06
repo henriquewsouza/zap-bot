@@ -42,21 +42,28 @@ s3 = boto3.client("s3", endpoint_url=ENDPOINT_URL)
 # ---------------------------
 
 def load_user_levels():
+    """
+    Load user levels from the Lightsail bucket.
+    If the object doesn't exist, return an empty dictionary.
+    """
     try:
         response = s3.get_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY)
-        contents = response['Body'].read().decode('utf-8')
-        data = json.loads(contents)
-        return {int(k): v for k, v in data.items()}
+        contents = response["Body"].read().decode("utf-8")
+        user_data = json.loads(contents)
+        return {int(user_id): info for user_id, info in user_data.items()}
     except ClientError as e:
-        if e.response['Error']['Code'] == 'NoSuchKey':
+        if e.response["Error"]["Code"] == "NoSuchKey":
+            # Object not found; return empty data.
             return {}
-        raise
+        else:
+            raise
 
-def save_user_levels(levels):
-    payload = json.dumps({str(k): v for k, v in levels.items()}, indent=4)
-    s3.put_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY, Body=payload.encode('utf-8'))
-
-user_levels = load_user_levels()
+def save_user_levels(user_levels):
+    """
+    Save user levels to the Lightsail bucket.
+    """
+    data = json.dumps({str(uid): info for uid, info in user_levels.items()}, indent=4)
+    s3.put_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY, Body=data.encode("utf-8"))
 
 # ---------------------------
 # Level Helpers
