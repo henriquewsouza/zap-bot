@@ -908,15 +908,16 @@ async def arca(ctx, month: str = None):
             continue
 
         # Filter by match date (assumed in top-level "data" field with format "dd/mm/YYYY HH:MM")
-        match_date_str = match_data.get("data")
-        if not match_date_str:
-            continue
-        try:
-            match_date = datetime.strptime(match_date_str, "%d/%m/%Y %H:%M")
-        except Exception:
-            continue
-        if match_date.strftime("%Y-%m") != month_year:
-            continue
+        if not all_flag:
+            match_date_str = match_data.get("data")
+            if not match_date_str:
+                continue
+            try:
+                match_date = datetime.strptime(match_date_str, "%d/%m/%Y %H:%M")
+            except Exception:
+                continue
+            if match_date.strftime("%Y-%m") != month_year:
+                continue
 
         # Determine unique match id
         match_id = match_data.get("id") or match_data.get("match_id")
