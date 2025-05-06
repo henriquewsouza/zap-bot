@@ -100,11 +100,11 @@ mix_in_progress = False
 
 
 def build_team_message(team1, team2):
-    sorted_team1 = sorted(team1, key=lambda m: get_effective_level(m), reverse=True)
-    sorted_team2 = sorted(team2, key=lambda m: get_effective_level(m), reverse=True)
+    sorted_team1 = sorted(team1, key=lambda m: get_display_level(m), reverse=True)
+    sorted_team2 = sorted(team2, key=lambda m: get_display_level(m), reverse=True)
 
-    total_team1 = sum(get_effective_level(m) for m in sorted_team1)
-    total_team2 = sum(get_effective_level(m) for m in sorted_team2)
+    total_team1 = sum(get_display_level(m) for m in sorted_team1)
+    total_team2 = sum(get_display_level(m) for m in sorted_team2)
 
     team1_text = "\n".join(
         f"{m.mention} (Level: {get_display_level(m)})" for m in sorted_team1
@@ -114,8 +114,8 @@ def build_team_message(team1, team2):
     )
 
     message = (
-        f"**Team 1:**\n{team1_text}\n**Total Skill:** {total_team1}\n\n"
-        f"**Team 2:**\n{team2_text}\n**Total Skill:** {total_team2}\n\n"
+        f"**Team 1:**\n{team1_text}\n\n"
+        f"**Team 2:**\n{team2_text}\n\n"
         f"**Difference:** {abs(total_team1 - total_team2)}\n\n"
         f"**Lembre-se: Se vc sacanear o Zap é melhor esperar que ele não descubra seu IP**"
     )
