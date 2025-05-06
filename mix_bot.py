@@ -1010,8 +1010,13 @@ async def arca(ctx, month: str = None):
         output_lines.append(line)
     output = "\n".join(output_lines)
 
+    if all_flag:
+        time_msg = "All time stats"
+    else:
+        time_msg = month_year
+
     embed = Embed(
-        title=f"Group (Arca) Performance on Each Map ({month_year})",
+        title=f"Group (Arca) Performance on Each Map ({time_msg})",
         description=output,
         color=0x1abc9c
     )
