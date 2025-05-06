@@ -469,6 +469,103 @@ async def botadmins(ctx):
             msg_lines.append(f"<@{admin_id}> - No info available.")
     await ctx.send("\n".join(msg_lines))
 
+@bot.command(name="alltimestats")
+async def all_time_stats(ctx, member: discord.Member):
+    """
+    !alltimestats @Player
+    Aggregates all available stats for the mentioned player across all months.
+    """
+    import json
+    from botocore.exceptions import ClientError
+
+    # Load members.json from S3
+    try:
+        response = s3.get_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY)
+        members_contents = response["Body"].read().decode("utf-8")
+        members_data = json.loads(members_contents)
+    except Exception:
+        await ctx.send("Erro ao carregar dados dos membros do S3.")
+        return
+
+    discord_id_str = str(member.id)
+    if discord_id_str not in members_data:
+        await ctx.send(f"{member.display_name} não está na lista de membros.")
+        return
+
+    gc_id = members_data[discord_id_str].get("gc")
+    if not gc_id:
+        await ctx.send(f"{member.display_name} não tem GC ID definido.")
+        return
+
+    # List all monthly stats files for this player
+    prefix = f"players/{gc_id}/stats-"
+    try:
+        list_resp = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix=prefix)
+        files = list_resp.get("Contents", [])
+    except Exception:
+        await ctx.send("Erro ao listar arquivos de stats no S3.")
+        return
+
+    if not files:
+        await ctx.send(f"Nenhum stats encontrado para {member.display_name}.")
+        return
+
+    # Initialize aggregate counters
+    total_matches = total_wins = total_losses = 0
+    total_kills = total_deaths = total_first_kills = 0
+    sum_adr = sum_hs = sum_matches_for_avg = 0
+
+    # Iterate through each stats file
+    for obj in files:
+        try:
+            stats_data = json.loads(
+                s3.get_object(Bucket=BUCKET_NAME, Key=obj['Key'])["Body"].read().decode("utf-8")
+            )
+        except ClientError:
+            continue
+        except Exception:
+            continue
+
+        matches = stats_data.get("total_matches", 0)
+        total_matches += matches
+        total_wins += stats_data.get("total_wins", 0)
+        total_losses += stats_data.get("total_losses", 0)
+        total_kills += stats_data.get("total_kills", 0)
+        total_deaths += stats_data.get("total_deaths", 0)
+        total_first_kills += stats_data.get("total_first_kills", 0)
+
+        # Weighted for averages
+        if matches > 0:
+            sum_adr += stats_data.get("ADR", 0) * matches
+            sum_hs += stats_data.get("HS_percent", 0) * matches
+            sum_matches_for_avg += matches
+
+    # Calculate aggregated metrics
+    win_rate = (total_wins / total_matches * 100) if total_matches else 0
+    kdr = (total_kills / total_deaths) if total_deaths else total_kills
+    avg_adr = (sum_adr / sum_matches_for_avg) if sum_matches_for_avg else 0
+    avg_hs = (sum_hs / sum_matches_for_avg) if sum_matches_for_avg else 0
+    avg_fk = (total_first_kills / total_matches) if total_matches else 0
+
+    # Build and send embed
+    embed = discord.Embed(
+        title=f"All Time Stats de {member.display_name}",
+        color=0x00ff00
+    )
+    embed.add_field(name="Partidas", value=total_matches, inline=True)
+    embed.add_field(name="Vitórias", value=total_wins, inline=True)
+    embed.add_field(name="Derrotas", value=total_losses, inline=True)
+    embed.add_field(name="Win Rate", value=f"{win_rate:.2f}%", inline=True)
+    embed.add_field(name="Kills", value=total_kills, inline=True)
+    embed.add_field(name="Deaths", value=total_deaths, inline=True)
+    embed.add_field(name="KDR", value=f"{kdr:.2f}", inline=True)
+    embed.add_field(name="ADR", value=f"{avg_adr:.2f}", inline=True)
+    embed.add_field(name="HS%", value=f"{avg_hs:.2f}%", inline=True)
+    embed.add_field(name="First Kills", value=total_first_kills, inline=True)
+    embed.add_field(name="Avg FK/Match", value=f"{avg_fk:.2f}", inline=True)
+    await ctx.send(embed=embed)
+
+
 @bot.command(name="stats")
 async def stats(ctx, member: discord.Member, month: str = None):
     """
@@ -511,6 +608,7 @@ async def stats(ctx, member: discord.Member, month: str = None):
             return
     else:
         month_year = datetime.now().strftime("%Y-%m")
+
     stats_key = f"players/{gc_id}/stats-{month_year}.json"
     try:
         stats_response = s3.get_object(Bucket=BUCKET_NAME, Key=stats_key)
