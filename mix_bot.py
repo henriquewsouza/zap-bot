@@ -834,6 +834,120 @@ async def update(ctx, member: discord.Member):
     await ctx.send(f"Update complete for {member.mention}.")
 
 
+@bot.command(name="alltimeranking")
+async def all_time_ranking(ctx):
+    """
+    !alltimeranking
+    Aggregates all available stats across all months for all players and displays leaderboards.
+    """
+    import json
+    from botocore.exceptions import ClientError
+
+    # Load members.json from S3
+    try:
+        response = s3.get_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY)
+        members_contents = response["Body"].read().decode("utf-8")
+        members_data = json.loads(members_contents)
+    except Exception:
+        await ctx.send("Erro ao carregar dados dos membros do S3.")
+        return
+
+    stats_list = []
+    # Iterate each member to aggregate their all-time stats
+    for discord_id_str, info in members_data.items():
+        gc_id = info.get("gc")
+        nickname = info.get("nickname", "Unknown")
+        if not gc_id:
+            continue
+
+        # List all stats files for this player
+        prefix = f"players/{gc_id}/stats-"
+        try:
+            list_resp = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix=prefix)
+            files = list_resp.get("Contents", [])
+        except Exception:
+            continue
+
+        if not files:
+            continue
+
+        # Initialize aggregate counters
+        total_matches = total_wins = total_losses = 0
+        total_kills = total_deaths = total_first_kills = 0
+        sum_adr = sum_hs = sum_matches_for_avg = 0
+
+        for obj in files:
+            try:
+                stats_data = json.loads(
+                    s3.get_object(Bucket=BUCKET_NAME, Key=obj['Key'])["Body"].read().decode("utf-8")
+                )
+            except ClientError:
+                continue
+            except Exception:
+                continue
+
+            matches = stats_data.get("total_matches", 0)
+            total_matches += matches
+            total_wins += stats_data.get("total_wins", 0)
+            total_losses += stats_data.get("total_losses", 0)
+            total_kills += stats_data.get("total_kills", 0)
+            total_deaths += stats_data.get("total_deaths", 0)
+            total_first_kills += stats_data.get("total_first_kills", 0)
+            if matches > 0:
+                sum_adr += stats_data.get("ADR", 0) * matches
+                sum_hs += stats_data.get("HS_percent", 0) * matches
+                sum_matches_for_avg += matches
+
+        if total_matches == 0:
+            continue
+
+        # Compute metrics
+        win_rate = (total_wins / total_matches * 100)
+        kdr = (total_kills / total_deaths) if total_deaths else total_kills
+        avg_adr = (sum_adr / sum_matches_for_avg) if sum_matches_for_avg else 0
+        avg_hs = (sum_hs / sum_matches_for_avg) if sum_matches_for_avg else 0
+        avg_fk = (total_first_kills / total_matches) if total_matches else 0
+
+        stats_list.append({
+            "nickname": nickname,
+            "matches": total_matches,
+            "win_rate": win_rate,
+            "kdr": kdr,
+            "adr": avg_adr,
+            "hs": avg_hs,
+            "avg_fk": avg_fk
+        })
+
+    if not stats_list:
+        await ctx.send("Nenhum dado de stats encontrado para ranking.")
+        return
+
+    # Helper to build ranking text
+    def build_ranking(sorted_list, key, label):
+        return "\n".join([
+            f"{i+1}. {p['nickname']} - {label}: {p[key]:.2f} ({p['matches']} partidas)"
+            for i, p in enumerate(sorted_list)
+        ])
+
+    # Sort and build each leaderboard
+    kdr_sorted = sorted(stats_list, key=lambda x: x['kdr'], reverse=True)
+    adr_sorted = sorted(stats_list, key=lambda x: x['adr'], reverse=True)
+    fk_sorted = sorted(stats_list, key=lambda x: x['avg_fk'], reverse=True)
+    win_sorted = sorted(stats_list, key=lambda x: x['win_rate'], reverse=True)
+
+    embed = discord.Embed(
+        title="All Time Ranking",
+        description="Leaderboards agregados de todos os meses",
+        color=0x3498db
+    )
+    embed.add_field(name="KDR Ranking", value=f"```{build_ranking(kdr_sorted, 'kdr', 'KDR')}```", inline=False)
+    embed.add_field(name="ADR Ranking", value=f"```{build_ranking(adr_sorted, 'adr', 'ADR')}```", inline=False)
+    embed.add_field(name="Avg FK Ranking", value=f"```{build_ranking(fk_sorted, 'avg_fk', 'Avg FK')}```", inline=False)
+    embed.add_field(name="Win Rate Ranking", value=f"```{build_ranking(win_sorted, 'win_rate', 'Win Rate')}```", inline=False)
+
+    await ctx.send(embed=embed)
+
+
 
 @bot.command(name="ranking")
 async def ranking(ctx, month: str = None):
