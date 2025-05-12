@@ -3,5 +3,35 @@
         "match_id": 23615681,
         "map": "de_dust2",
         "win": 1
+    },
+    {
+        "match_id": 23629532,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 23629911,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 23649641,
+        "map": "de_anubis",
+        "win": 0
+    },
+    {
+        "match_id": 23663502,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 23666567,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 23667585,
+        "map": "de_anubis",
+        "win": 0
     }
 ]

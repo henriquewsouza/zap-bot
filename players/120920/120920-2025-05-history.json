@@ -63,5 +63,45 @@
         "match_id": 23623330,
         "map": "de_dust2",
         "win": 0
+    },
+    {
+        "match_id": 23629911,
+        "map": "de_nuke",
+        "win": 0
+    },
+    {
+        "match_id": 23630476,
+        "map": "de_anubis",
+        "win": 0
+    },
+    {
+        "match_id": 23642646,
+        "map": "de_anubis",
+        "win": 1
+    },
+    {
+        "match_id": 23642887,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 23643315,
+        "map": "de_nuke",
+        "win": 0
+    },
+    {
+        "match_id": 23650039,
+        "map": "de_anubis",
+        "win": 0
+    },
+    {
+        "match_id": 23663502,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 23667150,
+        "map": "de_anubis",
+        "win": 0
     }
 ]
