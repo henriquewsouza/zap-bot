@@ -431,28 +431,36 @@ async def players(ctx):
 @bot.command(name="help")
 async def help_command(ctx):
     """
-    !help
-    Displays the list of available bot commands.
+    Exibe a lista de comandos disponíveis.
     """
     help_text = (
-        "**Bot Commands:**\n"
-        "**!mix [<number>] [--exclude @User ...] [--extra @User ...]**\n"
-        "   - Generates one or more balanced team partitions from non‑bot members.\n"
-        "     (If any member does not have a level set, their name will be reported.)\n"
-        "**!arere**\n"
-        "   - Randomly splits voice channel members into two teams.\n"
-        "**!clear**\n"
-        "   - Clears all (non-pinned) messages from the current channel. (Requires Manage Messages; Bot Admins only.)\n"
-        "**!setlevel @User <level>**\n"
-        "   - Permanently updates a member's level and saves the change to the Lightsail bucket. (Bot Admins only.)\n"
-        "**!addtemp @User <level>**\n"
-        "   - Temporarily adds a member with a given level (in-memory only). (Bot Admins only.)\n"
-        "**!players**\n"
-        "   - Displays the current list of players along with their levels and nicknames.\n"
-        "**!botadmins**\n"
-        "   - Displays the current list of Bot Admins along with their nicknames and levels."
+        "**Comandos do Zap Bot**\n\n"
+        "__👥 Gestão de Times__\n"
+        "**!mix [<n>] [--exclude/-e @User …] [--extra/-x @User …] [--duelo/-t @A @B]**\n"
+        "   • Gera até **n** partições balanceadas dos membros do seu canal de voz.\n"
+        "   • `--exclude` remove mencionados, `--extra` adiciona extras, `--duelo` garante que dois jogadores fiquem em lados opostos.\n"
+        "**!arere** – Divide o canal de voz aleatoriamente em dois times.\n"
+        "**!ranking_mix [YYYY-MM]** – Leaderboards apenas de partidas onde ambos os times tinham players do grupo.\n\n"
+        "__📊 Estatísticas de Jogadores__\n"
+        "**!stats @Player [YYYY-MM]** – Mostra stats do mês (ou atual) + roast gerado pelo ZapIA.\n"
+        "**!alltimestats @Player** – Agrega todos os meses registrados para o jogador.\n"
+        "**!ranking [YYYY-MM]** – Ranking mensal (KDR, ADR, FK, Win Rate).\n"
+        "**!alltimeranking** – Ranking geral somando todos os meses.\n"
+        "**!arca [YYYY-MM | -all]** – Desempenho do grupo por mapa (mês ou all-time).\n\n"
+        "__🤖 Integração com IA__\n"
+        "**!zapIA <pergunta>** – Pergunte qualquer coisa sobre os stats agregados do grupo; resposta vem com elogios e roast.\n\n"
+        "__🔧 Comandos de Administração__ (Bot Admins)\n"
+        "**!setlevel @User <level>** – Define o nível permanente do jogador.\n"
+        "**!addtemp @User <level>** – Adiciona nível temporário (somente memória).\n"
+        "**!clear** – Limpa todas as mensagens não fixadas do canal atual.\n"
+        "**!update @User** – Atualiza histórico e stats do jogador para o mês corrente.\n"
+        "**!updateall** – Atualiza histórico/stats de todos os jogadores listados.\n\n"
+        "__ℹ️ Informações__\n"
+        "**!players** – Lista todos os jogadores cadastrados com níveis.\n"
+        "**!botadmins** – Mostra quem são os administradores do bot.\n"
     )
     await ctx.send(help_text)
+
 
 @bot.command(name="botadmins")
 async def botadmins(ctx):
