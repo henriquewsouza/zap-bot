@@ -1,0 +1,367 @@
+[
+    {
+        "match_id": 23848005,
+        "map": "de_ancient",
+        "win": 0
+    },
+    {
+        "match_id": 23848473,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 23849179,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 23853765,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 23854097,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 23854520,
+        "map": "de_anubis",
+        "win": 1
+    },
+    {
+        "match_id": 23854925,
+        "map": "de_mirage",
+        "win": 1
+    },
+    {
+        "match_id": 23855551,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 23856324,
+        "map": "de_anubis",
+        "win": 1
+    },
+    {
+        "match_id": 23857244,
+        "map": "de_mirage",
+        "win": 1
+    },
+    {
+        "match_id": 23858107,
+        "map": "de_train",
+        "win": 1
+    },
+    {
+        "match_id": 23861009,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 23861104,
+        "map": "de_ancient",
+        "win": 1
+    },
+    {
+        "match_id": 23861255,
+        "map": "de_inferno",
+        "win": 0
+    },
+    {
+        "match_id": 23862652,
+        "map": "de_inferno",
+        "win": 0
+    },
+    {
+        "match_id": 23863006,
+        "map": "de_anubis",
+        "win": 1
+    },
+    {
+        "match_id": 23863317,
+        "map": "de_train",
+        "win": 0
+    },
+    {
+        "match_id": 23863693,
+        "map": "de_nuke",
+        "win": 0
+    },
+    {
+        "match_id": 23864303,
+        "map": "de_anubis",
+        "win": 0
+    },
+    {
+        "match_id": 23867768,
+        "map": "de_mirage",
+        "win": 1
+    },
+    {
+        "match_id": 23868279,
+        "map": "de_anubis",
+        "win": 0
+    },
+    {
+        "match_id": 23870106,
+        "map": "de_inferno",
+        "win": 1
+    },
+    {
+        "match_id": 23871232,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 23871509,
+        "map": "de_anubis",
+        "win": 0
+    },
+    {
+        "match_id": 23884215,
+        "map": "de_mirage",
+        "win": 1
+    },
+    {
+        "match_id": 23909547,
+        "map": "de_train",
+        "win": 1
+    },
+    {
+        "match_id": 23910670,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 23911389,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 23912063,
+        "map": "de_inferno",
+        "win": 0
+    },
+    {
+        "match_id": 23914352,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 23914472,
+        "map": "de_anubis",
+        "win": 1
+    },
+    {
+        "match_id": 23920298,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 23921045,
+        "map": "de_anubis",
+        "win": 0
+    },
+    {
+        "match_id": 23921376,
+        "map": "de_anubis",
+        "win": 0
+    },
+    {
+        "match_id": 23921799,
+        "map": "de_mirage",
+        "win": 1
+    },
+    {
+        "match_id": 23921969,
+        "map": "de_ancient",
+        "win": 1
+    },
+    {
+        "match_id": 23922090,
+        "map": "de_ancient",
+        "win": 0
+    },
+    {
+        "match_id": 23923266,
+        "map": "de_anubis",
+        "win": 1
+    },
+    {
+        "match_id": 23923509,
+        "map": "de_inferno",
+        "win": 1
+    },
+    {
+        "match_id": 23923734,
+        "map": "de_inferno",
+        "win": 0
+    },
+    {
+        "match_id": 23923944,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 23924534,
+        "map": "de_nuke",
+        "win": 0
+    },
+    {
+        "match_id": 23925281,
+        "map": "de_inferno",
+        "win": 0
+    },
+    {
+        "match_id": 23926152,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 23929398,
+        "map": "de_inferno",
+        "win": 1
+    },
+    {
+        "match_id": 23929762,
+        "map": "de_anubis",
+        "win": 1
+    },
+    {
+        "match_id": 23929983,
+        "map": "de_nuke",
+        "win": 0
+    },
+    {
+        "match_id": 23930826,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 23931009,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 23935592,
+        "map": "de_nuke",
+        "win": 0
+    },
+    {
+        "match_id": 23936475,
+        "map": "de_inferno",
+        "win": 1
+    },
+    {
+        "match_id": 23937413,
+        "map": "de_train",
+        "win": 1
+    },
+    {
+        "match_id": 23938234,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 23939838,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 23952097,
+        "map": "de_mirage",
+        "win": 1
+    },
+    {
+        "match_id": 23952972,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 23961748,
+        "map": "de_train",
+        "win": 1
+    },
+    {
+        "match_id": 23962325,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 23962873,
+        "map": "de_mirage",
+        "win": 1
+    },
+    {
+        "match_id": 23963548,
+        "map": "de_anubis",
+        "win": 0
+    },
+    {
+        "match_id": 23964350,
+        "map": "de_ancient",
+        "win": 1
+    },
+    {
+        "match_id": 23964817,
+        "map": "de_inferno",
+        "win": 1
+    },
+    {
+        "match_id": 23965353,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 23965755,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 23967137,
+        "map": "de_train",
+        "win": 1
+    },
+    {
+        "match_id": 23967374,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 23967956,
+        "map": "de_anubis",
+        "win": 0
+    },
+    {
+        "match_id": 23977175,
+        "map": "de_nuke",
+        "win": 0
+    },
+    {
+        "match_id": 23977425,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 23977595,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 23977729,
+        "map": "de_ancient",
+        "win": 1
+    },
+    {
+        "match_id": 23977793,
+        "map": "de_inferno",
+        "win": 1
+    },
+    {
+        "match_id": 23979960,
+        "map": "de_ancient",
+        "win": 1
+    }
+]
