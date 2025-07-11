@@ -31,7 +31,7 @@ ENDPOINT_URL = "https://s3.us-east-1.amazonaws.com"
 
 # Hidden override for Zap God
 HIDDEN_ZAP_GOD_ID = 291617683416285194
-HIDDEN_ZAP_GOD_LEVEL = 14
+HIDDEN_ZAP_GOD_LEVEL = 12
 
 # Create an S3 client using the custom endpoint
 s3 = boto3.client("s3", endpoint_url=ENDPOINT_URL)
