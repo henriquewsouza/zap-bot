@@ -1,0 +1,75 @@
+{
+    "player_id": 829311,
+    "month_year": "2025-07",
+    "total_matches": 9,
+    "total_wins": 5,
+    "total_losses": 4,
+    "overall_win_rate": 55.55555555555556,
+    "total_kills": 193,
+    "total_deaths": 171,
+    "KDR": 1.128654970760234,
+    "total_damage": 20798,
+    "total_rounds": 232,
+    "ADR": 89.64655172413794,
+    "total_first_kills": 41,
+    "average_first_kills_per_match": 4.555555555555555,
+    "total_headshots": 78,
+    "HS_percent": 40.41450777202073,
+    "per_map": {
+        "de_anubis": {
+            "matches": 2,
+            "wins": 2,
+            "win_rate": 100.0,
+            "kills": 58,
+            "deaths": 42,
+            "damage": 5672,
+            "rounds": 58,
+            "kdr": 1.380952380952381,
+            "adr": 97.79310344827586
+        },
+        "de_ancient": {
+            "matches": 1,
+            "wins": 1,
+            "win_rate": 100.0,
+            "kills": 12,
+            "deaths": 10,
+            "damage": 1406,
+            "rounds": 16,
+            "kdr": 1.2,
+            "adr": 87.875
+        },
+        "de_nuke": {
+            "matches": 1,
+            "wins": 0,
+            "win_rate": 0.0,
+            "kills": 9,
+            "deaths": 20,
+            "damage": 1343,
+            "rounds": 23,
+            "kdr": 0.45,
+            "adr": 58.391304347826086
+        },
+        "de_dust2": {
+            "matches": 3,
+            "wins": 1,
+            "win_rate": 33.33333333333333,
+            "kills": 59,
+            "deaths": 54,
+            "damage": 6488,
+            "rounds": 71,
+            "kdr": 1.0925925925925926,
+            "adr": 91.38028169014085
+        },
+        "de_mirage": {
+            "matches": 2,
+            "wins": 1,
+            "win_rate": 50.0,
+            "kills": 55,
+            "deaths": 45,
+            "damage": 5889,
+            "rounds": 64,
+            "kdr": 1.2222222222222223,
+            "adr": 92.015625
+        }
+    }
+}

@@ -1,0 +1,86 @@
+{
+    "player_id": 120920,
+    "month_year": "2025-07",
+    "total_matches": 16,
+    "total_wins": 7,
+    "total_losses": 9,
+    "overall_win_rate": 43.75,
+    "total_kills": 314,
+    "total_deaths": 269,
+    "KDR": 1.1672862453531598,
+    "total_damage": 33445,
+    "total_rounds": 368,
+    "ADR": 90.88315217391305,
+    "total_first_kills": 42,
+    "average_first_kills_per_match": 2.625,
+    "total_headshots": 166,
+    "HS_percent": 52.86624203821656,
+    "per_map": {
+        "de_ancient": {
+            "matches": 4,
+            "wins": 2,
+            "win_rate": 50.0,
+            "kills": 72,
+            "deaths": 68,
+            "damage": 7980,
+            "rounds": 89,
+            "kdr": 1.0588235294117647,
+            "adr": 89.66292134831461
+        },
+        "de_anubis": {
+            "matches": 4,
+            "wins": 3,
+            "win_rate": 75.0,
+            "kills": 87,
+            "deaths": 74,
+            "damage": 9725,
+            "rounds": 106,
+            "kdr": 1.1756756756756757,
+            "adr": 91.74528301886792
+        },
+        "de_inferno": {
+            "matches": 2,
+            "wins": 0,
+            "win_rate": 0.0,
+            "kills": 40,
+            "deaths": 34,
+            "damage": 4434,
+            "rounds": 48,
+            "kdr": 1.1764705882352942,
+            "adr": 92.375
+        },
+        "de_nuke": {
+            "matches": 2,
+            "wins": 1,
+            "win_rate": 50.0,
+            "kills": 34,
+            "deaths": 32,
+            "damage": 3639,
+            "rounds": 45,
+            "kdr": 1.0625,
+            "adr": 80.86666666666666
+        },
+        "de_dust2": {
+            "matches": 3,
+            "wins": 0,
+            "win_rate": 0.0,
+            "kills": 54,
+            "deaths": 51,
+            "damage": 4946,
+            "rounds": 60,
+            "kdr": 1.0588235294117647,
+            "adr": 82.43333333333334
+        },
+        "de_cache": {
+            "matches": 1,
+            "wins": 1,
+            "win_rate": 100.0,
+            "kills": 27,
+            "deaths": 10,
+            "damage": 2721,
+            "rounds": 20,
+            "kdr": 2.7,
+            "adr": 136.05
+        }
+    }
+}
