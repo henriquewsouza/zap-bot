@@ -1298,60 +1298,71 @@ async def updateall(ctx):
 async def lks_command(ctx):
     """
     !LKS
-    Envia um prompt com todas as imagens do folder 'lks' no S3 para o ChatGPT,
-    pedindo uma análise sarcástica sobre zapg0d e doctor (LKS o iron burro).
+    Lista todas as imagens do folder 'lks' no S3, envia elas no chat e
+    pergunta ao ChatGPT o que acha de zapg0d e doctor (LKS o iron burro).
     """
     from botocore.exceptions import ClientError
 
-    await ctx.send("🔍 Carregando imagens do LKS e perguntando para o ZapIA...")
+    await ctx.send("🔍 Carregando imagens do LKS e preparando a análise do ZapIA...")
 
     # Lista todos os objetos no prefixo 'lks/'
     try:
         response = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix="lks/")
         contents = response.get("Contents", [])
         if not contents:
-            await ctx.send("Nenhuma imagem encontrada no folder 'lks/'.")
+            await ctx.send("❌ Nenhuma imagem encontrada no folder 'lks/'.")
             return
     except ClientError as e:
-        await ctx.send("Erro ao listar o folder 'lks/' no S3.")
+        await ctx.send("❌ Erro ao listar o folder 'lks/' no S3.")
         return
 
-    # Gera uma lista com os nomes das imagens
-    image_names = [obj["Key"].split("/")[-1] for obj in contents if obj["Key"].lower().endswith(('.png', '.jpg', '.jpeg', '.gif'))]
-    if not image_names:
-        await ctx.send("Nenhuma imagem válida (.png/.jpg/.jpeg/.gif) encontrada no folder 'lks/'.")
+    # Filtra apenas imagens válidas
+    image_keys = [obj["Key"] for obj in contents if obj["Key"].lower().endswith(('.png', '.jpg', '.jpeg', '.gif'))]
+    if not image_keys:
+        await ctx.send("❌ Nenhuma imagem válida (.png/.jpg/.jpeg/.gif) encontrada no folder 'lks/'.")
         return
 
-    # Monta o prompt para o ChatGPT
-    images_list = "\n".join(f"- {name}" for name in image_names)
+    # Envia cada imagem no chat
+    for key in image_keys:
+        try:
+            image_url = f"{ENDPOINT_URL}/{BUCKET_NAME}/{key}"
+            await ctx.send(content=f"📷 Imagem: `{key.split('/')[-1]}`", embed=discord.Embed().set_image(url=image_url))
+        except Exception as e:
+            await ctx.send(f"⚠️ Erro ao enviar imagem `{key.split('/')[-1]}`")
+
+    # Monta lista de nomes para o prompt
+    image_names = "\n".join(f"- {key.split('/')[-1]}" for key in image_keys)
+
+    # Monta prompt para ChatGPT
     prompt = f"""
-Você é um analista extremamente sarcástico e provocador do ZapIA. Aqui estão imagens do folder 'lks':
-{images_list}
+Você é o ZapIA, um analista extremamente sarcástico e provocador de CS. Aqui estão imagens do folder 'lks':
+{image_names}
 
-Com base nessas imagens, faça um comentário sobre o jogador zapg0d e o jogador doctor (também conhecido como LKS, o iron burro). 
-Use muita ironia, humor negro e criatividade. Elogie quando necessário, mas principalmente faça roasts pesados. Não seja politicamente correto.
+Baseado nessas imagens, comente sobre o jogador zapg0d e o jogador doctor (também conhecido como LKS, o iron burro). 
+Use ironia pesada, humor ácido e comparações com outros jogadores se possível. Pode elogiar quando necessário, mas o foco é o roast.
 """
     try:
         logging.debug("Enviando prompt para ChatGPT (LKS): %s", prompt)
         response = client.responses.create(
             model="gpt-4o",
-            instructions="Você é um analista de estatísticas e comportamento de jogadores de CS, extremamente sarcástico e provocador.",
+            instructions="Você é um analista de estatísticas de CS, sarcástico, ofensivo e provocador.",
             input=prompt
         )
         answer = response.output_text.strip()
         logging.debug("Resposta do ChatGPT (LKS): %s", answer)
     except Exception as e:
-        logging.exception("Erro ao consultar o ChatGPT para !LKS:")
-        await ctx.send("Erro ao consultar o ChatGPT para o comando !LKS.")
+        logging.exception("❌ Erro ao consultar o ChatGPT para !LKS:")
+        await ctx.send("❌ Erro ao consultar o ChatGPT para o comando !LKS.")
         return
 
-    # Enviar a resposta no Discord
+    # Envia a resposta do ChatGPT no chat
     if len(answer) > 1900:
-        await ctx.send("💬 **ZapIA disse:**")
+        await ctx.send("🧠 **ZapIA disse:**")
         for i in range(0, len(answer), 1900):
             await ctx.send(f"```{answer[i:i+1900]}```")
     else:
-        await ctx.send(f"💬 **ZapIA disse:**\n```{answer}```")
+        await ctx.send(f"🧠 **ZapIA disse:**\n```{answer}```")
+
 
 
 @bot.command(name="ranking_mix")
