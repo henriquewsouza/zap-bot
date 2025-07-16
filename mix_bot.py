@@ -1298,14 +1298,14 @@ async def updateall(ctx):
 async def lks_command(ctx):
     """
     !LKS
-    Lista todas as imagens do folder 'lks' no S3, envia elas no chat e
-    pergunta ao ChatGPT o que acha de zapg0d e doctor (LKS o iron burro).
+    Lista imagens do folder 'lks' no S3, envia elas no Discord e pede ao GPT-4o para julgar
+    zapg0d e doctor (LKS o iron burro) com base no conteúdo visual e nos nomes dos arquivos.
     """
     from botocore.exceptions import ClientError
 
-    await ctx.send("🔍 Carregando imagens do LKS e preparando a análise do ZapIA...")
+    await ctx.send("🔍 Carregando imagens do LKS e preparando a análise do ZapIA insano...")
 
-    # Lista todos os objetos no prefixo 'lks/'
+    # Lista os objetos no prefixo 'lks/'
     try:
         response = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix="lks/")
         contents = response.get("Contents", [])
@@ -1316,52 +1316,76 @@ async def lks_command(ctx):
         await ctx.send("❌ Erro ao listar o folder 'lks/' no S3.")
         return
 
-    # Filtra apenas imagens válidas
+    # Filtra imagens válidas
     image_keys = [obj["Key"] for obj in contents if obj["Key"].lower().endswith(('.png', '.jpg', '.jpeg', '.gif'))]
     if not image_keys:
-        await ctx.send("❌ Nenhuma imagem válida (.png/.jpg/.jpeg/.gif) encontrada no folder 'lks/'.")
+        await ctx.send("❌ Nenhuma imagem válida encontrada no folder 'lks/'.")
         return
 
-    # Envia cada imagem no chat
+    multimodal_inputs = []
+    signed_urls = []
+
+    # Envia as imagens no Discord e prepara para o GPT
     for key in image_keys:
         try:
-            image_url = f"{ENDPOINT_URL}/{BUCKET_NAME}/{key}"
-            await ctx.send(content=f"📷 Imagem: `{key.split('/')[-1]}`", embed=discord.Embed().set_image(url=image_url))
+            signed_url = s3.generate_presigned_url(
+                'get_object',
+                Params={'Bucket': BUCKET_NAME, 'Key': key},
+                ExpiresIn=3600  # válido por 1h
+            )
+            signed_urls.append(signed_url)
+
+            # Enviar no Discord
+            embed = discord.Embed(title=f"Imagem: {key.split('/')[-1]}")
+            embed.set_image(url=signed_url)
+            await ctx.send(embed=embed)
+
+            # Adiciona ao multimodal input
+            multimodal_inputs.append({
+                "type": "image_url",
+                "image_url": {"url": signed_url}
+            })
         except Exception as e:
+            logging.exception(f"Erro ao gerar signed URL para {key}:")
             await ctx.send(f"⚠️ Erro ao enviar imagem `{key.split('/')[-1]}`")
 
-    # Monta lista de nomes para o prompt
-    image_names = "\n".join(f"- {key.split('/')[-1]}" for key in image_keys)
-
-    # Monta prompt para ChatGPT
-    prompt = f"""
-Você é o ZapIA, um analista extremamente sarcástico e provocador de CS. Aqui estão imagens do folder 'lks':
-{image_names}
-
-Baseado nessas imagens, comente sobre o jogador zapg0d e o jogador doctor (também conhecido como LKS, o iron burro). 
-Use ironia pesada, humor ácido e comparações com outros jogadores se possível. Pode elogiar quando necessário, mas o foco é o roast.
+    # Adiciona o prompt textual
+    multimodal_inputs.append({
+        "type": "text",
+        "text": """
+Você é o ZapIA, um analista de CS extremamente sarcástico e provocador.
+Com base nessas imagens e nos nomes dos arquivos, faça um julgamento sobre o jogador zapg0d e o jogador doctor (também conhecido como LKS, o iron burro).
+Use ironia pesada, humor ácido e comparações com outros jogadores se possível.
+Pode elogiar onde necessário, mas o foco é o roast mais ofensivo e engraçado possível.
 """
+    })
+
+    # Envia para o GPT-4o multimodal
     try:
-        logging.debug("Enviando prompt para ChatGPT (LKS): %s", prompt)
-        response = client.responses.create(
+        logging.debug("Enviando conteúdo multimodal para ChatGPT (LKS)")
+        response = client.chat.completions.create(
             model="gpt-4o",
-            instructions="Você é um analista de estatísticas de CS, sarcástico, ofensivo e provocador.",
-            input=prompt
+            messages=[
+                {"role": "system", "content": "Você é um analista de CS, sarcástico, ofensivo e provocador."},
+                {"role": "user", "content": multimodal_inputs}
+            ]
         )
-        answer = response.output_text.strip()
-        logging.debug("Resposta do ChatGPT (LKS): %s", answer)
+        answer = response.choices[0].message.content.strip()
+        logging.debug("Resposta do ChatGPT (LKS multimodal): %s", answer)
     except Exception as e:
         logging.exception("❌ Erro ao consultar o ChatGPT para !LKS:")
-        await ctx.send("❌ Erro ao consultar o ChatGPT para o comando !LKS.")
+        await ctx.send("❌ Erro ao consultar o ChatGPT multimodal para o comando !LKS.")
         return
 
-    # Envia a resposta do ChatGPT no chat
+    # Envia a resposta no Discord
     if len(answer) > 1900:
-        await ctx.send("🧠 **ZapIA disse:**")
+        await ctx.send("🧠 **ZapIA (modo insano) disse:**")
         for i in range(0, len(answer), 1900):
             await ctx.send(f"```{answer[i:i+1900]}```")
     else:
-        await ctx.send(f"🧠 **ZapIA disse:**\n```{answer}```")
+        await ctx.send(f"🧠 **ZapIA (modo insano) disse:**\n```{answer}```")
+
+
 
 
 
