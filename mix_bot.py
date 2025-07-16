@@ -1294,6 +1294,66 @@ async def updateall(ctx):
     
     await ctx.send("Update complete for all players.")
 
+@bot.command(name="LKS")
+async def lks_command(ctx):
+    """
+    !LKS
+    Envia um prompt com todas as imagens do folder 'lks' no S3 para o ChatGPT,
+    pedindo uma análise sarcástica sobre zapg0d e doctor (LKS o iron burro).
+    """
+    from botocore.exceptions import ClientError
+
+    await ctx.send("🔍 Carregando imagens do LKS e perguntando para o ZapIA...")
+
+    # Lista todos os objetos no prefixo 'lks/'
+    try:
+        response = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix="lks/")
+        contents = response.get("Contents", [])
+        if not contents:
+            await ctx.send("Nenhuma imagem encontrada no folder 'lks/'.")
+            return
+    except ClientError as e:
+        await ctx.send("Erro ao listar o folder 'lks/' no S3.")
+        return
+
+    # Gera uma lista com os nomes das imagens
+    image_names = [obj["Key"].split("/")[-1] for obj in contents if obj["Key"].lower().endswith(('.png', '.jpg', '.jpeg', '.gif'))]
+    if not image_names:
+        await ctx.send("Nenhuma imagem válida (.png/.jpg/.jpeg/.gif) encontrada no folder 'lks/'.")
+        return
+
+    # Monta o prompt para o ChatGPT
+    images_list = "\n".join(f"- {name}" for name in image_names)
+    prompt = f"""
+Você é um analista extremamente sarcástico e provocador do ZapIA. Aqui estão imagens do folder 'lks':
+{images_list}
+
+Com base nessas imagens, faça um comentário sobre o jogador zapg0d e o jogador doctor (também conhecido como LKS, o iron burro). 
+Use muita ironia, humor negro e criatividade. Elogie quando necessário, mas principalmente faça roasts pesados. Não seja politicamente correto.
+"""
+    try:
+        logging.debug("Enviando prompt para ChatGPT (LKS): %s", prompt)
+        response = client.responses.create(
+            model="gpt-4o",
+            instructions="Você é um analista de estatísticas e comportamento de jogadores de CS, extremamente sarcástico e provocador.",
+            input=prompt
+        )
+        answer = response.output_text.strip()
+        logging.debug("Resposta do ChatGPT (LKS): %s", answer)
+    except Exception as e:
+        logging.exception("Erro ao consultar o ChatGPT para !LKS:")
+        await ctx.send("Erro ao consultar o ChatGPT para o comando !LKS.")
+        return
+
+    # Enviar a resposta no Discord
+    if len(answer) > 1900:
+        await ctx.send("💬 **ZapIA disse:**")
+        for i in range(0, len(answer), 1900):
+            await ctx.send(f"```{answer[i:i+1900]}```")
+    else:
+        await ctx.send(f"💬 **ZapIA disse:**\n```{answer}```")
+
+
 @bot.command(name="ranking_mix")
 async def ranking_mix(ctx, month: str = None):
     """
