@@ -1302,6 +1302,8 @@ async def lks_command(ctx):
     zapg0d e doctor (LKS o iron burro) com base no conteúdo visual e nos nomes dos arquivos.
     """
     from botocore.exceptions import ClientError
+    import base64
+    import requests
 
     await ctx.send("🔍 Carregando imagens do LKS e preparando a análise do ZapIA insano...")
 
@@ -1325,6 +1327,18 @@ async def lks_command(ctx):
     multimodal_inputs = []
     signed_urls = []
 
+    # Helper para converter imagem S3 em data URL base64
+    def s3_image_to_base64(signed_url):
+        try:
+            response = requests.get(signed_url)
+            response.raise_for_status()
+            content_type = response.headers['Content-Type']
+            base64_data = base64.b64encode(response.content).decode('utf-8')
+            return f"data:{content_type};base64,{base64_data}"
+        except Exception as e:
+            logging.exception("Erro ao converter imagem para base64:")
+            return None
+
     # Envia as imagens no Discord e prepara para o GPT
     for key in image_keys:
         try:
@@ -1340,20 +1354,28 @@ async def lks_command(ctx):
             embed.set_image(url=signed_url)
             await ctx.send(embed=embed)
 
-            # Adiciona ao multimodal input
-            multimodal_inputs.append({
-                "type": "image_url",
-                "image_url": {"url": signed_url}
-            })
+            # Converte para base64 e adiciona ao multimodal
+            base64_url = s3_image_to_base64(signed_url)
+            if base64_url:
+                multimodal_inputs.append({
+                    "type": "image_url",
+                    "image_url": {"url": base64_url}
+                })
+            else:
+                await ctx.send(f"⚠️ Erro ao processar imagem `{key.split('/')[-1]}` para o ZapIA.")
         except Exception as e:
             logging.exception(f"Erro ao gerar signed URL para {key}:")
             await ctx.send(f"⚠️ Erro ao enviar imagem `{key.split('/')[-1]}`")
+
+    if not multimodal_inputs:
+        await ctx.send("❌ Nenhuma imagem pôde ser processada para o ZapIA.")
+        return
 
     # Adiciona o prompt textual
     multimodal_inputs.append({
         "type": "text",
         "text": """
-Você é o ZapIA, um analista de CS e roaster de perfils, segue em anexo um conjunto de imagens de resultados de partidas de CS e fotos do player doctor, se refira a ele como LKS!
+Você é o ZapIA, um analista de CS e roaster de perfis. As imagens anexadas são resultados de partidas e fotos do player doctor, conhecido como LKS (o iron burro). Analise e dê sua opinião com sarcasmo, ofensas criativas e comparações com outros players. Seja curto e direto.
 """
     })
 
@@ -1376,11 +1398,12 @@ Você é o ZapIA, um analista de CS e roaster de perfils, segue em anexo um conj
 
     # Envia a resposta no Discord
     if len(answer) > 1900:
-        await ctx.send("🧠 **ZapIA (modo insano) disse:**")
+        await ctx.send("🧠 **ZapIA disse:**")
         for i in range(0, len(answer), 1900):
             await ctx.send(f"```{answer[i:i+1900]}```")
     else:
-        await ctx.send(f"🧠 **ZapIA (modo insano) disse:**\n```{answer}```")
+        await ctx.send(f"🧠 **ZapIA disse:**\n```{answer}```")
+
 
 
 
