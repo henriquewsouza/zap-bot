@@ -1353,10 +1353,7 @@ async def lks_command(ctx):
     multimodal_inputs.append({
         "type": "text",
         "text": """
-Você é o ZapIA, um analista de CS extremamente sarcástico e provocador.
-Com base nessas imagens e nos nomes dos arquivos, faça um julgamento sobre o jogador zapg0d e o jogador doctor (também conhecido como LKS, o iron burro).
-Use ironia pesada, humor ácido e comparações com outros jogadores se possível.
-Pode elogiar onde necessário, mas o foco é o roast mais ofensivo e engraçado possível.
+Você é o ZapIA, um analista de CS e roaster de perfils, segue em anexo um conjunto de imagens de resultados de partidas de CS e fotos do player doctor, se refira a ele como LKS!
 """
     })
 
@@ -1366,7 +1363,7 @@ Pode elogiar onde necessário, mas o foco é o roast mais ofensivo e engraçado 
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
-                {"role": "system", "content": "Você é um analista de CS, sarcástico, ofensivo e provocador."},
+                {"role": "system", "content": "Você é um analista de CS e de imagens, sarcástico, ofensivo e provocador."},
                 {"role": "user", "content": multimodal_inputs}
             ]
         )
