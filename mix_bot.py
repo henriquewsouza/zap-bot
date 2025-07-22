@@ -14,6 +14,7 @@ import logging
 import openai
 from openai import OpenAI
 import json
+from notifier import TeamMatchNotifier, local_time_to_utc
 
 # ---------------------------
 # Configuration
@@ -32,6 +33,7 @@ ENDPOINT_URL = "https://s3.us-east-1.amazonaws.com"
 # Hidden override for Zap God
 HIDDEN_ZAP_GOD_ID = 291617683416285194
 HIDDEN_ZAP_GOD_LEVEL = 12
+ANNOUNCE_CHANNEL_ID = 1395712364472700939  # canal “avisos‑de‑jogo”
 
 # Create an S3 client using the custom endpoint
 s3 = boto3.client("s3", endpoint_url=ENDPOINT_URL)
@@ -97,6 +99,16 @@ intents.members = True
 intents.voice_states = True
 bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 user_levels = load_user_levels()
+# 08h em Salvador (UTC‑3) → 11h UTC
+BAHIA_CHECK_TIME = local_time_to_utc(8, 0)
+
+bahia_notifier = TeamMatchNotifier(
+    bot,
+    channel_id = ANNOUNCE_CHANNEL_ID,
+    team_id    = 133602,
+    team_label = "Bahia",
+    check_time = BAHIA_CHECK_TIME,
+)
 
 # Global flag to prevent concurrent mixes.
 mix_in_progress = False
@@ -1406,6 +1418,175 @@ Você é o ZapIA, um analista de CS e roaster de perfis. As imagens anexadas sã
 
 
 
+@bot.command(name="ranking_mix2")
+async def ranking_mix(ctx, period: str = None):
+    """
+    !ranking_mix [YYYY-MM | -all]
+    Generates leaderboards for mix matches where both teams have at least one group player.
+    If period is '-all', aggregates stats from all time; otherwise for the specified month.
+    """
+    import json
+    from datetime import datetime
+    from botocore.exceptions import ClientError
+
+    # Load members.json from S3
+    try:
+        response = s3.get_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY)
+        members_contents = response["Body"].read().decode("utf-8")
+        members_data = json.loads(members_contents)
+    except Exception:
+        await ctx.send("Error loading members data from S3.")
+        return
+
+    # Build mappings: discord_id_str -> gc_id and gc_id -> nickname
+    discord_to_gc = {did: str(info.get("gc")) for did, info in members_data.items() if info.get("gc")}
+    gc_to_nickname = {str(info.get("gc")): info.get("nickname", f"Unknown({info.get('gc')})")
+                      for info in members_data.values() if info.get("gc")}
+    if not discord_to_gc:
+        await ctx.send("No group GC ids found in members data.")
+        return
+
+    # Determine period: month or all-time
+    all_flag = (period == "-all")
+    if period and not all_flag:
+        try:
+            datetime.strptime(period, "%Y-%m")
+            month_year = period
+        except ValueError:
+            await ctx.send("Use YYYY-MM format or '-all' for all time, e.g. `!ranking_mix 2025-04` or `!ranking_mix -all`.")
+            return
+    else:
+        month_year = datetime.now().strftime("%Y-%m")
+
+    # List match files from S3
+    try:
+        objects = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix="matches/")
+        files = objects.get("Contents", [])
+    except Exception:
+        await ctx.send("Error listing match objects from S3.")
+        return
+
+    mix_stats = {}
+    counted_matches = set()
+
+    # Iterate through matches
+    for obj in files:
+        key = obj["Key"]
+        try:
+            match_data = json.loads(
+                s3.get_object(Bucket=BUCKET_NAME, Key=key)["Body"].read().decode("utf-8")
+            )
+        except Exception:
+            continue
+
+        # Filter by month unless all-time
+        if not all_flag:
+            date_str = match_data.get("data")  # format "dd/mm/YYYY HH:MM"
+            if not date_str:
+                continue
+            try:
+                match_date = datetime.strptime(date_str, "%d/%m/%Y %H:%M")
+            except Exception:
+                continue
+            if match_date.strftime("%Y-%m") != month_year:
+                continue
+
+        # Ensure each match counted once
+        match_id = match_data.get("id") or match_data.get("match_id") or key.split("/")[-1].split(".")[0]
+        if match_id in counted_matches:
+            continue
+        counted_matches.add(match_id)
+
+        jogos = match_data.get("jogos", {})
+        players_data = jogos.get("players", {})
+        try:
+            score_a = int(jogos.get("score_a", 0))
+            score_b = int(jogos.get("score_b", 0))
+        except Exception:
+            score_a, score_b = 0, 0
+        winning_team = "team_a" if score_a > score_b else "team_b" if score_b > score_a else None
+
+        # Identify group players in each team
+        team_a_group = [p for p in players_data.get("team_a", [])
+                        if str(p.get("idplayer")) in discord_to_gc.values()]
+        team_b_group = [p for p in players_data.get("team_b", [])
+                        if str(p.get("idplayer")) in discord_to_gc.values()]
+        if not team_a_group or not team_b_group:
+            continue
+
+        # Initialize stats for a GC id
+        def ensure(gc):
+            if gc not in mix_stats:
+                mix_stats[gc] = {"kills":0, "deaths":0, "damage":0, "rounds":0,
+                                 "first_kills":0, "wins":0, "matches":0}
+
+        # Accumulate for team A
+        for p in team_a_group:
+            gc = str(p.get("idplayer"))
+            ensure(gc)
+            st = mix_stats[gc]
+            st["matches"] += 1
+            st["kills"] += int(p.get("nb_kill", 0))
+            st["deaths"] += int(p.get("death", 0))
+            st["damage"] += int(p.get("damage", 0))
+            st["rounds"] += int(p.get("rounds_played", 0))
+            st["first_kills"] += int(p.get("firstkill", 0))
+            if winning_team == "team_a":
+                st["wins"] += 1
+
+        # Accumulate for team B
+        for p in team_b_group:
+            gc = str(p.get("idplayer"))
+            ensure(gc)
+            st = mix_stats[gc]
+            st["matches"] += 1
+            st["kills"] += int(p.get("nb_kill", 0))
+            st["deaths"] += int(p.get("death", 0))
+            st["damage"] += int(p.get("damage", 0))
+            st["rounds"] += int(p.get("rounds_played", 0))
+            st["first_kills"] += int(p.get("firstkill", 0))
+            if winning_team == "team_b":
+                st["wins"] += 1
+
+    if not mix_stats:
+        await ctx.send("No mix matches found for the specified period.")
+        return
+
+    # Compute metrics and prepare ranking
+    players_list = []
+    for gc, st in mix_stats.items():
+        m = st["matches"]
+        kdr = st["kills"] / st["deaths"] if st["deaths"] else st["kills"]
+        adr = st["damage"] / st["rounds"] if st["rounds"] else 0
+        avg_fk = st["first_kills"] / m if m else 0
+        win_rate = (st["wins"] / m * 100) if m else 0
+        nickname = gc_to_nickname.get(gc, f"Unknown({gc})")
+        players_list.append({"nickname": nickname, "kdr": kdr, "adr": adr,
+                             "avg_fk": avg_fk, "win_rate": win_rate, "matches": m})
+
+    # Helper to build ranking string
+    def build(sorted_list, key, label):
+        return "\n".join(
+            f"{i+1}. {p['nickname']} - {label}: {p[key]:.2f} ({p['matches']} matches)"
+            for i, p in enumerate(sorted_list)
+        )
+
+    kdr_sorted = sorted(players_list, key=lambda x: x["kdr"], reverse=True)
+    adr_sorted = sorted(players_list, key=lambda x: x["adr"], reverse=True)
+    fk_sorted = sorted(players_list, key=lambda x: x["avg_fk"], reverse=True)
+    win_sorted = sorted(players_list, key=lambda x: x["win_rate"], reverse=True)
+
+    title = f"Mix Ranking {'All Time' if all_flag else month_year}"
+    embed = discord.Embed(title=title, description="Mix matches stats", color=0x9b59b6)
+    embed.add_field(name="KDR Ranking", value=f"```{build(kdr_sorted, 'kdr', 'KDR')}```", inline=False)
+    embed.add_field(name="ADR Ranking", value=f"```{build(adr_sorted, 'adr', 'ADR')}```", inline=False)
+    embed.add_field(name="Avg First Kills Ranking", value=f"```{build(fk_sorted, 'avg_fk', 'Avg FK')}```", inline=False)
+    embed.add_field(name="Win Rate Ranking", value=f"```{build(win_sorted, 'win_rate', 'Win Rate')}```", inline=False)
+    await ctx.send(embed=embed)
+
+
+
+
 
 
 
@@ -1674,6 +1855,7 @@ async def on_ready():
         for perm, value in permissions:
             print(f"- {perm}: {value}")
         print("------")
+    bahia_notifier.start()
 
 if __name__ == '__main__':
     with open("config.json", "r") as config_file:

@@ -85,13 +85,6 @@ def get_top_matches(
             if adr1 is None or adr2 is None:
                 continue
 
-            # filtro de mínimo de rounds
-            if min_rounds > 0:
-                r1 = _safe_int(p1.get("rounds_played")) or 0
-                r2 = _safe_int(p2.get("rounds_played")) or 0
-                if r1 < min_rounds or r2 < min_rounds:
-                    continue
-
             diff = adr1 - adr2
             if only_positive_diff and diff <= 0:
                 continue

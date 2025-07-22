@@ -93,8 +93,6 @@ def find_worst_matches(
                 continue
 
             rounds = _safe_int(p.get("rounds_played")) or 0
-            if min_rounds > 0 and rounds < min_rounds:
-                continue
 
             kills = _safe_int(p.get("nb_kill")) or 0
             deaths = _safe_int(p.get("death")) or 0
