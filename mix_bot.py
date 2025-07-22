@@ -1855,8 +1855,6 @@ async def on_ready():
         for perm, value in permissions:
             print(f"- {perm}: {value}")
         print("------")
-    bahia_notifier.start()
-
 if __name__ == '__main__':
     with open("config.json", "r") as config_file:
         config = json.load(config_file)
