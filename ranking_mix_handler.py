@@ -215,7 +215,7 @@ class RankingMixHandler:
 
         # Helper para montar bloco de texto
         def build(lst: List[Dict[str, Any]], metric_key: str, label: str) -> str:
-            return "\n".join(
+            return "".join(
                 f"{idx+1}. {player['nick']} - {label}: {player[metric_key]:.2f} ({player['m']} jogos)"
                 for idx, player in enumerate(lst)
             )
