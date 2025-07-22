@@ -11,15 +11,15 @@ from discord.ext import commands
 
 class RankingMixHandler:
     """
-    Gera ranking de mix games (quando nosso grupo joga contra ele mesmo).
+    Ranking de mixes onde o grupo joga contra ele mesmo.
 
-    Critérios de inclusão da partida:
-      • Cada time tem ≥1 player do grupo; e
-      • A soma de players do grupo presentes nos dois times é ≥8.
+    • Partida só conta se cada time tiver ≥1 player do grupo e, somados, ≥8.
+    • Por jogador consideramos os N últimos jogos (flag -last, default 10).
+    • Filtragem por período (YYYY-MM) só acontece quando passado explicitamente.
     """
 
-    MIN_GROUP_PLAYERS_IN_MATCH = 8      # ≥8 players do grupo no total na partida
-    MIN_MATCHES_PER_PLAYER     = 3      # descarta player com menos que isso
+    MIN_GROUP_PLAYERS_IN_MATCH = 7       # players do grupo (somando os dois times)
+    MIN_MATCHES_PER_PLAYER     = 3       # descarta player com menos de 3 partidas
 
     def __init__(
         self,
@@ -35,43 +35,35 @@ class RankingMixHandler:
         self.matches_prefix = matches_prefix
         self.executor = ThreadPoolExecutor(max_workers=max_workers)
 
-    # ──────────────────────────────────────────────────────────────────────
+    # ──────────────────────────────────────────────────────────────────────────
     async def handle(self, ctx: commands.Context, args: Optional[str] = None):
-        # 1) FLAGS ----------------------------------------------------------------
-        period: Optional[str] = None
-        all_flag = False
-        last_n = 10
+        # ------------------------------------------------------------------ 1. FLAGS
+        period: Optional[str] = None        # só filtra se for passado
+        last_n = 10                         # default
+        toks = args.split() if args else []
 
-        tokens = args.split() if args else []
-        cleaned: List[str] = []
-        i = 0
-        while i < len(tokens):
-            tok = tokens[i]
-            if tok.lower() in ("-last", "-l") and i + 1 < len(tokens):
+        idx = 0
+        while idx < len(toks):
+            tok = toks[idx]
+            if tok.lower() in ("-last", "-l") and idx + 1 < len(toks):
                 try:
-                    last_n = int(tokens[i + 1])
-                    i += 2
+                    last_n = int(toks[idx + 1])
+                    idx += 2
                     continue
                 except ValueError:
-                    await ctx.send("`-last` precisa ser seguido por um número inteiro.")
+                    await ctx.send("`-last` precisa ser seguido por número inteiro.")
                     return
-            cleaned.append(tok)
-            i += 1
-
-        if cleaned:
-            if cleaned[0].lower() == "-all":
-                all_flag = True
             else:
+                # qualquer token restante tratamos como possível período YYYY-MM
                 try:
-                    datetime.strptime(cleaned[0], "%Y-%m")
-                    period = cleaned[0]
+                    datetime.strptime(tok, "%Y-%m")
+                    period = tok
                 except ValueError:
-                    await ctx.send("Período inválido – use `YYYY-MM` ou `-all`.")
+                    await ctx.send("Período inválido – use `YYYY-MM` ou omita para all‑time.")
                     return
+                idx += 1
 
-        month_year = None if all_flag else (period or datetime.now().strftime("%Y-%m"))
-
-        # 2) MEMBERS --------------------------------------------------------------
+        # ------------------------------------------------------------------ 2. MEMBERS
         try:
             resp = self.s3.get_object(Bucket=self.bucket, Key=self.members_key)
             members: Dict[str, Any] = json.loads(resp["Body"].read().decode())
@@ -79,8 +71,8 @@ class RankingMixHandler:
             await ctx.send(f"Erro ao carregar members.json: {exc}")
             return
 
-        discord_to_gc = {did: str(info.get("gc")) for did, info in members.items() if info.get("gc")}
-        gc_to_nick = {str(info.get("gc")): info.get("nickname", f"Unknown({info.get('gc')})")
+        discord_to_gc = {did: str(info["gc"]) for did, info in members.items() if info.get("gc")}
+        gc_to_nick = {str(info["gc"]): info.get("nickname", f"Unknown({info['gc']})")
                       for info in members.values() if info.get("gc")}
         group_gc_ids = set(discord_to_gc.values())
 
@@ -88,7 +80,7 @@ class RankingMixHandler:
             await ctx.send("Nenhum GC ID do grupo encontrado.")
             return
 
-        # 3) LISTAR ARQUIVOS DE PARTIDA ------------------------------------------
+        # ------------------------------------------------------------------ 3. LISTA DE PARTIDAS
         try:
             objs = self.s3.list_objects_v2(Bucket=self.bucket, Prefix=self.matches_prefix)
             match_keys = [o["Key"] for o in objs.get("Contents", [])]
@@ -96,7 +88,7 @@ class RankingMixHandler:
             await ctx.send(f"Erro ao listar partidas no S3: {exc}")
             return
 
-        # 4) DOWNLOAD EM PARALELO -------------------------------------------------
+        # ------------------------------------------------------------------ 4. DOWNLOAD EM PARALELO
         loop = asyncio.get_event_loop()
 
         async def fetch(key: str):
@@ -111,158 +103,122 @@ class RankingMixHandler:
 
         fetched = await asyncio.gather(*(fetch(k) for k in match_keys))
 
-        # 5) AGREGAR STATS --------------------------------------------------------
-        stats: Dict[str, Dict[str, Any]] = {}
-        processed_matches = set()
+        # ------------------------------------------------------------------ 5. AGREGAÇÃO
+        stats: Dict[str, List[Dict[str, Any]]] = {}   # gc_id -> lista de registros
+        processed = set()
 
         for key, match in fetched:
             if not match:
                 continue
 
-            # -- período -----------------------------------------------------
-            if not all_flag:
+            # (a) filtro de período – só se usuário passou
+            if period:
                 ds = match.get("data") or match.get("date")
                 try:
                     md = datetime.strptime(ds, "%d/%m/%Y %H:%M")
                 except Exception:
                     continue
-                if md.strftime("%Y-%m") != month_year:
+                if md.strftime("%Y-%m") != period:
                     continue
             else:
-                md = None  # dispensável depois
+                ds = match.get("data") or match.get("date")
+                try:
+                    md = datetime.strptime(ds, "%d/%m/%Y %H:%M")
+                except Exception:
+                    md = None  # se não vier data usa mínima
 
+            # (b) evita duplicidade
             match_id = str(match.get("id") or match.get("match_id") or key.split("/")[-1])
-            if match_id in processed_matches:
+            if match_id in processed:
                 continue
-            processed_matches.add(match_id)
+            processed.add(match_id)
 
-            # -- estrutura ----------------------------------------------------
+            # (c) estrutura / players grupo
             jogos = match.get("jogos", {})
             players_info = jogos.get("players", {})
-            team_a_players = players_info.get("team_a", [])
-            team_b_players = players_info.get("team_b", [])
+            team_a = players_info.get("team_a", [])
+            team_b = players_info.get("team_b", [])
 
-            # Players do grupo em cada time
-            team_a_group = [p for p in team_a_players if str(p.get("idplayer")) in group_gc_ids]
-            team_b_group = [p for p in team_b_players if str(p.get("idplayer")) in group_gc_ids]
+            grp_a = [p for p in team_a if str(p.get("idplayer")) in group_gc_ids]
+            grp_b = [p for p in team_b if str(p.get("idplayer")) in group_gc_ids]
 
-            # Regras: cada time ≥1 do grupo, e total ≥8
-            total_group = len(team_a_group) + len(team_b_group)
-            if not team_a_group or not team_b_group or total_group < self.MIN_GROUP_PLAYERS_IN_MATCH:
+            if not grp_a or not grp_b or (len(grp_a) + len(grp_b) < self.MIN_GROUP_PLAYERS_IN_MATCH):
                 continue
 
-            # Placar / vencedor
+            # (d) vencedor
             try:
-                score_a = int(jogos.get("score_a", 0))
-                score_b = int(jogos.get("score_b", 0))
+                sa = int(jogos.get("score_a", 0)); sb = int(jogos.get("score_b", 0))
             except Exception:
-                score_a = score_b = 0
-            winner = "team_a" if score_a > score_b else "team_b" if score_b > score_a else None
+                sa = sb = 0
+            winner = "team_a" if sa > sb else "team_b" if sb > sa else None
 
-            # Função auxiliar
-            def add_stats(player: Dict[str, Any], team: str):
-                gc = str(player.get("idplayer"))
-                s = stats.setdefault(gc, {
-                    "kills": 0, "deaths": 0, "damage": 0, "rounds": 0,
-                    "first_kills": 0, "wins": 0, "matches": 0,
-                    "dates": [],
+            # (e) acumula registro por player
+            def add(p: Dict[str, Any], team: str):
+                gc = str(p.get("idplayer"))
+                stats.setdefault(gc, []).append({
+                    "date": md or datetime.min,
+                    "kills": int(p.get("nb_kill", 0)),
+                    "deaths": int(p.get("death", 0)),
+                    "damage": int(p.get("damage", 0)),
+                    "rounds": int(p.get("rounds_played", 0)),
+                    "first_kills": int(p.get("firstkill", 0)),
+                    "win": 1 if winner == team else 0,
                 })
-                s["matches"] += 1
-                s["kills"] += int(player.get("nb_kill", 0))
-                s["deaths"] += int(player.get("death", 0))
-                s["damage"] += int(player.get("damage", 0))
-                s["rounds"] += int(player.get("rounds_played", 0))
-                s["first_kills"] += int(player.get("firstkill", 0))
-                if winner == team:
-                    s["wins"] += 1
-                if md:
-                    s["dates"].append(md)
 
-            for p in team_a_group:
-                add_stats(p, "team_a")
-            for p in team_b_group:
-                add_stats(p, "team_b")
+            for p in grp_a:
+                add(p, "team_a")
+            for p in grp_b:
+                add(p, "team_b")
 
-        if not stats:
-            await ctx.send("Nenhuma partida elegível encontrada para os critérios.")
-            return
-
-        # 6) CÁLCULO DE MÉTRICAS POR PLAYER --------------------------------------
+        # ------------------------------------------------------------------ 6. MÉTRICAS POR PLAYER
         players: List[Dict[str, Any]] = []
-        for gc, st in stats.items():
-            if st["matches"] < self.MIN_MATCHES_PER_PLAYER:
+        for gc, recs in stats.items():
+            if len(recs) < self.MIN_MATCHES_PER_PLAYER:
                 continue
 
-            # Considera somente os últimos N matches (‑last flag)
-            if st["dates"]:
-                ordered = sorted(st["dates"])
-                # índices das partidas dentro da janela escolhida
-                keep = set(ordered[-last_n:])
+            # usa apenas os N últimos jogos do próprio player
+            recs = sorted(recs, key=lambda r: r["date"])[-last_n:]
 
-                def filter_val(vals):
-                    return [v for v, d in zip(vals, st["dates"]) if d in keep]
-
-                # Re‑acumula somente as datas filtradas
-                if len(st["dates"]) > last_n:
-                    st_filtered = {k: 0 for k in ("kills", "deaths", "damage",
-                                                   "rounds", "first_kills", "wins")}
-                    for idx, d in enumerate(st["dates"]):
-                        if d not in keep:
-                            continue
-                        st_filtered["kills"]       += st["kills_list"][idx] if "kills_list" in st else 0
-                    # Reconta rapidamente usando listas paralelas se quiser,
-                    # mas, para simplificar, ignoramos e continuamos; na prática,
-                    # como `matches` == len(dates), basta cortar proporcionalmente.
-                    # (Mantido simples pois nem sempre temos listas separadas.)
-                # Para não complicar, usamos tudo se não tem dates individuais.
-
-            m = st["matches"]
-            kdr = st["kills"] / st["deaths"] if st["deaths"] else st["kills"]
-            adr = st["damage"] / st["rounds"] if st["rounds"] else 0
-            avg_fk = st["first_kills"] / m
-            win_rate = (st["wins"] / m) * 100
+            tot = len(recs)
+            S = {k: sum(r[k] for r in recs) for k in
+                 ("kills", "deaths", "damage", "rounds", "first_kills", "win")}
 
             players.append({
                 "nick": gc_to_nick.get(gc, f"Unknown({gc})"),
-                "kdr": kdr,
-                "adr": adr,
-                "avg_fk": avg_fk,
-                "win_rate": win_rate,
-                "matches": m,
+                "matches": tot,
+                "kdr": S["kills"] / S["deaths"] if S["deaths"] else S["kills"],
+                "adr": S["damage"] / S["rounds"] if S["rounds"] else 0,
+                "avg_fk": S["first_kills"] / tot,
+                "win_rate": (S["win"] / tot) * 100,
             })
 
         if not players:
-            await ctx.send("Nenhum player com mínimo de partidas para ranquear.")
+            await ctx.send("Nenhum player com partidas suficientes para ranquear.")
             return
 
-        # 7) ORDENAÇÃO ------------------------------------------------------------
-        rankings = {
+        # ------------------------------------------------------------------ 7. RANKINGS
+        ranks = {
             "KDR":      sorted(players, key=lambda p: p["kdr"],      reverse=True),
             "ADR":      sorted(players, key=lambda p: p["adr"],      reverse=True),
             "Avg FK":   sorted(players, key=lambda p: p["avg_fk"],   reverse=True),
             "Win Rate": sorted(players, key=lambda p: p["win_rate"], reverse=True),
         }
-        key_map = {"KDR": "kdr", "ADR": "adr", "Avg FK": "avg_fk", "Win Rate": "win_rate"}
+        key_of = {"KDR": "kdr", "ADR": "adr", "Avg FK": "avg_fk", "Win Rate": "win_rate"}
 
-        def build(lst: List[Dict[str, Any]], metric_key: str, label: str) -> str:
+        def build(lst: List[Dict[str, Any]], k: str, label: str) -> str:
             return "\n".join(
-                f"{idx+1}. {p['nick']} - {label}: {p[metric_key]:.2f} ({p['matches']} jogos)"
-                for idx, p in enumerate(lst)
+                f"{i+1}. {p['nick']} - {label}: {p[k]:.2f} ({p['matches']} jogos)"
+                for i, p in enumerate(lst)
             )
 
-        # 8) EMBED ----------------------------------------------------------------
-        title = f"Mix Ranking {'All‑Time' if all_flag else month_year} (últ. {last_n})"
+        # ------------------------------------------------------------------ 8. EMBED
+        title = f"Mix Ranking {'All‑Time' if not period else period} (últ. {last_n})"
         embed = discord.Embed(
             title=title,
             description=f"Somente partidas grupo vs grupo (≥{self.MIN_GROUP_PLAYERS_IN_MATCH} players do grupo).",
             color=0x9B59B6,
         )
-
-        for lbl, lst in rankings.items():
-            embed.add_field(
-                name=lbl,
-                value=f"```{build(lst, key_map[lbl], lbl)}```",
-                inline=False,
-            )
+        for lbl, lst in ranks.items():
+            embed.add_field(name=lbl, value=f"```{build(lst, key_of[lbl], lbl)}```", inline=False)
 
         await ctx.send(embed=embed)
