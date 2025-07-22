@@ -13,5 +13,30 @@
         "match_id": 24251508,
         "map": "de_anubis",
         "win": 0
+    },
+    {
+        "match_id": 24270162,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 24273738,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24274762,
+        "map": "de_nuke",
+        "win": 0
+    },
+    {
+        "match_id": 24297641,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24297758,
+        "map": "de_nuke",
+        "win": 1
     }
 ]

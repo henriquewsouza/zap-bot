@@ -183,5 +183,110 @@
         "match_id": 24265150,
         "map": "de_inferno",
         "win": 1
+    },
+    {
+        "match_id": 24274762,
+        "map": "de_nuke",
+        "win": 0
+    },
+    {
+        "match_id": 24293177,
+        "map": "de_ancient",
+        "win": 0
+    },
+    {
+        "match_id": 24293583,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 24301445,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 24310135,
+        "map": "de_ancient",
+        "win": 0
+    },
+    {
+        "match_id": 24311718,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24312242,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24315806,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24315988,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24316159,
+        "map": "de_anubis",
+        "win": 1
+    },
+    {
+        "match_id": 24316365,
+        "map": "de_overpass",
+        "win": 0
+    },
+    {
+        "match_id": 24317170,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24323825,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24323924,
+        "map": "de_inferno",
+        "win": 0
+    },
+    {
+        "match_id": 24324120,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 24324618,
+        "map": "de_anubis",
+        "win": 0
+    },
+    {
+        "match_id": 24325824,
+        "map": "de_mirage",
+        "win": 1
+    },
+    {
+        "match_id": 24326282,
+        "map": "de_anubis",
+        "win": 1
+    },
+    {
+        "match_id": 24326714,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 24327192,
+        "map": "de_nuke",
+        "win": 0
+    },
+    {
+        "match_id": 24327996,
+        "map": "de_inferno",
+        "win": 0
     }
 ]

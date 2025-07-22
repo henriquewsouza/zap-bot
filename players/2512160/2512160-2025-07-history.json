@@ -23,5 +23,220 @@
         "match_id": 24268984,
         "map": "de_inferno",
         "win": 0
+    },
+    {
+        "match_id": 24270026,
+        "map": "de_anubis",
+        "win": 1
+    },
+    {
+        "match_id": 24272060,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24272569,
+        "map": "de_inferno",
+        "win": 1
+    },
+    {
+        "match_id": 24273738,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24274762,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 24279863,
+        "map": "de_inferno",
+        "win": 0
+    },
+    {
+        "match_id": 24281160,
+        "map": "de_ancient",
+        "win": 0
+    },
+    {
+        "match_id": 24281471,
+        "map": "de_anubis",
+        "win": 0
+    },
+    {
+        "match_id": 24281754,
+        "map": "de_inferno",
+        "win": 0
+    },
+    {
+        "match_id": 24291392,
+        "map": "de_anubis",
+        "win": 1
+    },
+    {
+        "match_id": 24291438,
+        "map": "de_overpass",
+        "win": 0
+    },
+    {
+        "match_id": 24291705,
+        "map": "de_mirage",
+        "win": 1
+    },
+    {
+        "match_id": 24291975,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24292731,
+        "map": "de_inferno",
+        "win": 1
+    },
+    {
+        "match_id": 24293238,
+        "map": "de_anubis",
+        "win": 0
+    },
+    {
+        "match_id": 24294441,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 24295207,
+        "map": "de_inferno",
+        "win": 1
+    },
+    {
+        "match_id": 24295787,
+        "map": "de_train",
+        "win": 1
+    },
+    {
+        "match_id": 24296460,
+        "map": "de_inferno",
+        "win": 1
+    },
+    {
+        "match_id": 24296957,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24297310,
+        "map": "de_mirage",
+        "win": 1
+    },
+    {
+        "match_id": 24297563,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24299851,
+        "map": "de_nuke",
+        "win": 0
+    },
+    {
+        "match_id": 24304660,
+        "map": "de_inferno",
+        "win": 0
+    },
+    {
+        "match_id": 24305286,
+        "map": "de_inferno",
+        "win": 1
+    },
+    {
+        "match_id": 24305880,
+        "map": "de_overpass",
+        "win": 0
+    },
+    {
+        "match_id": 24305940,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24306843,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24306999,
+        "map": "de_ancient",
+        "win": 0
+    },
+    {
+        "match_id": 24307600,
+        "map": "de_nuke",
+        "win": 0
+    },
+    {
+        "match_id": 24307807,
+        "map": "de_ancient",
+        "win": 1
+    },
+    {
+        "match_id": 24309755,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 24310135,
+        "map": "de_ancient",
+        "win": 0
+    },
+    {
+        "match_id": 24310623,
+        "map": "de_anubis",
+        "win": 1
+    },
+    {
+        "match_id": 24311718,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24312242,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24316528,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24317170,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24318807,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24319143,
+        "map": "de_ancient",
+        "win": 1
+    },
+    {
+        "match_id": 24319551,
+        "map": "de_inferno",
+        "win": 0
+    },
+    {
+        "match_id": 24341401,
+        "map": "de_train",
+        "win": 1
+    },
+    {
+        "match_id": 24341961,
+        "map": "de_inferno",
+        "win": 0
     }
 ]

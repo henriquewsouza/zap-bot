@@ -1,20 +1,20 @@
 {
     "player_id": 36170,
     "month_year": "2025-07",
-    "total_matches": 3,
-    "total_wins": 1,
-    "total_losses": 2,
-    "overall_win_rate": 33.33333333333333,
-    "total_kills": 50,
-    "total_deaths": 58,
-    "KDR": 0.8620689655172413,
-    "total_damage": 6448,
-    "total_rounds": 79,
-    "ADR": 81.62025316455696,
-    "total_first_kills": 8,
-    "average_first_kills_per_match": 2.6666666666666665,
-    "total_headshots": 15,
-    "HS_percent": 30.0,
+    "total_matches": 8,
+    "total_wins": 4,
+    "total_losses": 4,
+    "overall_win_rate": 50.0,
+    "total_kills": 129,
+    "total_deaths": 144,
+    "KDR": 0.8958333333333334,
+    "total_damage": 15551,
+    "total_rounds": 190,
+    "ADR": 81.84736842105264,
+    "total_first_kills": 19,
+    "average_first_kills_per_match": 2.375,
+    "total_headshots": 47,
+    "HS_percent": 36.434108527131784,
     "per_map": {
         "de_anubis": {
             "matches": 1,
@@ -27,27 +27,27 @@
             "kdr": 0.7741935483870968,
             "adr": 89.02857142857142
         },
-        "de_dust2": {
-            "matches": 1,
-            "wins": 1,
-            "win_rate": 100.0,
-            "kills": 12,
-            "deaths": 10,
-            "damage": 1567,
-            "rounds": 20,
-            "kdr": 1.2,
-            "adr": 78.35
-        },
         "de_nuke": {
-            "matches": 1,
-            "wins": 0,
-            "win_rate": 0.0,
-            "kills": 14,
-            "deaths": 17,
-            "damage": 1765,
-            "rounds": 24,
-            "kdr": 0.8235294117647058,
-            "adr": 73.54166666666667
+            "matches": 4,
+            "wins": 2,
+            "win_rate": 50.0,
+            "kills": 60,
+            "deaths": 76,
+            "damage": 7351,
+            "rounds": 96,
+            "kdr": 0.7894736842105263,
+            "adr": 76.57291666666667
+        },
+        "de_dust2": {
+            "matches": 3,
+            "wins": 2,
+            "win_rate": 66.66666666666666,
+            "kills": 45,
+            "deaths": 37,
+            "damage": 5084,
+            "rounds": 59,
+            "kdr": 1.2162162162162162,
+            "adr": 86.16949152542372
         }
     }
 }

@@ -78,5 +78,110 @@
         "match_id": 24258831,
         "map": "de_dust2",
         "win": 0
+    },
+    {
+        "match_id": 24282862,
+        "map": "de_mirage",
+        "win": 1
+    },
+    {
+        "match_id": 24291975,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24292284,
+        "map": "de_ancient",
+        "win": 1
+    },
+    {
+        "match_id": 24300487,
+        "map": "de_anubis",
+        "win": 0
+    },
+    {
+        "match_id": 24300967,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24301445,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 24311718,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24312242,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24315577,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24315682,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24315806,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24316159,
+        "map": "de_anubis",
+        "win": 1
+    },
+    {
+        "match_id": 24316365,
+        "map": "de_overpass",
+        "win": 0
+    },
+    {
+        "match_id": 24323825,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24323924,
+        "map": "de_inferno",
+        "win": 0
+    },
+    {
+        "match_id": 24326714,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 24327192,
+        "map": "de_nuke",
+        "win": 0
+    },
+    {
+        "match_id": 24327996,
+        "map": "de_inferno",
+        "win": 1
+    },
+    {
+        "match_id": 24329126,
+        "map": "de_anubis",
+        "win": 0
+    },
+    {
+        "match_id": 24335928,
+        "map": "de_anubis",
+        "win": 1
+    },
+    {
+        "match_id": 24336374,
+        "map": "de_nuke",
+        "win": 0
     }
 ]

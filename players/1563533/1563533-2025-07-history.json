@@ -228,5 +228,125 @@
         "match_id": 24262882,
         "map": "de_nuke",
         "win": 0
+    },
+    {
+        "match_id": 24273738,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24274762,
+        "map": "de_nuke",
+        "win": 0
+    },
+    {
+        "match_id": 24282295,
+        "map": "de_anubis",
+        "win": 1
+    },
+    {
+        "match_id": 24282820,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 24283508,
+        "map": "de_ancient",
+        "win": 0
+    },
+    {
+        "match_id": 24292731,
+        "map": "de_inferno",
+        "win": 1
+    },
+    {
+        "match_id": 24293177,
+        "map": "de_ancient",
+        "win": 0
+    },
+    {
+        "match_id": 24293583,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 24300487,
+        "map": "de_anubis",
+        "win": 0
+    },
+    {
+        "match_id": 24301445,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 24302504,
+        "map": "de_mirage",
+        "win": 1
+    },
+    {
+        "match_id": 24309755,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 24310135,
+        "map": "de_ancient",
+        "win": 0
+    },
+    {
+        "match_id": 24310623,
+        "map": "de_anubis",
+        "win": 1
+    },
+    {
+        "match_id": 24311718,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24312242,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24315577,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24315682,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24315988,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24324120,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 24324372,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24329126,
+        "map": "de_anubis",
+        "win": 0
+    },
+    {
+        "match_id": 24337023,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24338120,
+        "map": "de_dust2",
+        "win": 1
     }
 ]

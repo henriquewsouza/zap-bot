@@ -1,1 +1,32 @@
-[]
+[
+    {
+        "match_id": 24328538,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24329126,
+        "map": "de_anubis",
+        "win": 0
+    },
+    {
+        "match_id": 24336374,
+        "map": "de_nuke",
+        "win": 0
+    },
+    {
+        "match_id": 24337023,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24338120,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24343445,
+        "map": "de_dust2",
+        "win": 1
+    }
+]

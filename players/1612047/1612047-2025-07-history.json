@@ -73,5 +73,20 @@
         "match_id": 24263368,
         "map": "de_mirage",
         "win": 1
+    },
+    {
+        "match_id": 24302504,
+        "map": "de_mirage",
+        "win": 1
+    },
+    {
+        "match_id": 24327996,
+        "map": "de_inferno",
+        "win": 1
+    },
+    {
+        "match_id": 24338120,
+        "map": "de_dust2",
+        "win": 1
     }
 ]

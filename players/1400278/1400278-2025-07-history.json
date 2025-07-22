@@ -78,5 +78,30 @@
         "match_id": 24265892,
         "map": "de_dust2",
         "win": 1
+    },
+    {
+        "match_id": 24293177,
+        "map": "de_ancient",
+        "win": 0
+    },
+    {
+        "match_id": 24293583,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 24302504,
+        "map": "de_mirage",
+        "win": 1
+    },
+    {
+        "match_id": 24309755,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 24311253,
+        "map": "de_mirage",
+        "win": 1
     }
 ]
