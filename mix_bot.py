@@ -14,8 +14,6 @@ import logging
 import openai
 from openai import OpenAI
 import json
-from notifier import TeamMatchNotifier, local_time_to_utc
-
 # ---------------------------
 # Configuration
 # ---------------------------
