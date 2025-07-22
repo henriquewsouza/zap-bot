@@ -30,9 +30,6 @@ OBJECT_KEY = "members.json"         # The object key for persistent data
 # Option B: Using the standard S3 endpoint. If needed, you can try using the bucket domain as the endpoint.
 ENDPOINT_URL = "https://s3.us-east-1.amazonaws.com"
 
-# Hidden override for Zap God
-HIDDEN_ZAP_GOD_ID = 291617683416285194
-HIDDEN_ZAP_GOD_LEVEL = 12
 ANNOUNCE_CHANNEL_ID = 1395712364472700939  # canal “avisos‑de‑jogo”
 
 # Create an S3 client using the custom endpoint
@@ -99,16 +96,6 @@ intents.members = True
 intents.voice_states = True
 bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 user_levels = load_user_levels()
-# 08h em Salvador (UTC‑3) → 11h UTC
-BAHIA_CHECK_TIME = local_time_to_utc(8, 0)
-
-bahia_notifier = TeamMatchNotifier(
-    bot,
-    channel_id = ANNOUNCE_CHANNEL_ID,
-    team_id    = 133602,
-    team_label = "Bahia",
-    check_time = BAHIA_CHECK_TIME,
-)
 
 # Global flag to prevent concurrent mixes.
 mix_in_progress = False
