@@ -19,7 +19,7 @@ class RankingMixHandler:
     """
 
     MIN_GROUP_PLAYERS_IN_MATCH = 7       # players do grupo (somando os dois times)
-    MIN_MATCHES_PER_PLAYER     = 3       # descarta player com menos de 3 partidas
+    MIN_MATCHES_PER_PLAYER     = 4       # descarta player com menos de 3 partidas
 
     def __init__(
         self,
