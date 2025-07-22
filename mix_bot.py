@@ -14,6 +14,7 @@ import logging
 import openai
 from openai import OpenAI
 import json
+from ranking_mix_handler import RankingMixHandler
 # ---------------------------
 # Configuration
 # ---------------------------
@@ -32,6 +33,7 @@ ANNOUNCE_CHANNEL_ID = 1395712364472700939  # canal “avisos‑de‑jogo”
 
 # Create an S3 client using the custom endpoint
 s3 = boto3.client("s3", endpoint_url=ENDPOINT_URL)
+ranking_mix_handler = RankingMixHandler(s3, BUCKET_NAME, OBJECT_KEY)
 
 
 # ---------------------------

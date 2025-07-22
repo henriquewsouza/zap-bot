@@ -1,3 +1,4 @@
+# ranking_mix_handler.py
 import json
 from datetime import datetime
 import asyncio
@@ -104,7 +105,8 @@ class RankingMixHandler:
             winner = "team_a" if score_a>score_b else "team_b" if score_b>score_a else None
             def rec(p, team):
                 gc = str(p.get("idplayer"))
-                if gc not in records: records[gc] = []
+                if gc not in records:
+                    records[gc] = []
                 records[gc].append({
                     "date": mdate or datetime.min,
                     "kills": int(p.get("nb_kill",0)),
@@ -119,9 +121,11 @@ class RankingMixHandler:
             for p in players.get("team_b", []):
                 if str(p.get("idplayer")) in discord_to_gc.values(): rec(p, "team_b")
 
-        # Aggregate last_n
+        # Aggregate last_n and filter <3 matches
         stats_list = []
         for gc, recs in records.items():
+            if len(recs) < 3:
+                continue
             recs = sorted(recs, key=lambda r: r["date"])[-last_n:]
             if not recs: continue
             tot = len(recs)
@@ -136,7 +140,8 @@ class RankingMixHandler:
             await ctx.send("No mix matches found.")
             return
         def build(lst, key, lbl):
-            return "\n".join(f"{i+1}. {p['nick']} - {lbl}: {p[key]:.2f} ({p['m']} matches)" for i,p in enumerate(lst))
+            return "
+".join(f"{i+1}. {p['nick']} - {lbl}: {p[key]:.2f} ({p['m']} matches)" for i,p in enumerate(lst))
         sorted_stats = {"KDR": sorted(stats_list, key=lambda x: x["kdr"], reverse=True),
                         "ADR": sorted(stats_list, key=lambda x: x["adr"], reverse=True),
                         "Avg FK": sorted(stats_list, key=lambda x: x["fk"], reverse=True),
