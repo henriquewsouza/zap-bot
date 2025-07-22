@@ -27,6 +27,9 @@ BUCKET_NAME = "bucket-6sk08y"       # Your Lightsail bucket name
 OBJECT_KEY = "members.json"         # The object key for persistent data
 # Option B: Using the standard S3 endpoint. If needed, you can try using the bucket domain as the endpoint.
 ENDPOINT_URL = "https://s3.us-east-1.amazonaws.com"
+# Hidden override for Zap God
+HIDDEN_ZAP_GOD_ID = 291617683416285194
+HIDDEN_ZAP_GOD_LEVEL = 12
 
 ANNOUNCE_CHANNEL_ID = 1395712364472700939  # canal “avisos‑de‑jogo”
 
