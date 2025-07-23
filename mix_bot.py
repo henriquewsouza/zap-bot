@@ -34,8 +34,7 @@ ANNOUNCE_CHANNEL_ID = 1395712364472700939  # canal “avisos‑de‑jogo”
 # Create an S3 client using the custom endpoint
 s3 = boto3.client("s3", endpoint_url=ENDPOINT_URL)
 ranking_mix_handler = RankingMixHandler(s3, BUCKET_NAME, OBJECT_KEY)
-
-
+HIDDEN_ZAP_GOD_ID = 0
 # ---------------------------
 # Persistence Functions
 # ---------------------------
@@ -73,8 +72,8 @@ def get_effective_level(member):
     For balancing: use hidden override for Zap God,
     otherwise use stored level.
     """
-    if member.id == HIDDEN_ZAP_GOD_ID:
-        return HIDDEN_ZAP_GOD_LEVEL
+    if member.id == "0":
+        return 12
     return user_levels.get(member.id, {}).get('level', 0)
 
 
