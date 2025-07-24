@@ -15,6 +15,7 @@ import openai
 from openai import OpenAI
 import json
 from ranking_mix_handler import RankingMixHandler
+from ranking_creator_handler import RankingCreatorHandler
 # ---------------------------
 # Configuration
 # ---------------------------
@@ -22,6 +23,7 @@ from ranking_mix_handler import RankingMixHandler
 # Discord Bot Configuration
 BOT_ADMINS = [291617683416285194, 701661704844738580]
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+creator_handler = RankingCreatorHandler(s3, BUCKET_NAME, OBJECT_KEY)
 
 # Lightsail Bucket (S3‑compatible) Configuration
 BUCKET_NAME = "bucket-6sk08y"       # Your Lightsail bucket name
@@ -325,6 +327,14 @@ async def mix_teams(ctx):
             await channel.send(message)
     finally:
         mix_in_progress = False
+
+@bot.command(name="ranking_creators")
+async def ranking_creators(ctx, *, args: str = None):
+    """
+    !ranking_creators [YYYY-MM | -all]
+    Ranking de win‑rate dos criadores de lobby.
+    """
+    await creator_handler.handle(ctx, args)
 
 @bot.command(name="arere")
 async def arere(ctx):
