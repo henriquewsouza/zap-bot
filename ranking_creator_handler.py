@@ -1,33 +1,44 @@
 # ranking_creator_handler.py
-import re, json, asyncio
+import asyncio
+import json
+import re
 from collections import defaultdict
 from datetime import datetime
+from typing import Dict, Optional, Set
+
 import discord
 from botocore.exceptions import ClientError
 
 
 class RankingCreatorHandler:
     """
-    Gera ranking de win‑rate dos criadores de lobby (admins da partida).
+    Calcula o win‑rate dos criadores de lobby (admins de partida).
 
-    Uso no Discord:
-      !ranking_creators                    -> mês atual
-      !ranking_creators 2025-03            -> março/2025
-      !ranking_creators -all               -> all‑time
+    Comandos esperados no Discord:
+      !ranking_creators              -> mês atual
+      !ranking_creators YYYY-MM      -> mês específico (ex.: 2025-03)
+      !ranking_creators -all         -> all‑time
     """
 
-    MATCH_PREFIX = "matches/"           # pasta no S3 com as partidas
-    MIN_LOBBIES = 5                     # amostragem mínima por admin
+    MATCH_PREFIX: str = "matches/"   # pasta no S3 onde ficam os JSON de partidas
+    MIN_LOBBIES: int = 5             # qtd. mínima de lobbys para entrar no ranking
 
+    # --------------------------------------------------------------------- #
+    #  Construtor                                                           #
+    # --------------------------------------------------------------------- #
     def __init__(self, s3_client, bucket_name: str, members_key: str):
         self.s3 = s3_client
         self.bucket = bucket_name
-        self.members_key = members_key          # normalmente "members.json"
+        self.members_key = members_key  # geralmente "members.json"
 
-    # ---------- API pública ----------
-    async def handle(self, ctx, args: str | None = None):
+    # --------------------------------------------------------------------- #
+    #  Entrada principal chamada pelo bot                                   #
+    # --------------------------------------------------------------------- #
+    async def handle(self, ctx, args: Optional[str] = None):
         period = (args or "").strip() if args else ""
-        all_flag = (period == "-all")
+        all_flag = period == "-all"
+
+        # Validação do período
         if not all_flag and period:
             try:
                 datetime.strptime(period, "%Y-%m")
@@ -38,9 +49,16 @@ class RankingCreatorHandler:
             period = datetime.now().strftime("%Y-%m")
 
         members = self._load_members()
-        gc_ids_group = {str(m["gc"]) for m in members.values() if m.get("gc")}
-        gc2nick = {str(m["gc"]): m.get("nickname", f"GC {m['gc']}") for m in members.values() if m.get("gc")}
+        gc_ids_group: Set[str] = {
+            str(m["gc"]) for m in members.values() if m.get("gc")
+        }
+        gc2nick: Dict[str, str] = {
+            str(m["gc"]): m.get("nickname", f"GC {m['gc']}")
+            for m in members.values()
+            if m.get("gc")
+        }
 
+        # Coleta é bloqueante → executa em thread
         stats = await asyncio.to_thread(
             self._collect_stats, gc_ids_group, period, all_flag
         )
@@ -48,15 +66,23 @@ class RankingCreatorHandler:
             await ctx.send("Nenhum criador de lobby do grupo encontrado no período.")
             return
 
+        # Constrói ranking
         ranking = [
-            (gc2nick[gc], data["wins"], data["matches"],
-             data["wins"] / data["matches"] * 100)
-            for gc, data in stats.items() if data["matches"] >= self.MIN_LOBBIES
+            (
+                gc2nick.get(gc, f"GC {gc}"),
+                data["wins"],
+                data["matches"],
+                data["wins"] / data["matches"] * 100,
+            )
+            for gc, data in stats.items()
+            if data["matches"] >= self.MIN_LOBBIES
         ]
         ranking.sort(key=lambda x: x[3], reverse=True)
 
         if not ranking:
-            await ctx.send(f"Ninguém atingiu {self.MIN_LOBBIES} lobbys no período.")
+            await ctx.send(
+                f"Ninguém atingiu {self.MIN_LOBBIES} lobbys no período selecionado."
+            )
             return
 
         text = "\n".join(
@@ -66,36 +92,53 @@ class RankingCreatorHandler:
 
         embed = discord.Embed(
             title=f"Ranking – Criadores de Lobby ({'All Time' if all_flag else period})",
-            description="Win‑rate considerando *todas* as lobbys em que o jogador foi admin.",
-            color=0xe67e22
+            description="Win‑rate considerando apenas lobbys em que o jogador foi admin.",
+            color=0xE67E22,
         )
         embed.add_field(name="🏆 Win‑Rate", value=f"```{text}```", inline=False)
         await ctx.send(embed=embed)
 
-    # ---------- coleta ----------
-    def _collect_stats(self, group_ids: set[str], period: str, all_flag: bool):
+    # --------------------------------------------------------------------- #
+    #  Coleta de estatísticas                                               #
+    # --------------------------------------------------------------------- #
+    def _collect_stats(
+        self, group_ids: Set[str], period: str, all_flag: bool
+    ) -> Dict[str, Dict[str, int]]:
         """
-        Varrre todos os JSON em matches/ e devolve:
-            { gc_id: {wins: int, matches: int}, ... }
+        Varre todos os JSON em matches/ e retorna:
+            { gc_id: {'wins': int, 'matches': int}, ... }
         """
-        stats = defaultdict(lambda: {"wins": 0, "matches": 0})
-        objects = self.s3.list_objects_v2(Bucket=self.bucket, Prefix=self.MATCH_PREFIX).get("Contents", [])
+        stats: Dict[str, Dict[str, int]] = defaultdict(
+            lambda: {"wins": 0, "matches": 0}
+        )
+        objects = (
+            self.s3.list_objects_v2(Bucket=self.bucket, Prefix=self.MATCH_PREFIX).get(
+                "Contents", []
+            )
+        )
 
         for obj in objects:
             key = obj["Key"]
             try:
-                body = self.s3.get_object(Bucket=self.bucket, Key=key)["Body"].read().decode("utf-8")
+                body = (
+                    self.s3.get_object(Bucket=self.bucket, Key=key)["Body"]
+                    .read()
+                    .decode("utf-8")
+                )
                 match = json.loads(body)
             except Exception:
                 continue
 
-            # filtro de período
+            # Filtra por período, se não for all‑time
             if not all_flag:
-                date_str = match.get("data")
+                date_str = match.get("data")  # "dd/mm/YYYY HH:MM"
                 if not date_str:
                     continue
                 try:
-                    if datetime.strptime(date_str, "%d/%m/%Y %H:%M").strftime("%Y-%m") != period:
+                    if (
+                        datetime.strptime(date_str, "%d/%m/%Y %H:%M").strftime("%Y-%m")
+                        != period
+                    ):
                         continue
                 except Exception:
                     continue
@@ -103,7 +146,6 @@ class RankingCreatorHandler:
             admin_a = self._extract_admin_id(match.get("admin_avatar_a"))
             admin_b = self._extract_admin_id(match.get("admin_avatar_b"))
 
-            # vencedor
             jogos = match.get("jogos", {})
             try:
                 score_a = int(jogos.get("score_a", 0))
@@ -112,7 +154,7 @@ class RankingCreatorHandler:
                 score_a = score_b = 0
             winner = "a" if score_a > score_b else "b" if score_b > score_a else None
 
-            def add_result(admin_gc: str | None, side: str):
+            def add_result(admin_gc: Optional[str], side: str):
                 if admin_gc in group_ids:
                     stats[admin_gc]["matches"] += 1
                     if winner == side:
@@ -123,18 +165,25 @@ class RankingCreatorHandler:
 
         return stats
 
-    # ---------- utilidades ----------
-    def _load_members(self) -> dict:
+    # --------------------------------------------------------------------- #
+    #  Utilidades                                                           #
+    # --------------------------------------------------------------------- #
+    def _load_members(self) -> Dict:
         try:
-            cont = self.s3.get_object(Bucket=self.bucket, Key=self.members_key)["Body"].read().decode("utf-8")
-            return json.loads(cont)
+            content = (
+                self.s3.get_object(Bucket=self.bucket, Key=self.members_key)["Body"]
+                .read()
+                .decode("utf-8")
+            )
+            return json.loads(content)
         except ClientError:
             return {}
 
     @staticmethod
-    def _extract_admin_id(url: str | None) -> str | None:
+    def _extract_admin_id(url: Optional[str]) -> Optional[str]:
         """
-        Ex.: https://static.gamersclub.com.br/players/avatar/1323034/1323034_medium.jpg
+        Extrai o GC ID do admin a partir do avatar:
+        https://static.gamersclub.com.br/players/avatar/1323034/1323034_medium.jpg
         -> "1323034"
         """
         if not url:

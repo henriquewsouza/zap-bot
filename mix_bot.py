@@ -23,7 +23,6 @@ from ranking_creator_handler import RankingCreatorHandler
 # Discord Bot Configuration
 BOT_ADMINS = [291617683416285194, 701661704844738580]
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
-creator_handler = RankingCreatorHandler(s3, BUCKET_NAME, OBJECT_KEY)
 
 # Lightsail Bucket (S3‑compatible) Configuration
 BUCKET_NAME = "bucket-6sk08y"       # Your Lightsail bucket name
@@ -37,6 +36,7 @@ ANNOUNCE_CHANNEL_ID = 1395712364472700939  # canal “avisos‑de‑jogo”
 s3 = boto3.client("s3", endpoint_url=ENDPOINT_URL)
 ranking_mix_handler = RankingMixHandler(s3, BUCKET_NAME, OBJECT_KEY)
 HIDDEN_ZAP_GOD_ID = 0
+creator_handler = RankingCreatorHandler(s3, BUCKET_NAME, OBJECT_KEY)
 # ---------------------------
 # Persistence Functions
 # ---------------------------
