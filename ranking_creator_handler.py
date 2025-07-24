@@ -21,7 +21,7 @@ class RankingCreatorHandler:
     """
 
     MATCH_PREFIX: str = "matches/"   # pasta no S3 onde ficam os JSON de partidas
-    MIN_LOBBIES: int = 5             # qtd. mínima de lobbys para entrar no ranking
+    MIN_LOBBIES: int = 10             # qtd. mínima de lobbys para entrar no ranking
 
     # --------------------------------------------------------------------- #
     #  Construtor                                                           #
