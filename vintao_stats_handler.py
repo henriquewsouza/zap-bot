@@ -97,7 +97,9 @@ class VintaoLocalStatsHandler:
         # descrição do embed
         desc = (
             "**Êeeeeeeeeee meu vintão!**\n"
-            "> Uma verdadeira máquina, ainda bem que CS não é jogo de matar, né?\n\n"
+            "**Vamos dar uma olhadinha na sua perfomance nas rankeds? ZapBOT quer entender como vc chegou lvl 20**\n"
+
+            "> Eita... ainda bem que CS não é jogo de matar, né?\n\n"
             f"• 🕹️ **Partidas:** {stats['matches']}\n"
             f"• 🔫 **K/D Ratio:** {stats['kdr']:.2f} 😂\n"
             f"• 💥 **ADR:** {stats['adr']:.2f}\n"
