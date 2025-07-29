@@ -1,5 +1,6 @@
 # vintao_local_stats_handler.py
-# ALL‑TIME Ranked Pro (vintão) do LKS – lido de arquivos locais
+# ALL‑TIME Ranked Pro (vintão) do LKS, lendo matches/*.json
+
 import json
 from pathlib import Path
 from datetime import datetime
@@ -8,54 +9,38 @@ from typing import Dict, Any, Optional
 import discord
 from discord.ext import commands
 
-GC_ID = "859273"
+GC_ID       = "859273"
 PLAYER_NAME = "LKS"
-
-HISTORY_DIR = Path("ranked_pro_matches") / GC_ID
-MATCHES_DIR  = Path("matches")           # onde estão match_id.json
+MATCHES_DIR = Path("matches")        # ajuste se necessário
 
 
 class VintaoLocalStatsHandler:
-    """Agrupa stats ALL‑TIME do LKS lendo arquivos locais."""
+    """Soma TODOS os matches/*.json que forem Ranked Pro do LKS."""
 
-    # -------------------- helpers --------------------
     @staticmethod
-    def _safe_int(val) -> int:
-        try:
-            return int(val)
-        except Exception:
-            return 0
-
-    def _collect_match_ids(self) -> set[str]:
-        """Percorre todos os JSON em HISTORY_DIR e retorna ids de ranked pro."""
-        ids = set()
-        for f in HISTORY_DIR.glob("*.json"):
-            try:
-                data = json.loads(f.read_text(encoding="utf-8"))
-                for m in data:
-                    if str(m.get("type", "")).lower() == "ranked pro":
-                        ids.add(str(m.get("id")))
-            except Exception:
-                continue
-        return ids
+    def _safe_int(v) -> int:
+        try:   return int(v)
+        except Exception: return 0
 
     def _aggregate(self) -> Optional[Dict[str, Any]]:
-        ids = self._collect_match_ids()
-        if not ids:
-            return None
-
         tot = {
-            "matches": 0, "wins": 0, "kills": 0, "deaths": 0,
-            "damage": 0, "rounds": 0, "firstk": 0, "hs": 0,
+            "matches": 0, "wins": 0,
+            "kills": 0, "deaths": 0, "damage": 0, "rounds": 0,
+            "firstk": 0, "hs": 0,
         }
 
-        for mid in ids:
-            match_file = MATCHES_DIR / f"{mid}.json"
-            if not match_file.exists():
-                continue
+        if not MATCHES_DIR.is_dir():
+            return None
+
+        for file in MATCHES_DIR.glob("*.json"):
             try:
-                m = json.loads(match_file.read_text(encoding="utf-8"))
+                m = json.loads(file.read_text(encoding="utf-8"))
             except Exception:
+                continue
+
+            # só Ranked Pro
+            t = str(m.get("type", m.get("lobbyType", ""))).lower()
+            if "ranked" not in t or "pro" not in t:
                 continue
 
             jogos   = m.get("jogos", {})
@@ -67,11 +52,11 @@ class VintaoLocalStatsHandler:
                     if str(p.get("idplayer")) == GC_ID:
                         my_rec, my_team = p, team
                         break
-                if my_rec:
-                    break
+                if my_rec: break
             if not my_rec:
                 continue
 
+            # soma stats
             tot["matches"] += 1
             tot["kills"]   += self._safe_int(my_rec.get("nb_kill"))
             tot["deaths"]  += self._safe_int(my_rec.get("death"))
@@ -80,7 +65,6 @@ class VintaoLocalStatsHandler:
             tot["firstk"]  += self._safe_int(my_rec.get("firstkill"))
             tot["hs"]      += self._safe_int(my_rec.get("hs"))
 
-            # vitória
             sa = self._safe_int(jogos.get("score_a"))
             sb = self._safe_int(jogos.get("score_b"))
             winner = "team_a" if sa > sb else "team_b" if sb > sa else None
@@ -90,8 +74,8 @@ class VintaoLocalStatsHandler:
         if tot["matches"] == 0:
             return None
 
-        deaths = tot["deaths"] or 1
-        rounds = tot["rounds"] or 1
+        deaths  = tot["deaths"] or 1
+        rounds  = tot["rounds"] or 1
         tot.update(
             losses = tot["matches"] - tot["wins"],
             kdr    = tot["kills"] / deaths,
@@ -102,15 +86,15 @@ class VintaoLocalStatsHandler:
         )
         return tot
 
-    # ----------------- interface pública -----------------
+    # ───────────────────────────────────────────────
     async def handle(self, ctx: commands.Context):
         stats = self._aggregate()
         if not stats:
-            await ctx.send(f"Nenhuma partida Ranked Pro encontrada para {PLAYER_NAME}.")
+            await ctx.send(f"Nenhuma partida Ranked Pro localizada para {PLAYER_NAME}.")
             return
 
         em = discord.Embed(
-            title=f"{PLAYER_NAME} – Ranked Pro (ALL‑TIME, dados locais)",
+            title=f"{PLAYER_NAME} – Ranked Pro (ALL‑TIME)",
             color=0xF1C40F,
         )
         for n, v in (
