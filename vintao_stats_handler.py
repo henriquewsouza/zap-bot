@@ -1,5 +1,5 @@
 # vintao_local_stats_handler.py
-# ALL‑TIME Ranked Pro (vintão) do LKS, lendo matches/*.json
+# ALL‑TIME Ranked Pro (“vintão”) do LKS  – dados locais
 
 import json
 from pathlib import Path
@@ -9,54 +9,74 @@ from typing import Dict, Any, Optional
 import discord
 from discord.ext import commands
 
-GC_ID       = "859273"
-PLAYER_NAME = "LKS"
-MATCHES_DIR = Path("matches")        # ajuste se necessário
+GC_ID        = "859273"
+PLAYER_NAME  = "LKS"
+HISTORY_DIR  = Path("ranked_pro_matches") / GC_ID   # onde ficam 859273-*-ranked pro.json
+MATCHES_DIR  = Path("matches")                      # stats completos <id>.json
 
 
 class VintaoLocalStatsHandler:
-    """Soma TODOS os matches/*.json que forem Ranked Pro do LKS."""
+    """Soma todos os Ranked Pro do LKS a partir dos arquivos locais."""
 
+    # ---------------- helpers ----------------
     @staticmethod
     def _safe_int(v) -> int:
-        try:   return int(v)
-        except Exception: return 0
+        try:
+            return int(v)
+        except Exception:
+            return 0
+
+    def _ranked_pro_ids(self) -> set[str]:
+        """Coleta IDs de partida a partir dos históricos Ranked Pro."""
+        ids: set[str] = set()
+        if not HISTORY_DIR.is_dir():
+            return ids
+        for f in HISTORY_DIR.glob("*.json"):
+            try:
+                data = json.loads(f.read_text(encoding="utf-8"))
+                for m in data:
+                    mid = m.get("id")
+                    if mid:
+                        ids.add(str(mid))
+            except Exception:
+                continue
+        return ids
 
     def _aggregate(self) -> Optional[Dict[str, Any]]:
+        ids = self._ranked_pro_ids()
+        if not ids:
+            return None
+
         tot = {
             "matches": 0, "wins": 0,
             "kills": 0, "deaths": 0, "damage": 0, "rounds": 0,
             "firstk": 0, "hs": 0,
         }
 
-        if not MATCHES_DIR.is_dir():
-            return None
-
-        for file in MATCHES_DIR.glob("*.json"):
-            try:
-                m = json.loads(file.read_text(encoding="utf-8"))
-            except Exception:
+        for mid in ids:
+            f = MATCHES_DIR / f"{mid}.json"
+            if not f.is_file():
                 continue
-
-            # só Ranked Pro
-            t = str(m.get("type", m.get("lobbyType", ""))).lower()
-            if "ranked" not in t or "pro" not in t:
+            try:
+                m = json.loads(f.read_text(encoding="utf-8"))
+            except Exception:
                 continue
 
             jogos   = m.get("jogos", {})
             players = jogos.get("players", {})
 
-            my_rec, my_team = None, None
+            my_rec = None
+            my_team = None
             for team in ("team_a", "team_b"):
                 for p in players.get(team, []):
                     if str(p.get("idplayer")) == GC_ID:
                         my_rec, my_team = p, team
                         break
-                if my_rec: break
+                if my_rec:
+                    break
             if not my_rec:
-                continue
+                continue  # LKS não jogou/ausente
 
-            # soma stats
             tot["matches"] += 1
             tot["kills"]   += self._safe_int(my_rec.get("nb_kill"))
             tot["deaths"]  += self._safe_int(my_rec.get("death"))
@@ -65,10 +85,11 @@ class VintaoLocalStatsHandler:
             tot["firstk"]  += self._safe_int(my_rec.get("firstkill"))
             tot["hs"]      += self._safe_int(my_rec.get("hs"))
 
+            # vitória
             sa = self._safe_int(jogos.get("score_a"))
             sb = self._safe_int(jogos.get("score_b"))
             winner = "team_a" if sa > sb else "team_b" if sb > sa else None
-            if winner == my_team:
+            if winner and winner == my_team:
                 tot["wins"] += 1
 
         if tot["matches"] == 0:
@@ -86,7 +107,7 @@ class VintaoLocalStatsHandler:
         )
         return tot
 
-    # ───────────────────────────────────────────────
+    # --------------- comando público ---------------
     async def handle(self, ctx: commands.Context):
         stats = self._aggregate()
         if not stats:
