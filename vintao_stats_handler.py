@@ -117,7 +117,7 @@ class VintaoLocalStatsHandler:
 
             sent = await ctx.send(
                 embed=embed,
-                content=f"`stats brutos anexados • sha256:{sha}`",
+                content=f"`stats brutos anexados para quem quiser checar a prova do **C R I M E**",
                 file=discord.File(zip_p, "LKS_match_stats.zip")
             )
 
