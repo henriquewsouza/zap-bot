@@ -38,7 +38,7 @@ s3 = boto3.client("s3", endpoint_url=ENDPOINT_URL)
 ranking_mix_handler = RankingMixHandler(s3, BUCKET_NAME, OBJECT_KEY)
 HIDDEN_ZAP_GOD_ID = 0
 creator_handler = RankingCreatorHandler(s3, BUCKET_NAME, OBJECT_KEY)
-vintao_local = VintaoLocalStatsHandler(None, None)  # sem S3
+vintao_local = VintaoLocalStatsHandler()  # sem S3
 # ---------------------------
 # Persistence Functions
 # ---------------------------
