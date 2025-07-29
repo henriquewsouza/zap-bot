@@ -16,7 +16,7 @@ from openai import OpenAI
 import json
 from ranking_mix_handler import RankingMixHandler
 from ranking_creator_handler import RankingCreatorHandler
-from vintao_stats_handler import VintaoStatsHandler
+from vintao_stats_handler import VintaoLocalStatsHandler
 # ---------------------------
 # Configuration
 # ---------------------------
