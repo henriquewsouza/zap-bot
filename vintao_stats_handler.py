@@ -93,7 +93,7 @@ class VintaoLocalStatsHandler:
         # ---------- monta descrição ----------
         desc = (
             f"**Êeeeeeeeeee meu vintão!**\n"
-            f>\" Uma verdadeira máquina, ainda bem que CS não é jogo de matar, né?\n\n"
+            f"  ainda bem que CS não é jogo de matar, né?\n\n"
             f"• 🕹️ **Partidas:** {stats['matches']}\n"
             f"• 🔫 **K/D Ratio:** {stats['kdr']:.2f} 😂\n"
             f"• 💥 **ADR:** {stats['adr']:.2f}\n"
