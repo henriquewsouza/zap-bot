@@ -87,4 +87,47 @@ class VintaoLocalStatsHandler:
             tot["firstk"]  += self._safe_int(my.get("firstkill"))
             tot["hs"]      += self._safe_int(my.get("hs"))
 
-            sa = self._safe_int(jogos.get("score_a"_
+            sa = self._safe_int(jogos.get("score_a"))
+            sb = self._safe_int(jogos.get("score_b"))
+            winner = "team_a" if sa > sb else "team_b" if sb > sa else None
+            if winner == my_team:
+                tot["wins"] += 1
+
+        if tot["matches"] == 0:
+            return None
+
+        deaths  = tot["deaths"] or 1
+        rounds  = tot["rounds"] or 1
+        tot.update(
+            losses = tot["matches"] - tot["wins"],
+            kdr    = tot["kills"] / deaths,
+            adr    = tot["damage"] / rounds,
+            wr     = tot["wins"] / tot["matches"] * 100,
+            fk_avg = tot["firstk"] / tot["matches"],
+            hs_pct = (tot["hs"] / tot["kills"] * 100) if tot["kills"] else 0,
+        )
+        return tot
+
+    # ------------- comando público -------------
+    async def handle(self, ctx: commands.Context):
+        stats = self._aggregate()
+        if not stats:
+            await ctx.send(f"Nenhuma partida Ranked Pro localizada para {PLAYER_NAME}.")
+            return
+
+        em = discord.Embed(
+            title=f"{PLAYER_NAME} – Ranked Pro (ALL‑TIME, dados locais)",
+            color=0xF1C40F,
+        )
+        for label, val in (
+            ("Partidas", stats["matches"]), ("Vitórias", stats["wins"]),
+            ("Derrotas", stats["losses"]),  ("Win Rate", f"{stats['wr']:.2f}%"),
+            ("Kills", stats["kills"]),      ("Deaths", stats["deaths"]),
+            ("KDR", f"{stats['kdr']:.2f}"), ("ADR", f"{stats['adr']:.2f}"),
+            ("First Kills", stats["firstk"]), ("Avg FK/Match", f"{stats['fk_avg']:.2f}"),
+            ("HS %", f"{stats['hs_pct']:.2f}%"),
+        ):
+            em.add_field(name=label, value=val, inline=True)
+
+        em.set_footer(text=datetime.utcnow().strftime("Gerado em %d/%m/%Y %H:%M UTC"))
+        await ctx.send(embed=em)
