@@ -1,41 +1,36 @@
 # vintao_local_stats_handler.py
-# LKS – Ranked Pro + Qualify (ALL‑TIME)  •  Texto “currículo” + ZIP + votos
+# LKS – Ranked Pro + Qualify (ALL‑TIME)  •  Embed colorido + ZIP + votação
 
 import json, logging, hashlib, shutil, tempfile
 from pathlib import Path
-from datetime import datetime
 from typing import Dict, Any, Optional
 
 import discord
 from discord.ext import commands
 
-GC_ID        = "859273"
-PLAYER_NAME  = "LKS"
-ANDZ_FIXED   = 71            # contagem manual do “team andZ”
+GC_ID       = "859273"
+PLAYER_NAME = "LKS"
+ANDZ_FIXED  = 71      # contagem manual do “team andZ”
 
 BASE_DIR    = Path(__file__).resolve().parent
-HISTORY_DIR = BASE_DIR / "ranked_pro_matches" / GC_ID
-MATCHES_DIR = BASE_DIR / "match_stats"        / GC_ID
+HIST_DIR    = BASE_DIR / "ranked_pro_matches" / GC_ID
+STAT_DIR    = BASE_DIR / "match_stats"        / GC_ID
 
 log = logging.getLogger("VintaoLocal")
 
-
 class VintaoLocalStatsHandler:
-    # ---------- helpers ----------
+
     @staticmethod
     def _safe_int(v) -> int:
-        try:
-            return int(v)
-        except Exception:
-            return 0
+        try: return int(v)
+        except Exception: return 0
 
     def _ranked_ids(self) -> set[str]:
         ids = set()
-        for f in HISTORY_DIR.glob("*.json"):
+        for f in HIST_DIR.glob("*.json"):
             try:
                 ids |= {str(m["id"]) for m in json.loads(f.read_text()) if "id" in m}
-            except Exception:
-                log.debug("Falha lendo %s", f.name)
+            except Exception: pass
         return ids
 
     def _aggregate(self) -> Optional[Dict[str, Any]]:
@@ -44,9 +39,8 @@ class VintaoLocalStatsHandler:
             return None
 
         tot = dict(matches=0, wins=0, kills=0, deaths=0, damage=0, rounds=0)
-
         for mid in ids:
-            p = MATCHES_DIR / f"{mid}.json"
+            p = STAT_DIR / f"{mid}.json"
             if not p.is_file():
                 continue
             try:
@@ -77,7 +71,7 @@ class VintaoLocalStatsHandler:
                           int(jogos.get("score_b", 0)) else "team_b") == my_team:
                 tot["wins"] += 1
 
-        if not tot["matches"]:
+        if tot["matches"] == 0:
             return None
 
         deaths = tot["deaths"] or 1
@@ -89,41 +83,45 @@ class VintaoLocalStatsHandler:
         )
         return tot
 
-    # ---------- comando ----------
+    # ── comando principal ────────────────────────────────────────────
     async def handle(self, ctx: commands.Context):
         stats = self._aggregate()
         if not stats:
-            await ctx.send("Nenhuma partida encontrada.")
+            await ctx.send("Nenhuma partida Ranked Pro encontrada.")
             return
 
-        # ── monta a mensagem estilo “currículo” ─────────────────────────
-        msg = (
-            f"**⚔️  {PLAYER_NAME} — Ranked Pro + Qualify (ALL‑TIME)**\n\n"
+        # ---------- monta descrição ----------
+        desc = (
             f"**Êeeeeeeeeee meu vintão!**\n"
-            f"> Uma verdadeira máquina — ainda bem que CS não é jogo de matar, né?\n\n"
-            f"📊 **Resumo de Performance**\n"
-            f"• 🕹️ Partidas: **{stats['matches']}**\n"
-            f"• 🔫 K/D Ratio: **{stats['kdr']:.2f}** :KEKW:\n"
-            f"• 💥 ADR: **{stats['adr']:.2f}**\n"
-            f"• 🏆 Win Rate: **{stats['wr']:.2f}%** :pepecry:\n\n"
-            f"*🚩 Observação curiosa:*  \n"
-            f"Rolou um tal de **“team andZ”** em **{ANDZ_FIXED}** jogos… "
-            f"amizade antiga ou carona de level? 🤔 :shocked:\n\n"
+            f>\" Uma verdadeira máquina, ainda bem que CS não é jogo de matar, né?\n\n"
+            f"• 🕹️ **Partidas:** {stats['matches']}\n"
+            f"• 🔫 **K/D Ratio:** {stats['kdr']:.2f} 😂\n"
+            f"• 💥 **ADR:** {stats['adr']:.2f}\n"
+            f"• 🏆 **Win Rate:** {stats['wr']:.2f}% 😢\n\n"
+            f"*🚩 Observação curiosa:* Rolou um tal de **“team andZ”** "
+            f"em **{ANDZ_FIXED}** jogos… amizade antiga ou carona de level? 😱\n\n"
             "É **true 20** ou n? Vote abaixo!"
         )
 
-        # ── cria ZIP temporário + checksum ──────────────────────────────
+        embed = discord.Embed(
+            title=f"⚔️  {PLAYER_NAME} — NAS RANKEDS PRO E QUALIFY EINNN",
+            description=desc,
+            color=0xF1C40F   # dourado
+        )
+
+        # ---------- cria ZIP + checksum ----------
         with tempfile.TemporaryDirectory() as tmp:
             zip_p = Path(tmp) / "LKS_match_stats.zip"
-            shutil.make_archive(zip_p.with_suffix(""), "zip", MATCHES_DIR)
+            shutil.make_archive(zip_p.with_suffix(""), "zip", STAT_DIR)
             sha = hashlib.sha256(zip_p.read_bytes()).hexdigest()[:12]
 
             sent = await ctx.send(
-                content=msg + f"\n\n`stats brutos anexados com as provas do CRIME • sha256:{sha}`",
+                embed=embed,
+                content=f"`stats brutos anexados • sha256:{sha}`",
                 file=discord.File(zip_p, "LKS_match_stats.zip")
             )
 
-        # ── adiciona reações para votação ───────────────────────────────
+        # ---------- reações para votação ----------
         try:
             await sent.add_reaction("👍")  # true 20
             await sent.add_reaction("👎")  # n
