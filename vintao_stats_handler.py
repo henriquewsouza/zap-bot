@@ -129,6 +129,6 @@ class VintaoLocalStatsHandler:
             shutil.make_archive(zip_path.with_suffix(""), "zip", STAT_DIR)
             sha = hashlib.sha256(zip_path.read_bytes()).hexdigest()[:12]
             await ctx.send(
-                content=f"`stats brutos anexados • sha256:{sha}`",
+                content=f"`json de todas as partidas anexados como prova do crime`",
                 file=discord.File(zip_path, "LKS_match_stats.zip")
             )
