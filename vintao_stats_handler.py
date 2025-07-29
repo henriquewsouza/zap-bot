@@ -1,30 +1,47 @@
-# vintao_stats_handler.py
-# Stats ALL‑TIME de Ranked Pro (“vintão”) do LKS – GC 859273
+# vintao_local_stats_handler.py
+# ALL‑TIME Ranked Pro (vintão) do LKS – lido de arquivos locais
 import json
-import logging
+from pathlib import Path
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Dict, Any, Optional
 
 import discord
-from botocore.exceptions import ClientError
+from discord.ext import commands
 
 GC_ID = "859273"
 PLAYER_NAME = "LKS"
 
+HISTORY_DIR = Path("ranked_pro_matches") / GC_ID
+MATCHES_DIR  = Path("matches")           # onde estão match_id.json
 
-class VintaoStatsHandler:
-    def __init__(self, s3_client, bucket_name: str):
-        self.s3 = s3_client
-        self.bucket = bucket_name
 
-    # ───────────────────────── helpers ─────────────────────────
-    def _aggregate_all(self) -> Optional[Dict[str, Any]]:
+class VintaoLocalStatsHandler:
+    """Agrupa stats ALL‑TIME do LKS lendo arquivos locais."""
+
+    # -------------------- helpers --------------------
+    @staticmethod
+    def _safe_int(val) -> int:
         try:
-            objs = self.s3.list_objects_v2(
-                Bucket=self.bucket, Prefix="matches/"
-            ).get("Contents", [])
-        except ClientError:
-            logging.exception("Erro listando matches/")
+            return int(val)
+        except Exception:
+            return 0
+
+    def _collect_match_ids(self) -> set[str]:
+        """Percorre todos os JSON em HISTORY_DIR e retorna ids de ranked pro."""
+        ids = set()
+        for f in HISTORY_DIR.glob("*.json"):
+            try:
+                data = json.loads(f.read_text(encoding="utf-8"))
+                for m in data:
+                    if str(m.get("type", "")).lower() == "ranked pro":
+                        ids.add(str(m.get("id")))
+            except Exception:
+                continue
+        return ids
+
+    def _aggregate(self) -> Optional[Dict[str, Any]]:
+        ids = self._collect_match_ids()
+        if not ids:
             return None
 
         tot = {
@@ -32,20 +49,18 @@ class VintaoStatsHandler:
             "damage": 0, "rounds": 0, "firstk": 0, "hs": 0,
         }
 
-        for obj in objs:
+        for mid in ids:
+            match_file = MATCHES_DIR / f"{mid}.json"
+            if not match_file.exists():
+                continue
             try:
-                m = json.loads(
-                    self.s3.get_object(Bucket=self.bucket, Key=obj["Key"])["Body"]
-                    .read().decode("utf-8")
-                )
+                m = json.loads(match_file.read_text(encoding="utf-8"))
             except Exception:
                 continue
 
-            if m.get("type", "").lower() != "ranked pro":
-                continue
-
-            jogos = m.get("jogos", {})
+            jogos   = m.get("jogos", {})
             players = jogos.get("players", {})
+
             my_rec, my_team = None, None
             for team in ("team_a", "team_b"):
                 for p in players.get(team, []):
@@ -57,48 +72,46 @@ class VintaoStatsHandler:
             if not my_rec:
                 continue
 
-            # soma stats
             tot["matches"] += 1
-            for raw, key in (("nb_kill", "kills"), ("death", "deaths"),
-                             ("damage", "damage"), ("rounds_played", "rounds"),
-                             ("firstkill", "firstk"), ("hs", "hs")):
-                tot[key] += int(my_rec.get(raw, 0))
+            tot["kills"]   += self._safe_int(my_rec.get("nb_kill"))
+            tot["deaths"]  += self._safe_int(my_rec.get("death"))
+            tot["damage"]  += self._safe_int(my_rec.get("damage"))
+            tot["rounds"]  += self._safe_int(my_rec.get("rounds_played"))
+            tot["firstk"]  += self._safe_int(my_rec.get("firstkill"))
+            tot["hs"]      += self._safe_int(my_rec.get("hs"))
 
-            # vitória?
-            try:
-                sa = int(jogos.get("score_a", 0))
-                sb = int(jogos.get("score_b", 0))
-            except Exception:
-                sa = sb = 0
+            # vitória
+            sa = self._safe_int(jogos.get("score_a"))
+            sb = self._safe_int(jogos.get("score_b"))
             winner = "team_a" if sa > sb else "team_b" if sb > sa else None
             if winner == my_team:
                 tot["wins"] += 1
 
-        if not tot["matches"]:
+        if tot["matches"] == 0:
             return None
 
-        deaths = tot["deaths"]
-        rounds = tot["rounds"]
-        tot.update({
-            "losses": tot["matches"] - tot["wins"],
-            "kdr": tot["kills"] / deaths if deaths else tot["kills"],
-            "adr": tot["damage"] / rounds if rounds else 0,
-            "wr":  tot["wins"] / tot["matches"] * 100,
-            "fk_avg": tot["firstk"] / tot["matches"],
-            "hs_pct": tot["hs"] / tot["kills"] * 100 if tot["kills"] else 0,
-        })
+        deaths = tot["deaths"] or 1
+        rounds = tot["rounds"] or 1
+        tot.update(
+            losses = tot["matches"] - tot["wins"],
+            kdr    = tot["kills"] / deaths,
+            adr    = tot["damage"] / rounds,
+            wr     = tot["wins"] / tot["matches"] * 100,
+            fk_avg = tot["firstk"] / tot["matches"],
+            hs_pct = (tot["hs"] / tot["kills"] * 100) if tot["kills"] else 0,
+        )
         return tot
 
-    # ───────────────────────── API pública ─────────────────────
-    async def handle(self, ctx):
-        stats = self._aggregate_all()
+    # ----------------- interface pública -----------------
+    async def handle(self, ctx: commands.Context):
+        stats = self._aggregate()
         if not stats:
             await ctx.send(f"Nenhuma partida Ranked Pro encontrada para {PLAYER_NAME}.")
             return
 
         em = discord.Embed(
-            title=f"{PLAYER_NAME} – Ranked Pro (ALL‑TIME)",
-            color=0xf1c40f,
+            title=f"{PLAYER_NAME} – Ranked Pro (ALL‑TIME, dados locais)",
+            color=0xF1C40F,
         )
         for n, v in (
             ("Partidas", stats["matches"]), ("Vitórias", stats["wins"]),
@@ -110,6 +123,5 @@ class VintaoStatsHandler:
         ):
             em.add_field(name=n, value=v, inline=True)
 
-        # timestamp de geração para referência
-        em.set_footer(text=datetime.utcnow().strftime("Atualizado em %d/%m/%Y %H:%M UTC"))
+        em.set_footer(text=datetime.utcnow().strftime("Gerado em %d/%m/%Y %H:%M UTC"))
         await ctx.send(embed=em)
