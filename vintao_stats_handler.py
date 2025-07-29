@@ -15,7 +15,7 @@ PLAYER_NAME  = "LKS"
 
 BASE_DIR    = Path(__file__).resolve().parent
 HISTORY_DIR = BASE_DIR / "ranked_pro_matches" / GC_ID
-MATCHES_DIR = BASE_DIR / "matches"
+MATCHES_DIR = BASE_DIR / "match_stats" / GC_ID
 
 log = logging.getLogger("VintaoLocal")
 
