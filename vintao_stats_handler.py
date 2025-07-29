@@ -130,9 +130,9 @@ class VintaoLocalStatsHandler:
             sha = hashlib.sha256(zip_path.read_bytes()).hexdigest()[:12]
             await ctx.send(
                 content=(
-                    "```json de todas as partidas anexados como prova do crime caso "
-                    "sejam levantadas dúvidas da veracidade, ZapBOT traz apenas números "
-                    "verídicos.```"
+                    "```Json de todas as partidas anexados como prova do crime, caso "
+                    "sejam levantadas dúvidas da veracidade dos números, ZapBOT trabalha apenas e tão somente com a "
+                    "verdade.```"
                 ),
                 file=discord.File(zip_path, "LKS_match_stats.zip")
             )
