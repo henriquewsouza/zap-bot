@@ -38,7 +38,7 @@ s3 = boto3.client("s3", endpoint_url=ENDPOINT_URL)
 ranking_mix_handler = RankingMixHandler(s3, BUCKET_NAME, OBJECT_KEY)
 HIDDEN_ZAP_GOD_ID = 0
 creator_handler = RankingCreatorHandler(s3, BUCKET_NAME, OBJECT_KEY)
-vintao_local_handler = VintaoLocalStatsHandler()  # S3 não é usado
+vintao_local = VintaoLocalStatsHandler(None, None)  # sem S3
 # ---------------------------
 # Persistence Functions
 # ---------------------------
@@ -341,8 +341,7 @@ async def ranking_creators(ctx, *, args: str = None):
 
 @bot.command(name="meu_vintao")
 async def meu_vintao(ctx):
-    """!meu_vintao – stats ALL‑TIME (arquivos locais) do LKS"""
-    await vintao_local_handler.handle(ctx)
+    await vintao_local.handle(ctx)
 
 @bot.command(name="arere")
 async def arere(ctx):
