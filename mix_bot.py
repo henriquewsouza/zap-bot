@@ -16,6 +16,7 @@ from openai import OpenAI
 import json
 from ranking_mix_handler import RankingMixHandler
 from ranking_creator_handler import RankingCreatorHandler
+from vintao_stats_handler import VintaoStatsHandler
 # ---------------------------
 # Configuration
 # ---------------------------
@@ -37,6 +38,8 @@ s3 = boto3.client("s3", endpoint_url=ENDPOINT_URL)
 ranking_mix_handler = RankingMixHandler(s3, BUCKET_NAME, OBJECT_KEY)
 HIDDEN_ZAP_GOD_ID = 0
 creator_handler = RankingCreatorHandler(s3, BUCKET_NAME, OBJECT_KEY)
+
+vintao_handler = VintaoStatsHandler(s3, BUCKET_NAME)
 # ---------------------------
 # Persistence Functions
 # ---------------------------
@@ -335,6 +338,12 @@ async def ranking_creators(ctx, *, args: str = None):
     Ranking de win‑rate dos criadores de lobby.
     """
     await creator_handler.handle(ctx, args)
+
+
+@bot.command(name="meu_vintao")
+async def meu_vintao(ctx):
+    """!meu_vintao  –  stats ALL‑TIME de Ranked Pro do LKS"""
+    await vintao_handler.handle(ctx)
 
 @bot.command(name="arere")
 async def arere(ctx):

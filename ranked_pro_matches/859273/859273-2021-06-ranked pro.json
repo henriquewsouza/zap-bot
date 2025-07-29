@@ -1,0 +1,86 @@
+[
+    {
+        "id": 12320999,
+        "teamNameA": ".-.",
+        "scoreA": 15,
+        "teamNameB": "benjarra",
+        "scoreB": 19,
+        "win": 1,
+        "ratingPlayer": 2855,
+        "ratingDiff": 14,
+        "map": "de_train",
+        "type": "ranked pro"
+    },
+    {
+        "id": 12333680,
+        "teamNameA": "bau",
+        "scoreA": 16,
+        "teamNameB": "spy1337",
+        "scoreB": 14,
+        "win": 0,
+        "ratingPlayer": 2849,
+        "ratingDiff": -16,
+        "map": "de_inferno",
+        "type": "ranked pro"
+    },
+    {
+        "id": 12333803,
+        "teamNameA": "SEQUELA",
+        "scoreA": 16,
+        "teamNameB": "firepower",
+        "scoreB": 12,
+        "win": 1,
+        "ratingPlayer": 2860,
+        "ratingDiff": 11,
+        "map": "de_dust2",
+        "type": "ranked pro"
+    },
+    {
+        "id": 12357850,
+        "teamNameA": "RAIMUNDO NONATO",
+        "scoreA": 19,
+        "teamNameB": "Jk4-2k",
+        "scoreB": 22,
+        "win": 0,
+        "ratingPlayer": 2829,
+        "ratingDiff": -12,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    },
+    {
+        "id": 12369567,
+        "teamNameA": "BITITO_",
+        "scoreA": 19,
+        "teamNameB": "hayabusa",
+        "scoreB": 17,
+        "win": 1,
+        "ratingPlayer": 2848,
+        "ratingDiff": 12,
+        "map": "de_vertigo",
+        "type": "ranked pro"
+    },
+    {
+        "id": 12404877,
+        "teamNameA": "amc bandolero",
+        "scoreA": 16,
+        "teamNameB": "cayao.el-1986",
+        "scoreB": 10,
+        "win": 1,
+        "ratingPlayer": 2858,
+        "ratingDiff": 16,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    },
+    {
+        "id": 12409829,
+        "teamNameA": "VnnZik",
+        "scoreA": 16,
+        "teamNameB": "r0x",
+        "scoreB": 14,
+        "win": 1,
+        "ratingPlayer": 2874,
+        "ratingDiff": 16,
+        "map": "de_ancient",
+        "type": "ranked pro"
+    }
+]

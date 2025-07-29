@@ -1,0 +1,26 @@
+[
+    {
+        "id": 20033807,
+        "teamNameA": "momentefps",
+        "scoreA": 9,
+        "teamNameB": "lajskdaslkjdasjkldhaksl",
+        "scoreB": 16,
+        "win": 0,
+        "ratingPlayer": 2857,
+        "ratingDiff": -19,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    },
+    {
+        "id": 20033888,
+        "teamNameA": "SkSfps1",
+        "scoreA": 16,
+        "teamNameB": "doctormd",
+        "scoreB": 12,
+        "win": 1,
+        "ratingPlayer": 2869,
+        "ratingDiff": 12,
+        "map": "de_vertigo",
+        "type": "ranked pro"
+    }
+]

@@ -1,0 +1,62 @@
+[
+    {
+        "id": 15586309,
+        "teamNameA": "kyozao",
+        "scoreA": 16,
+        "teamNameB": "TK.",
+        "scoreB": 14,
+        "win": 1,
+        "ratingPlayer": 2704,
+        "ratingDiff": 0,
+        "map": "de_dust2",
+        "type": "ranked pro"
+    },
+    {
+        "id": 15718256,
+        "teamNameA": "Parrudao...",
+        "scoreA": 16,
+        "teamNameB": "celo",
+        "scoreB": 7,
+        "win": 0,
+        "ratingPlayer": 2704,
+        "ratingDiff": 0,
+        "map": "de_inferno",
+        "type": "ranked pro"
+    },
+    {
+        "id": 15718512,
+        "teamNameA": "chicosetu",
+        "scoreA": 16,
+        "teamNameB": "twitch.tv/andzfps",
+        "scoreB": 10,
+        "win": 0,
+        "ratingPlayer": 2704,
+        "ratingDiff": 0,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    },
+    {
+        "id": 15728776,
+        "teamNameA": "Parrudao...",
+        "scoreA": 16,
+        "teamNameB": "CLODOVILDOCS",
+        "scoreB": 13,
+        "win": 1,
+        "ratingPlayer": 2704,
+        "ratingDiff": 0,
+        "map": "de_dust2",
+        "type": "ranked pro"
+    },
+    {
+        "id": 15739031,
+        "teamNameA": "n0g",
+        "scoreA": 16,
+        "teamNameB": "ink",
+        "scoreB": 2,
+        "win": 1,
+        "ratingPlayer": 2704,
+        "ratingDiff": 0,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    }
+]

@@ -1,0 +1,98 @@
+[
+    {
+        "id": 15247710,
+        "teamNameA": "idekaa",
+        "scoreA": 16,
+        "teamNameB": "GKB",
+        "scoreB": 14,
+        "win": 1,
+        "ratingPlayer": 2702,
+        "ratingDiff": 0,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    },
+    {
+        "id": 15270058,
+        "teamNameA": "lukiNdUbR0t0_",
+        "scoreA": 12,
+        "teamNameB": "noc4b",
+        "scoreB": 16,
+        "win": 1,
+        "ratingPlayer": 2702,
+        "ratingDiff": 0,
+        "map": "de_inferno",
+        "type": "ranked pro"
+    },
+    {
+        "id": 15282029,
+        "teamNameA": "meik",
+        "scoreA": 13,
+        "teamNameB": "Parrudao...",
+        "scoreB": 16,
+        "win": 1,
+        "ratingPlayer": 2702,
+        "ratingDiff": 0,
+        "map": "de_dust2",
+        "type": "ranked pro"
+    },
+    {
+        "id": 15364892,
+        "teamNameA": "Campe",
+        "scoreA": 16,
+        "teamNameB": "Dezesseis.",
+        "scoreB": 3,
+        "win": 0,
+        "ratingPlayer": 2702,
+        "ratingDiff": 0,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    },
+    {
+        "id": 15365238,
+        "teamNameA": "ninoleganse",
+        "scoreA": 10,
+        "teamNameB": "wallz1k",
+        "scoreB": 16,
+        "win": 0,
+        "ratingPlayer": 2702,
+        "ratingDiff": 0,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    },
+    {
+        "id": 15393310,
+        "teamNameA": "Err0r47",
+        "scoreA": 16,
+        "teamNameB": "Cafe",
+        "scoreB": 13,
+        "win": 1,
+        "ratingPlayer": 2702,
+        "ratingDiff": 0,
+        "map": "de_train",
+        "type": "ranked pro"
+    },
+    {
+        "id": 15393741,
+        "teamNameA": "keshaineter",
+        "scoreA": 23,
+        "teamNameB": "katherine pierce",
+        "scoreB": 25,
+        "win": 1,
+        "ratingPlayer": 2702,
+        "ratingDiff": 0,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    },
+    {
+        "id": 15395893,
+        "teamNameA": "0NLY-",
+        "scoreA": 16,
+        "teamNameB": "nicologaN   #TyGwyN",
+        "scoreB": 9,
+        "win": 0,
+        "ratingPlayer": 2686,
+        "ratingDiff": -16,
+        "map": "de_vertigo",
+        "type": "ranked pro"
+    }
+]

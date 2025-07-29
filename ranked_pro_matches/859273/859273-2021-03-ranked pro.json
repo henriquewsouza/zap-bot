@@ -1,0 +1,86 @@
+[
+    {
+        "id": 11137627,
+        "teamNameA": "scraw",
+        "scoreA": 16,
+        "teamNameB": ".-.",
+        "scoreB": 19,
+        "win": 0,
+        "ratingPlayer": 2833,
+        "ratingDiff": -14,
+        "map": "de_vertigo",
+        "type": "ranked pro"
+    },
+    {
+        "id": 11138139,
+        "teamNameA": "luca9ix",
+        "scoreA": 3,
+        "teamNameB": "scraw",
+        "scoreB": 16,
+        "win": 0,
+        "ratingPlayer": 2820,
+        "ratingDiff": -13,
+        "map": "de_inferno",
+        "type": "ranked pro"
+    },
+    {
+        "id": 11138478,
+        "teamNameA": "Ana Castela Boiadeira",
+        "scoreA": 5,
+        "teamNameB": "lazzarus",
+        "scoreB": 16,
+        "win": 1,
+        "ratingPlayer": 2828,
+        "ratingDiff": 8,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    },
+    {
+        "id": 11138823,
+        "teamNameA": "luca9ix",
+        "scoreA": 16,
+        "teamNameB": "CEMEN_BAKIN",
+        "scoreB": 14,
+        "win": 1,
+        "ratingPlayer": 2841,
+        "ratingDiff": 13,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    },
+    {
+        "id": 11149586,
+        "teamNameA": "noway",
+        "scoreA": 17,
+        "teamNameB": "BITITO_",
+        "scoreB": 19,
+        "win": 0,
+        "ratingPlayer": 2859,
+        "ratingDiff": -17,
+        "map": "de_vertigo",
+        "type": "ranked pro"
+    },
+    {
+        "id": 11150913,
+        "teamNameA": "rEm1nAt!oN",
+        "scoreA": 11,
+        "teamNameB": "K4bal-_",
+        "scoreB": 16,
+        "win": 1,
+        "ratingPlayer": 2873,
+        "ratingDiff": 14,
+        "map": "de_nuke",
+        "type": "ranked pro"
+    },
+    {
+        "id": 11294819,
+        "teamNameA": "zzzzzzzzzzz",
+        "scoreA": 8,
+        "teamNameB": "mks",
+        "scoreB": 1,
+        "win": 0,
+        "ratingPlayer": 2846,
+        "ratingDiff": -8,
+        "map": "de_inferno",
+        "type": "ranked pro"
+    }
+]

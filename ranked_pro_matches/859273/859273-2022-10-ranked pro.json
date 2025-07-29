@@ -1,0 +1,110 @@
+[
+    {
+        "id": 17536218,
+        "teamNameA": "saadzin",
+        "scoreA": 7,
+        "teamNameB": "novaess",
+        "scoreB": 16,
+        "win": 0,
+        "ratingPlayer": 2878,
+        "ratingDiff": 0,
+        "map": "de_vertigo",
+        "type": "ranked pro"
+    },
+    {
+        "id": 17536493,
+        "teamNameA": "NAOVEMFENOMENO",
+        "scoreA": 10,
+        "teamNameB": "novaess",
+        "scoreB": 16,
+        "win": 0,
+        "ratingPlayer": 2878,
+        "ratingDiff": 0,
+        "map": "de_inferno",
+        "type": "ranked pro"
+    },
+    {
+        "id": 17584096,
+        "teamNameA": "noway",
+        "scoreA": 17,
+        "teamNameB": "IMP wastzera",
+        "scoreB": 19,
+        "win": 0,
+        "ratingPlayer": 2878,
+        "ratingDiff": 0,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    },
+    {
+        "id": 17592144,
+        "teamNameA": "HooPeR",
+        "scoreA": 16,
+        "teamNameB": "redi",
+        "scoreB": 14,
+        "win": 1,
+        "ratingPlayer": 2878,
+        "ratingDiff": 0,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    },
+    {
+        "id": 17601253,
+        "teamNameA": "fhzDEUS",
+        "scoreA": 16,
+        "teamNameB": "212",
+        "scoreB": 9,
+        "win": 0,
+        "ratingPlayer": 2878,
+        "ratingDiff": 0,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    },
+    {
+        "id": 17608593,
+        "teamNameA": "DEEZikA",
+        "scoreA": 16,
+        "teamNameB": "ezzel",
+        "scoreB": 13,
+        "win": 1,
+        "ratingPlayer": 2878,
+        "ratingDiff": 0,
+        "map": "de_overpass",
+        "type": "ranked pro"
+    },
+    {
+        "id": 17609041,
+        "teamNameA": "Piroca Grande",
+        "scoreA": 25,
+        "teamNameB": "LKS",
+        "scoreB": 23,
+        "win": 0,
+        "ratingPlayer": 2878,
+        "ratingDiff": 0,
+        "map": "de_inferno",
+        "type": "ranked pro"
+    },
+    {
+        "id": 17609602,
+        "teamNameA": "spk",
+        "scoreA": 13,
+        "teamNameB": "KLR",
+        "scoreB": 16,
+        "win": 0,
+        "ratingPlayer": 2878,
+        "ratingDiff": 0,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    },
+    {
+        "id": 17631582,
+        "teamNameA": "neskk",
+        "scoreA": 16,
+        "teamNameB": "special k",
+        "scoreB": 13,
+        "win": 1,
+        "ratingPlayer": 2878,
+        "ratingDiff": 0,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    }
+]

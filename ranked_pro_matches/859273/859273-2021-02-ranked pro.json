@@ -1,0 +1,26 @@
+[
+    {
+        "id": 10787186,
+        "teamNameA": "twitch.tv/andzfps",
+        "scoreA": 16,
+        "teamNameB": "leo",
+        "scoreB": 14,
+        "win": 1,
+        "ratingPlayer": 2758,
+        "ratingDiff": 15,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    },
+    {
+        "id": 10846427,
+        "teamNameA": "twitch.tv/andzfps",
+        "scoreA": 16,
+        "teamNameB": "t9wzy",
+        "scoreB": 13,
+        "win": 1,
+        "ratingPlayer": 2834,
+        "ratingDiff": 13,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    }
+]

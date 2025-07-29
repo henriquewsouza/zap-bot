@@ -1,0 +1,86 @@
+[
+    {
+        "id": 13030723,
+        "teamNameA": "unrecognizable",
+        "scoreA": 5,
+        "teamNameB": "kyuren",
+        "scoreB": 16,
+        "win": 0,
+        "ratingPlayer": 2864,
+        "ratingDiff": -16,
+        "map": "de_dust2",
+        "type": "ranked pro"
+    },
+    {
+        "id": 13030766,
+        "teamNameA": ".-.",
+        "scoreA": 16,
+        "teamNameB": "H10",
+        "scoreB": 14,
+        "win": 1,
+        "ratingPlayer": 2872,
+        "ratingDiff": 8,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    },
+    {
+        "id": 13030857,
+        "teamNameA": ".-.",
+        "scoreA": 19,
+        "teamNameB": "H10",
+        "scoreB": 15,
+        "win": 0,
+        "ratingPlayer": 2856,
+        "ratingDiff": -16,
+        "map": "de_inferno",
+        "type": "ranked pro"
+    },
+    {
+        "id": 13031133,
+        "teamNameA": "LzN",
+        "scoreA": 14,
+        "teamNameB": "NUEVAYoL",
+        "scoreB": 16,
+        "win": 1,
+        "ratingPlayer": 2871,
+        "ratingDiff": 15,
+        "map": "de_vertigo",
+        "type": "ranked pro"
+    },
+    {
+        "id": 13038775,
+        "teamNameA": "segredo",
+        "scoreA": 9,
+        "teamNameB": "FUSK40",
+        "scoreB": 16,
+        "win": 1,
+        "ratingPlayer": 2869,
+        "ratingDiff": 11,
+        "map": "de_inferno",
+        "type": "ranked pro"
+    },
+    {
+        "id": 13090619,
+        "teamNameA": "Aangzy",
+        "scoreA": 16,
+        "teamNameB": "massukao",
+        "scoreB": 9,
+        "win": 0,
+        "ratingPlayer": 2849,
+        "ratingDiff": -20,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    },
+    {
+        "id": 13090998,
+        "teamNameA": "01will",
+        "scoreA": 16,
+        "teamNameB": "AsLanM4shadoW",
+        "scoreB": 11,
+        "win": 0,
+        "ratingPlayer": 2828,
+        "ratingDiff": -21,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    }
+]

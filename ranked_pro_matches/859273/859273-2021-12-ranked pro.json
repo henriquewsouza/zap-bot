@@ -1,0 +1,26 @@
+[
+    {
+        "id": 14464804,
+        "teamNameA": "levi",
+        "scoreA": 16,
+        "teamNameB": "hgz1nn",
+        "scoreB": 6,
+        "win": 0,
+        "ratingPlayer": 2687,
+        "ratingDiff": -13,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    },
+    {
+        "id": 14466362,
+        "teamNameA": "wandeco",
+        "scoreA": 16,
+        "teamNameB": "Vitchaka",
+        "scoreB": 8,
+        "win": 1,
+        "ratingPlayer": 2690,
+        "ratingDiff": 0,
+        "map": "de_overpass",
+        "type": "ranked pro"
+    }
+]

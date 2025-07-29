@@ -1,0 +1,26 @@
+[
+    {
+        "id": 15882562,
+        "teamNameA": "noway",
+        "scoreA": 16,
+        "teamNameB": "bymas ;p",
+        "scoreB": 19,
+        "win": 1,
+        "ratingPlayer": 2704,
+        "ratingDiff": 0,
+        "map": "de_vertigo",
+        "type": "ranked pro"
+    },
+    {
+        "id": 15882933,
+        "teamNameA": "xdsdzdxdsd",
+        "scoreA": 11,
+        "teamNameB": "Bunny",
+        "scoreB": 16,
+        "win": 0,
+        "ratingPlayer": 2684,
+        "ratingDiff": -20,
+        "map": "de_dust2",
+        "type": "ranked pro"
+    }
+]

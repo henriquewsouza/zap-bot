@@ -1,0 +1,38 @@
+[
+    {
+        "id": 12808067,
+        "teamNameA": "twitch.tv/andzfps",
+        "scoreA": 16,
+        "teamNameB": "VELOSO",
+        "scoreB": 14,
+        "win": 1,
+        "ratingPlayer": 2943,
+        "ratingDiff": 13,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    },
+    {
+        "id": 12814250,
+        "teamNameA": "nrdz",
+        "scoreA": 16,
+        "teamNameB": "ezzeb7",
+        "scoreB": 14,
+        "win": 0,
+        "ratingPlayer": 2904,
+        "ratingDiff": -20,
+        "map": "de_vertigo",
+        "type": "ranked pro"
+    },
+    {
+        "id": 12816530,
+        "teamNameA": "wz-",
+        "scoreA": 19,
+        "teamNameB": "acuesto giles",
+        "scoreB": 22,
+        "win": 1,
+        "ratingPlayer": 2873,
+        "ratingDiff": 11,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    }
+]
