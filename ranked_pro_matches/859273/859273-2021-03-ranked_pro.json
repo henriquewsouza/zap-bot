@@ -82,5 +82,17 @@
         "ratingDiff": -8,
         "map": "de_inferno",
         "type": "ranked pro"
+    },
+    {
+        "id": 11358023,
+        "teamNameA": "1945",
+        "scoreA": 16,
+        "teamNameB": "fallen jr",
+        "scoreB": 9,
+        "win": 0,
+        "ratingPlayer": 2848,
+        "ratingDiff": -17,
+        "map": "de_mirage",
+        "type": "ranked pro"
     }
 ]

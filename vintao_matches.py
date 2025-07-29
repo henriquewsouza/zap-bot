@@ -1,144 +1,133 @@
 #!/usr/bin/env python3
-# ───────────────────────────
-#  fetch_rpro_stats.py
-# ───────────────────────────
-import os
-import sys
-import json
-import time
-import random
-from typing import Optional, List, Dict
+# fetch_rpro_stats.py (versão com pré‑cheque de arquivos)
 
-import requests
-import cloudscraper
+import os, sys, json, time, random, requests, cloudscraper
+from typing import Dict, List, Optional
 
-# ── CONFIGURÁVEIS ─────────────────────────────────────────────────────────
-COOKIES_FILE = "cookies.json"          # cookies exportados do navegador
-HISTORY_DIR  = "ranked_pro_matches"    # onde estão os históricos mensais
-STATS_DIR    = "match_stats"           # para onde salvar os stats
+# ── CONFIG ────────────────────────────────────────────────────────────────
+COOKIES_FILE = "cookies.json"
+HISTORY_DIR  = "ranked_pro_matches"    # históricos mensais
+STATS_DIR    = "match_stats"           # destino para stats
 
 TIMEOUT        = 20
 MAX_RETRIES    = 3
 BACKOFF_FACTOR = 1.5
 
-BASE_HEADERS: Dict[str, str] = {
+HEADERS = {
     "accept": "application/json, text/plain, */*",
     "accept-language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
-    "user-agent": (
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
-    ),
+    "user-agent": ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                   "AppleWebKit/537.36 (KHTML, like Gecko) "
+                   "Chrome/138.0.0.0 Safari/537.36"),
     "x-requested-with": "XMLHttpRequest",
 }
 # ──────────────────────────────────────────────────────────────────────────
 
 
 def load_cookies(path: str) -> Dict[str, str]:
-    """Lê cookies exportados do navegador e devolve dict nome→valor."""
-    if not os.path.exists(path):
-        sys.exit(f"[erro] {path} não encontrado – exporte os cookies primeiro.")
     with open(path, encoding="utf-8") as f:
         raw = json.load(f)
     return {c["name"]: c["value"] for c in raw}
 
 
-def list_history_files(gc_id: int) -> List[str]:
-    """Lista arquivos de histórico (JSON) para o jogador."""
-    user_dir = os.path.join(HISTORY_DIR, str(gc_id))
-    if not os.path.isdir(user_dir):
-        sys.exit(f"[erro] Pasta {user_dir} não existe – rode o script de históricos antes.")
-    return sorted(
-        os.path.join(user_dir, f)
-        for f in os.listdir(user_dir)
-        if f.endswith(".json")
-    )
+def history_files(gc_id: int) -> List[str]:
+    folder = os.path.join(HISTORY_DIR, str(gc_id))
+    return sorted(os.path.join(folder, f) for f in os.listdir(folder) if f.endswith(".json"))
 
 
-def iter_match_ids(history_path: str) -> List[int]:
-    """Extrai todos os IDs de partida de um arquivo de histórico."""
-    with open(history_path, encoding="utf-8") as f:
-        data = json.load(f)
-    return [m["id"] for m in data if "id" in m]
+def match_ids(path: str) -> List[int]:
+    with open(path, encoding="utf-8") as f:
+        return [m["id"] for m in json.load(f) if "id" in m]
 
 
 def make_scraper(cookies: Dict[str, str]) -> cloudscraper.CloudScraper:
-    """Cria CloudScraper com headers e cookies já aplicados."""
-    scraper = cloudscraper.create_scraper()
-    scraper.headers.update(BASE_HEADERS)
-    cookie_header = "; ".join(f"{k}={v}" for k, v in cookies.items())
-    scraper.headers["Cookie"] = cookie_header
-    return scraper
+    s = cloudscraper.create_scraper()
+    s.headers.update(HEADERS)
+    s.headers["Cookie"] = "; ".join(f"{k}={v}" for k, v in cookies.items())
+    return s
 
 
-def fetch_stats(scraper: cloudscraper.CloudScraper, match_id: int) -> Optional[dict]:
-    """Baixa o JSON de stats da partida; respeita retries/back‑off."""
-    url = f"https://gamersclub.com.br/lobby/match/{match_id}/1"
-    headers = {"referer": f"https://gamersclub.com.br/lobby/match/{match_id}"}
+def fetch_stats(s: cloudscraper.CloudScraper, mid: int) -> Optional[dict]:
+    url = f"https://gamersclub.com.br/lobby/match/{mid}/1"
+    ref = {"referer": f"https://gamersclub.com.br/lobby/match/{mid}"}
 
     for attempt in range(1, MAX_RETRIES + 1):
         try:
-            resp = scraper.get(url, headers=headers, timeout=TIMEOUT)
+            r = s.get(url, headers=ref, timeout=TIMEOUT)
         except requests.RequestException as e:
-            print(f"      erro de rede ({e})")
-        else:
-            code = resp.status_code
-            if code == 200:
-                try:
-                    return resp.json()
-                except json.JSONDecodeError:
-                    print("      JSON inválido")
-                    return None
+            print(f"      rede: {e}")
+            continue
 
-            if code in (401, 403):
-                sys.exit("      401/403 – cookies expirados, atualize o cookies.json.")
-            if code == 429:
-                sys.exit("      429 – rate‑limit forte, pare e tente depois.")
-            if 500 <= code < 600:
-                back = BACKOFF_FACTOR * (2 ** (attempt - 1))
-                print(f"      {code} erro servidor → esperando {back:.1f}s")
-                time.sleep(back)
-                continue
+        if r.status_code == 200:
+            try:
+                return r.json()
+            except json.JSONDecodeError:
+                print("      JSON inválido")
+                return None
 
-            print(f"      status {code} não tratável")
-            return None
+        if r.status_code in (401, 403):
+            sys.exit("cookies expirados (401/403) – atualize cookies.json")
+        if r.status_code == 429:
+            sys.exit("rate‑limit forte (429) – tente depois")
+
+        if 500 <= r.status_code < 600:
+            back = BACKOFF_FACTOR * (2 ** (attempt - 1))
+            print(f"      {r.status_code} servidor – esperando {back:.1f}s")
+            time.sleep(back)
+            continue
+
+        print(f"      status {r.status_code} não tratável")
+        return None
 
     print("      excedeu tentativas")
     return None
 
 
-def main(gc_id: int) -> None:
-    cookies = load_cookies(COOKIES_FILE)
-    scraper = make_scraper(cookies)
-    os.makedirs(os.path.join(STATS_DIR, str(gc_id)), exist_ok=True)
+def main(gc_id: int):
+    # 1) descobrir quais IDs faltam
+    wanted: set[int] = set()
+    for hist in history_files(gc_id):
+        wanted.update(match_ids(hist))
 
-    history_files = list_history_files(gc_id)
+    stats_path = Path(STATS_DIR) / str(gc_id)
+    stats_path.mkdir(parents=True, exist_ok=True)
+    existing = {int(p.stem) for p in stats_path.glob("*.json")}
+    missing_ids = sorted(wanted - existing)
+
+    print(f"Total de partidas nos históricos : {len(wanted)}")
+    print(f"Já baixadas localmente           : {len(existing)}")
+    print(f"Faltando baixar                  : {len(missing_ids)}")
+
+    if not missing_ids:
+        print("✅ Nada a fazer.")
+        return
+
+    scraper = make_scraper(load_cookies(COOKIES_FILE))
     total_new = 0
 
-    for hist in history_files:
-        print(f"\n📂 {os.path.basename(hist)}")
-        for match_id in iter_match_ids(hist):
-            out_file = os.path.join(STATS_DIR, str(gc_id), f"{match_id}.json")
-            if os.path.exists(out_file):
-                print(f"  {match_id} ✔︎ já existe")
-                continue
+    for idx, mid in enumerate(missing_ids, 1):
+        print(f"  {mid} …", end="", flush=True)
+        data = fetch_stats(scraper, mid)
+        if not data:
+            print("✗")
+            continue
 
-            print(f"  {match_id} …", end="", flush=True)
-            stats = fetch_stats(scraper, match_id)
-            if stats is None:
-                print("  ✗")
-                continue
+        with open(stats_path / f"{mid}.json", "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+        total_new += 1
+        print("✓")
 
-            with open(out_file, "w", encoding="utf-8") as f_out:
-                json.dump(stats, f_out, indent=4, ensure_ascii=False)
-            total_new += 1
-            print("  ✓ salvo")
+        # pausa gentil
+        if idx % 20 == 0:
+            time.sleep(random.uniform(4, 6))
+        else:
+            time.sleep(random.uniform(1, 1.8))
 
-            time.sleep(random.uniform(1.0, 2.0))  # gentileza com o servidor
-
-    print(f"\n🏁 concluído! Novos arquivos salvos: {total_new}")
+    print(f"\n🏁 concluído – novos arquivos: {total_new}")
 
 
 if __name__ == "__main__":
     if len(sys.argv) != 2 or not sys.argv[1].isdigit():
         sys.exit("uso: python fetch_rpro_stats.py <gc_id>")
+    from pathlib import Path
     main(int(sys.argv[1]))

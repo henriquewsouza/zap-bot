@@ -94,5 +94,101 @@
         "ratingDiff": -16,
         "map": "de_vertigo",
         "type": "ranked pro"
+    },
+    {
+        "id": 15428827,
+        "teamNameA": "pepeilson",
+        "scoreA": 16,
+        "teamNameB": "massukao",
+        "scoreB": 13,
+        "win": 0,
+        "ratingPlayer": 2704,
+        "ratingDiff": 0,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    },
+    {
+        "id": 15429403,
+        "teamNameA": "NNN",
+        "scoreA": 11,
+        "teamNameB": "fex",
+        "scoreB": 16,
+        "win": 0,
+        "ratingPlayer": 2704,
+        "ratingDiff": 0,
+        "map": "de_dust2",
+        "type": "ranked pro"
+    },
+    {
+        "id": 15429790,
+        "teamNameA": "pulse final boss",
+        "scoreA": 16,
+        "teamNameB": "Flowveep",
+        "scoreB": 11,
+        "win": 1,
+        "ratingPlayer": 2704,
+        "ratingDiff": 0,
+        "map": "de_dust2",
+        "type": "ranked pro"
+    },
+    {
+        "id": 15439809,
+        "teamNameA": "toissao",
+        "scoreA": 13,
+        "teamNameB": "xata",
+        "scoreB": 16,
+        "win": 0,
+        "ratingPlayer": 2704,
+        "ratingDiff": 0,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    },
+    {
+        "id": 15440156,
+        "teamNameA": "toissao",
+        "scoreA": 16,
+        "teamNameB": "xata",
+        "scoreB": 13,
+        "win": 1,
+        "ratingPlayer": 2704,
+        "ratingDiff": 0,
+        "map": "de_mirage",
+        "type": "ranked pro"
+    },
+    {
+        "id": 15440542,
+        "teamNameA": "xata",
+        "scoreA": 16,
+        "teamNameB": "Dr Steve",
+        "scoreB": 14,
+        "win": 1,
+        "ratingPlayer": 2704,
+        "ratingDiff": 0,
+        "map": "de_vertigo",
+        "type": "ranked pro"
+    },
+    {
+        "id": 15451274,
+        "teamNameA": "ninoleganse",
+        "scoreA": 16,
+        "teamNameB": "nsherzs",
+        "scoreB": 14,
+        "win": 1,
+        "ratingPlayer": 2704,
+        "ratingDiff": 0,
+        "map": "de_vertigo",
+        "type": "ranked pro"
+    },
+    {
+        "id": 15451664,
+        "teamNameA": "dav1deuS",
+        "scoreA": 13,
+        "teamNameB": "Babidy",
+        "scoreB": 16,
+        "win": 1,
+        "ratingPlayer": 2704,
+        "ratingDiff": 0,
+        "map": "de_mirage",
+        "type": "ranked pro"
     }
 ]

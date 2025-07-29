@@ -1,71 +1,56 @@
-import os
-import json
-import time
-import random
+#!/usr/bin/env python3
+"""
+fetch_ranked_pro_pages.py
+Baixa **todas** as partidas Ranked Pro do LKS (GC 859273),
+paginando em /historyMatchesPage, e salva um arquivo por mês.
+"""
+
+import os, json, time, random, requests
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-import requests
 
-GC_ID = 859273
-START_MONTH = "2021-01"
-BASE_DIR = "ranked_solo_matches"
+GC_ID        = 859273
+START_MONTH  = "2021-01"
+OUT_DIR      = "ranked_pro_matches"        # raiz
 COOKIES_FILE = "cookies.json"
+RANKED_TYPES = {"ranked pro", "ranked_pro"}
 
-# Headers mínimos; o cookie leva as credenciais.
-BASE_HEADERS = {
+HEADERS = {
     "accept": "application/json, text/plain, */*",
-    "user-agent": (
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
-    ),
+    "user-agent": ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                   "AppleWebKit/537.36 (KHTML, like Gecko) "
+                   "Chrome/138.0.0.0 Safari/537.36"),
     "referer": f"https://gamersclub.com.br/jogador/{GC_ID}",
     "accept-language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
     "dnt": "1",
 }
 
-def month_iter(start_yyyymm: str):
-    cur = datetime.strptime(start_yyyymm, "%Y-%m")
+def month_iter(start):
+    cur = datetime.strptime(start, "%Y-%m")
     end = datetime.today().replace(day=1)
     while cur <= end:
         yield cur.strftime("%Y-%m")
         cur += relativedelta(months=1)
 
-def load_cookies_from_file(path: str) -> list[dict]:
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+def load_cookie_header() -> str:
+    with open(COOKIES_FILE, encoding="utf-8") as f:
+        return "; ".join(f"{c['name']}={c['value']}" for c in json.load(f))
 
-def build_cookie_header(cookies: list[dict]) -> str:
-    # Monta "name=value; name2=value2; ..."
-    parts = []
-    for c in cookies:
-        name = c.get("name")
-        value = c.get("value")
-        if name and value is not None:
-            parts.append(f"{name}={value}")
-    return "; ".join(parts)
-
-def make_session(cookies_json: list[dict]) -> requests.Session:
+def make_session(cookie_header: str):
     s = requests.Session()
-    s.headers.update(BASE_HEADERS)
-    # Preferir header "Cookie" para garantir envio com o domínio correto.
-    cookie_header = build_cookie_header(cookies_json)
+    s.headers.update(HEADERS)
     s.headers["Cookie"] = cookie_header
     return s
 
-def fetch_month(session: requests.Session, gc_id: int, month_yyyymm: str) -> list[dict]:
-    url = f"https://gamersclub.com.br/api/box/historyFilterDate/{gc_id}/{month_yyyymm}"
-    resp = session.get(url, timeout=30)
-    # Tratar rate limit / auth expirada de forma amigável
-    if resp.status_code in (401, 403):
-        raise RuntimeError(
-            f"Acesso negado ({resp.status_code}) em {month_yyyymm}. "
-            f"Atualize os cookies em {COOKIES_FILE} e tente novamente."
-        )
-    if resp.status_code == 429:
-        raise RuntimeError("Rate limited (429). Tente novamente mais tarde.")
-    resp.raise_for_status()
-    payload = resp.json()
-    return payload.get("monthMatches", []) or []
+def fetch_page(sess, gc_id: int, yyyymm: str, page: int):
+    url = f"https://gamersclub.com.br/api/box/historyMatchesPage/{gc_id}/{yyyymm}/{page}"
+    r = sess.get(url, timeout=30)
+    if r.status_code in (401, 403):
+        raise RuntimeError("cookies expirados (401/403)")
+    if r.status_code == 429:
+        raise RuntimeError("rate‑limit (429)")
+    r.raise_for_status()
+    return r.json()
 
 def save_json(path: str, data):
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -73,33 +58,43 @@ def save_json(path: str, data):
         json.dump(data, f, ensure_ascii=False, indent=4)
 
 def main():
-    cookies_json = load_cookies_from_file(COOKIES_FILE)
-    session = make_session(cookies_json)
+    sess   = make_session(load_cookie_header())
+    total  = 0
 
-    total_saved = 0
     for month in month_iter(START_MONTH):
-        try:
-            print(f"⬇️  Buscando {month} ...", end=" ", flush=True)
-            matches = fetch_month(session, GC_ID, month)
-            ranked = [m for m in matches if m.get("type") == "ranked pro"]
-            if ranked:
-                out_path = os.path.join(
-                    BASE_DIR, str(GC_ID), f"{GC_ID}-{month}-ranked pro.json"
-                )
-                save_json(out_path, ranked)
-                total_saved += len(ranked)
-                print(f"↳ {len(ranked)} partidas salvas → {out_path}")
-            else:
-                print("sem ranked pro")
-        except Exception as e:
-            print(f"\n⚠️  Falhou em {month}: {e}")
-            # Em caso de erro de auth/rate-limit, parar pode ser melhor:
-            if any(msg in str(e) for msg in ("Acesso negado", "Rate limited")):
+        month_matches = []
+        page = 0
+        while True:
+            try:
+                data = fetch_page(sess, GC_ID, month, page)
+            except Exception as e:
+                print(f"[{month} p{page}] erro: {e}")
                 break
-        # Pausa curta aleatória (boa prática para evitar bloqueios)
-        time.sleep(random.uniform(1.0, 2.0))
 
-    print(f"\n✅ Concluído. Total de partidas ranked_solo salvas: {total_saved}")
+            matches = data.get("monthMatches", [])
+            if not matches:
+                break
+
+            month_matches.extend(matches)
+            print(f"{month} página {page}: {len(matches)} matches")
+            page += 1
+            time.sleep(random.uniform(0.8, 1.5))
+
+        # filtra ranked pro
+        ranked = [m for m in month_matches
+                  if str(m.get("type", "")).lower() in RANKED_TYPES]
+
+        if ranked:
+            out = os.path.join(
+                OUT_DIR, str(GC_ID), f"{GC_ID}-{month}-ranked_pro.json"
+            )
+            save_json(out, ranked)
+            total += len(ranked)
+            print(f"-- {month}: {len(ranked)} ranked pro salvas → {out}")
+        else:
+            print(f"-- {month}: 0 ranked pro")
+
+    print(f"\n✅ Total geral Ranked Pro salvas: {total}")
 
 if __name__ == "__main__":
     main()
