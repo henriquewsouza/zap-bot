@@ -17,6 +17,7 @@ import json
 from ranking_mix_handler import RankingMixHandler
 from ranking_creator_handler import RankingCreatorHandler
 from vintao_stats_handler import VintaoLocalStatsHandler
+from ranking_handler import RankingHandler
 # ---------------------------
 # Configuration
 # ---------------------------
@@ -38,7 +39,9 @@ s3 = boto3.client("s3", endpoint_url=ENDPOINT_URL)
 ranking_mix_handler = RankingMixHandler(s3, BUCKET_NAME, OBJECT_KEY)
 HIDDEN_ZAP_GOD_ID = 0
 creator_handler = RankingCreatorHandler(s3, BUCKET_NAME, OBJECT_KEY)
-vintao_local = VintaoLocalStatsHandler()  # sem S3
+vintao_local = VintaoLocalStatsHandler()
+ranking_handler = RankingHandler(s3, BUCKET_NAME, OBJECT_KEY)  # NOVO
+
 # ---------------------------
 # Persistence Functions
 # ---------------------------
@@ -970,107 +973,109 @@ async def all_time_ranking(ctx):
 
     await ctx.send(embed=embed)
 
-
-
 @bot.command(name="ranking")
-async def ranking(ctx, month: str = None):
-    """
-    !ranking
-    Displays a ranking of members (from members.json stored on S3) for the current month,
-    based on overall KDR, ADR, average first kills per match, and overall win rate.
-    Each ranking shows the member's nickname, metric value, and total matches played.
-    """
-    import json
-    from datetime import datetime
-    from botocore.exceptions import ClientError
+async def ranking(ctx, *, args: str = None):
+    await ranking_handler.handle(ctx, args)
 
-    # Load members.json from S3
-    try:
-        response = s3.get_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY)
-        members_contents = response["Body"].read().decode("utf-8")
-        members_data = json.loads(members_contents)
-    except Exception as e:
-        await ctx.send("Error loading members data from S3.")
-        return
+# @bot.command(name="ranking2")
+# async def ranking(ctx, month: str = None):
+#     """
+#     !ranking
+#     Displays a ranking of members (from members.json stored on S3) for the current month,
+#     based on overall KDR, ADR, average first kills per match, and overall win rate.
+#     Each ranking shows the member's nickname, metric value, and total matches played.
+#     """
+#     import json
+#     from datetime import datetime
+#     from botocore.exceptions import ClientError
 
-    if month:
-        try:
-            datetime.strptime(month, "%Y-%m")
-            month_year = month
-        except ValueError:
-            await ctx.send("Use YYYY-MM format, e.g. `!ranking 2025-04`")
-            return
-    else:
-        month_year = datetime.now().strftime("%Y-%m")
-    stats_list = []
+#     # Load members.json from S3
+#     try:
+#         response = s3.get_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY)
+#         members_contents = response["Body"].read().decode("utf-8")
+#         members_data = json.loads(members_contents)
+#     except Exception as e:
+#         await ctx.send("Error loading members data from S3.")
+#         return
 
-    # Iterate over each member in members.json
-    for discord_id, info in members_data.items():
-        gc_id = info.get("gc")
-        if not gc_id:
-            continue
-        stats_key = f"players/{gc_id}/stats-{month_year}.json"
-        try:
-            stats_response = s3.get_object(Bucket=BUCKET_NAME, Key=stats_key)
-            stats_contents = stats_response["Body"].read().decode("utf-8")
-            stats = json.loads(stats_contents)
-        except ClientError:
-            continue  # Skip members with no stats file
-        except Exception:
-            continue
+#     if month:
+#         try:
+#             datetime.strptime(month, "%Y-%m")
+#             month_year = month
+#         except ValueError:
+#             await ctx.send("Use YYYY-MM format, e.g. `!ranking 2025-04`")
+#             return
+#     else:
+#         month_year = datetime.now().strftime("%Y-%m")
+#     stats_list = []
+
+#     # Iterate over each member in members.json
+#     for discord_id, info in members_data.items():
+#         gc_id = info.get("gc")
+#         if not gc_id:
+#             continue
+#         stats_key = f"players/{gc_id}/stats-{month_year}.json"
+#         try:
+#             stats_response = s3.get_object(Bucket=BUCKET_NAME, Key=stats_key)
+#             stats_contents = stats_response["Body"].read().decode("utf-8")
+#             stats = json.loads(stats_contents)
+#         except ClientError:
+#             continue  # Skip members with no stats file
+#         except Exception:
+#             continue
         
-        # Extract overall metrics
-        kdr = stats.get("KDR", 0)
-        adr = stats.get("ADR", 0)
-        avg_first = stats.get("average_first_kills_per_match", 0)
-        win_rate = stats.get("overall_win_rate", 0)
-        total_matches = stats.get("total_matches", 0)
-        nickname = info.get("nickname", "Unknown")
+#         # Extract overall metrics
+#         kdr = stats.get("KDR", 0)
+#         adr = stats.get("ADR", 0)
+#         avg_first = stats.get("average_first_kills_per_match", 0)
+#         win_rate = stats.get("overall_win_rate", 0)
+#         total_matches = stats.get("total_matches", 0)
+#         nickname = info.get("nickname", "Unknown")
         
-        stats_list.append({
-            "discord_id": discord_id,
-            "nickname": nickname,
-            "kdr": kdr,
-            "adr": adr,
-            "avg_first": avg_first,
-            "win_rate": win_rate,
-            "matches": total_matches
-        })
+#         stats_list.append({
+#             "discord_id": discord_id,
+#             "nickname": nickname,
+#             "kdr": kdr,
+#             "adr": adr,
+#             "avg_first": avg_first,
+#             "win_rate": win_rate,
+#             "matches": total_matches
+#         })
     
-    if not stats_list:
-        await ctx.send("No aggregated stats found for this month.")
-        return
+#     if not stats_list:
+#         await ctx.send("No aggregated stats found for this month.")
+#         return
 
-    # Helper: Build ranking string from a sorted list
-    def build_ranking_str(sorted_list, metric_key, metric_name):
-        lines = []
-        for idx, stat in enumerate(sorted_list, start=1):
-            value = stat[metric_key]
-            lines.append(f"{idx}. {stat['nickname']} - {metric_name}: {value:.2f} ({stat['matches']} matches)")
-        return "\n".join(lines)
+#     # Helper: Build ranking string from a sorted list
+#     def build_ranking_str(sorted_list, metric_key, metric_name):
+#         lines = []
+#         for idx, stat in enumerate(sorted_list, start=1):
+#             value = stat[metric_key]
+#             lines.append(f"{idx}. {stat['nickname']} - {metric_name}: {value:.2f} ({stat['matches']} matches)")
+#         return "\n".join(lines)
 
-    # Sort members by each metric (descending: higher is better)
-    kdr_sorted = sorted(stats_list, key=lambda x: x["kdr"], reverse=True)
-    adr_sorted = sorted(stats_list, key=lambda x: x["adr"], reverse=True)
-    first_sorted = sorted(stats_list, key=lambda x: x["avg_first"], reverse=True)
-    win_rate_sorted = sorted(stats_list, key=lambda x: x["win_rate"], reverse=True)
+#     # Sort members by each metric (descending: higher is better)
+#     kdr_sorted = sorted(stats_list, key=lambda x: x["kdr"], reverse=True)
+#     adr_sorted = sorted(stats_list, key=lambda x: x["adr"], reverse=True)
+#     first_sorted = sorted(stats_list, key=lambda x: x["avg_first"], reverse=True)
+#     win_rate_sorted = sorted(stats_list, key=lambda x: x["win_rate"], reverse=True)
 
-    ranking_kdr = build_ranking_str(kdr_sorted, "kdr", "KDR")
-    ranking_adr = build_ranking_str(adr_sorted, "adr", "ADR")
-    ranking_first = build_ranking_str(first_sorted, "avg_first", "Avg First Kills")
-    ranking_win = build_ranking_str(win_rate_sorted, "win_rate", "Win Rate")
+#     ranking_kdr = build_ranking_str(kdr_sorted, "kdr", "KDR")
+#     ranking_adr = build_ranking_str(adr_sorted, "adr", "ADR")
+#     ranking_first = build_ranking_str(first_sorted, "avg_first", "Avg First Kills")
+#     ranking_win = build_ranking_str(win_rate_sorted, "win_rate", "Win Rate")
 
-    embed = discord.Embed(
-        title=f"Member Rankings for {month_year}",
-        description="Rankings based on overall KDR, ADR, Average First Kills per Match, and Win Rate.",
-        color=0x3498db
-    )
-    embed.add_field(name="KDR Ranking", value=f"```{ranking_kdr}```", inline=False)
-    embed.add_field(name="ADR Ranking", value=f"```{ranking_adr}```", inline=False)
-    embed.add_field(name="Avg First Kills Ranking", value=f"```{ranking_first}```", inline=False)
-    embed.add_field(name="Win Rate Ranking", value=f"```{ranking_win}```", inline=False)
+#     embed = discord.Embed(
+#         title=f"Member Rankings for {month_year}",
+#         description="Rankings based on overall KDR, ADR, Average First Kills per Match, and Win Rate.",
+#         color=0x3498db
+#     )
+#     embed.add_field(name="KDR Ranking", value=f"```{ranking_kdr}```", inline=False)
+#     embed.add_field(name="ADR Ranking", value=f"```{ranking_adr}```", inline=False)
+#     embed.add_field(name="Avg First Kills Ranking", value=f"```{ranking_first}```", inline=False)
+#     embed.add_field(name="Win Rate Ranking", value=f"```{ranking_win}```", inline=False)
     
-    await ctx.send(embed=embed)
+#     await ctx.send(embed=embed)
 
 @bot.command(name="arca")
 async def arca(ctx, month: str = None):
