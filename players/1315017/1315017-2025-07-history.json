@@ -83,5 +83,10 @@
         "match_id": 24335928,
         "map": "de_anubis",
         "win": 1
+    },
+    {
+        "match_id": 24381368,
+        "map": "de_dust2",
+        "win": 0
     }
 ]

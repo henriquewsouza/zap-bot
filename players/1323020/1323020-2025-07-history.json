@@ -173,5 +173,40 @@
         "match_id": 24337023,
         "map": "de_dust2",
         "win": 0
+    },
+    {
+        "match_id": 24362085,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24362832,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24370973,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24371366,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24398679,
+        "map": "de_anubis",
+        "win": 1
+    },
+    {
+        "match_id": 24407495,
+        "map": "de_ancient",
+        "win": 1
+    },
+    {
+        "match_id": 24408918,
+        "map": "de_anubis",
+        "win": 1
     }
 ]

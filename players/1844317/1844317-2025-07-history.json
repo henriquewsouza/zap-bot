@@ -118,5 +118,115 @@
         "match_id": 24338120,
         "map": "de_dust2",
         "win": 1
+    },
+    {
+        "match_id": 24345479,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 24345865,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24346227,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 24354409,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 24354980,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24355514,
+        "map": "de_inferno",
+        "win": 0
+    },
+    {
+        "match_id": 24356227,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24362450,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24363199,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 24364429,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24371787,
+        "map": "de_anubis",
+        "win": 0
+    },
+    {
+        "match_id": 24372288,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24372799,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24373546,
+        "map": "de_cbble_old",
+        "win": 0
+    },
+    {
+        "match_id": 24374974,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24375749,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24398679,
+        "map": "de_anubis",
+        "win": 1
+    },
+    {
+        "match_id": 24408208,
+        "map": "de_inferno",
+        "win": 0
+    },
+    {
+        "match_id": 24408706,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24409491,
+        "map": "de_anubis",
+        "win": 1
+    },
+    {
+        "match_id": 24411424,
+        "map": "de_mirage",
+        "win": 1
+    },
+    {
+        "match_id": 24412019,
+        "map": "de_mirage",
+        "win": 1
     }
 ]

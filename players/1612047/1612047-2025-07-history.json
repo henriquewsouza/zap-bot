@@ -88,5 +88,35 @@
         "match_id": 24338120,
         "map": "de_dust2",
         "win": 1
+    },
+    {
+        "match_id": 24345865,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24354038,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24354980,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24355514,
+        "map": "de_inferno",
+        "win": 1
+    },
+    {
+        "match_id": 24356227,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24362085,
+        "map": "de_mirage",
+        "win": 0
     }
 ]
