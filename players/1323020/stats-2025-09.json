@@ -1,0 +1,75 @@
+{
+    "player_id": 1323020,
+    "month_year": "2025-09",
+    "total_matches": 13,
+    "total_wins": 6,
+    "total_losses": 7,
+    "overall_win_rate": 46.15384615384615,
+    "total_kills": 165,
+    "total_deaths": 221,
+    "KDR": 0.746606334841629,
+    "total_damage": 19118,
+    "total_rounds": 301,
+    "ADR": 63.51495016611295,
+    "total_first_kills": 18,
+    "average_first_kills_per_match": 1.3846153846153846,
+    "total_headshots": 76,
+    "HS_percent": 46.06060606060606,
+    "per_map": {
+        "de_mirage": {
+            "matches": 2,
+            "wins": 2,
+            "win_rate": 100.0,
+            "kills": 15,
+            "deaths": 29,
+            "damage": 2362,
+            "rounds": 46,
+            "kdr": 0.5172413793103449,
+            "adr": 51.34782608695652
+        },
+        "de_train": {
+            "matches": 3,
+            "wins": 2,
+            "win_rate": 66.66666666666666,
+            "kills": 38,
+            "deaths": 55,
+            "damage": 4558,
+            "rounds": 72,
+            "kdr": 0.6909090909090909,
+            "adr": 63.30555555555556
+        },
+        "de_dust2": {
+            "matches": 6,
+            "wins": 1,
+            "win_rate": 16.666666666666664,
+            "kills": 68,
+            "deaths": 86,
+            "damage": 7721,
+            "rounds": 117,
+            "kdr": 0.7906976744186046,
+            "adr": 65.99145299145299
+        },
+        "de_overpass": {
+            "matches": 1,
+            "wins": 0,
+            "win_rate": 0.0,
+            "kills": 25,
+            "deaths": 33,
+            "damage": 2876,
+            "rounds": 42,
+            "kdr": 0.7575757575757576,
+            "adr": 68.47619047619048
+        },
+        "de_anubis": {
+            "matches": 1,
+            "wins": 1,
+            "win_rate": 100.0,
+            "kills": 19,
+            "deaths": 18,
+            "damage": 1601,
+            "rounds": 24,
+            "kdr": 1.0555555555555556,
+            "adr": 66.70833333333333
+        }
+    }
+}

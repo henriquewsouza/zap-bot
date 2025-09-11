@@ -1,0 +1,75 @@
+{
+    "player_id": 1844317,
+    "month_year": "2025-09",
+    "total_matches": 14,
+    "total_wins": 8,
+    "total_losses": 6,
+    "overall_win_rate": 57.14285714285714,
+    "total_kills": 247,
+    "total_deaths": 197,
+    "KDR": 1.2538071065989849,
+    "total_damage": 26258,
+    "total_rounds": 304,
+    "ADR": 86.375,
+    "total_first_kills": 36,
+    "average_first_kills_per_match": 2.5714285714285716,
+    "total_headshots": 111,
+    "HS_percent": 44.93927125506073,
+    "per_map": {
+        "de_mirage": {
+            "matches": 1,
+            "wins": 1,
+            "win_rate": 100.0,
+            "kills": 19,
+            "deaths": 11,
+            "damage": 1774,
+            "rounds": 23,
+            "kdr": 1.7272727272727273,
+            "adr": 77.1304347826087
+        },
+        "de_train": {
+            "matches": 3,
+            "wins": 1,
+            "win_rate": 33.33333333333333,
+            "kills": 50,
+            "deaths": 43,
+            "damage": 4907,
+            "rounds": 60,
+            "kdr": 1.1627906976744187,
+            "adr": 81.78333333333333
+        },
+        "de_dust2": {
+            "matches": 5,
+            "wins": 3,
+            "win_rate": 60.0,
+            "kills": 67,
+            "deaths": 51,
+            "damage": 6879,
+            "rounds": 89,
+            "kdr": 1.3137254901960784,
+            "adr": 77.29213483146067
+        },
+        "de_overpass": {
+            "matches": 2,
+            "wins": 1,
+            "win_rate": 50.0,
+            "kills": 61,
+            "deaths": 40,
+            "damage": 6283,
+            "rounds": 61,
+            "kdr": 1.525,
+            "adr": 103.0
+        },
+        "de_anubis": {
+            "matches": 3,
+            "wins": 2,
+            "win_rate": 66.66666666666666,
+            "kills": 50,
+            "deaths": 52,
+            "damage": 6415,
+            "rounds": 71,
+            "kdr": 0.9615384615384616,
+            "adr": 90.35211267605634
+        }
+    }
+}

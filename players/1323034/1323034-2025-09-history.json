@@ -1,0 +1,62 @@
+[
+    {
+        "match_id": 24702495,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24703478,
+        "map": "de_mirage",
+        "win": 1
+    },
+    {
+        "match_id": 24711725,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24719792,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24720648,
+        "map": "de_mirage",
+        "win": 1
+    },
+    {
+        "match_id": 24764588,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24765465,
+        "map": "de_train",
+        "win": 1
+    },
+    {
+        "match_id": 24766167,
+        "map": "de_overpass",
+        "win": 1
+    },
+    {
+        "match_id": 24774106,
+        "map": "de_train",
+        "win": 1
+    },
+    {
+        "match_id": 24774646,
+        "map": "de_anubis",
+        "win": 0
+    },
+    {
+        "match_id": 24775364,
+        "map": "de_overpass",
+        "win": 1
+    },
+    {
+        "match_id": 24780285,
+        "map": "de_anubis",
+        "win": 1
+    }
+]

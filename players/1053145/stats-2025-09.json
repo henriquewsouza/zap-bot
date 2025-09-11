@@ -1,0 +1,31 @@
+{
+    "player_id": 1053145,
+    "month_year": "2025-09",
+    "total_matches": 1,
+    "total_wins": 1,
+    "total_losses": 0,
+    "overall_win_rate": 100.0,
+    "total_kills": 16,
+    "total_deaths": 8,
+    "KDR": 2.0,
+    "total_damage": 1846,
+    "total_rounds": 18,
+    "ADR": 102.55555555555556,
+    "total_first_kills": 2,
+    "average_first_kills_per_match": 2.0,
+    "total_headshots": 6,
+    "HS_percent": 37.5,
+    "per_map": {
+        "de_mirage": {
+            "matches": 1,
+            "wins": 1,
+            "win_rate": 100.0,
+            "kills": 16,
+            "deaths": 8,
+            "damage": 1846,
+            "rounds": 18,
+            "kdr": 2.0,
+            "adr": 102.55555555555556
+        }
+    }
+}
