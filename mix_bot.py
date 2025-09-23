@@ -18,6 +18,7 @@ from ranking_mix_handler import RankingMixHandler
 from ranking_creator_handler import RankingCreatorHandler
 from vintao_stats_handler import VintaoLocalStatsHandler
 from ranking_handler import RankingHandler
+from ranking_command import RankingCommand
 # ---------------------------
 # Configuration
 # ---------------------------
@@ -41,6 +42,7 @@ HIDDEN_ZAP_GOD_ID = 0
 creator_handler = RankingCreatorHandler(s3, BUCKET_NAME, OBJECT_KEY)
 vintao_local = VintaoLocalStatsHandler()
 ranking_handler = RankingHandler(s3, BUCKET_NAME, OBJECT_KEY)  # NOVO
+ranking_command = RankingCommand(s3, BUCKET_NAME, OBJECT_KEY)  # New ranking command
 
 # ---------------------------
 # Persistence Functions
@@ -397,12 +399,25 @@ async def set_level(ctx, member: discord.Member, level: int):
     """
     !setlevel @User <level>
     Permanently updates a member's level and saves the change to the Lightsail bucket.
+    Uses data from local members.json for gc and context if available.
     (Bot Admins only.)
     """
     global user_levels
+    
+    # Load local members.json data
+    try:
+        with open("members.json", "r", encoding="utf-8") as f:
+            local_members = json.load(f)
+        local_data = local_members.get(str(member.id), {})
+    except (FileNotFoundError, json.JSONDecodeError, KeyError):
+        local_data = {}
+    
+    # Preserve existing data and merge with local data
+    existing_data = user_levels.get(member.id, {})
     user_levels[member.id] = {
-        "level": level,
-        "nickname": member.display_name
+        **existing_data,  # Preserve existing fields
+        **local_data,     # Use local members.json data (gc, context, nickname, etc.)
+        "level": level,   # Update level only
     }
     save_user_levels(user_levels)
     await ctx.send(f"Updated {member.mention}'s level to {level}.")
@@ -413,15 +428,28 @@ async def add_temp(ctx, member: discord.Member, level: int):
     """
     !addtemp @User <level>
     Temporarily adds a member with a given level (in-memory only).
+    Uses data from local members.json for gc and context if available.
     (Bot Admins only.)
     """
     global user_levels
     if member.id in user_levels:
         await ctx.send(f"{member.mention} is already in the user list. Use !setlevel to update their level.")
         return
+    
+    # Load local members.json data
+    try:
+        with open("members.json", "r", encoding="utf-8") as f:
+            local_members = json.load(f)
+        local_data = local_members.get(str(member.id), {})
+    except (FileNotFoundError, json.JSONDecodeError, KeyError):
+        local_data = {}
+    
+    # Preserve existing data and merge with local data
+    existing_data = user_levels.get(member.id, {})
     user_levels[member.id] = {
-        "level": level,
-        "nickname": member.display_name
+        **existing_data,  # Preserve existing fields
+        **local_data,     # Use local members.json data (gc, context, nickname, etc.)
+        "level": level,   # Set level only
     }
     await ctx.send(f"Temporarily added {member.mention} with level {level}.")
 
@@ -464,6 +492,7 @@ async def help_command(ctx):
         "**!alltimestats @Player** – Agrega todos os meses registrados para o jogador.\n"
         "**!ranking [YYYY-MM]** – Ranking mensal (KDR, ADR, FK, Win Rate).\n"
         "**!alltimeranking** – Ranking geral somando todos os meses.\n"
+        "**!c4** – Ranking de média de C4 plantada por rounds jogados (all-time).\n"
         "**!arca [YYYY-MM | -all]** – Desempenho do grupo por mapa (mês ou all-time).\n\n"
         "__🤖 Integração com IA__\n"
         "**!zapIA <pergunta>** – Pergunte qualquer coisa sobre os stats agregados do grupo; resposta vem com elogios e roast.\n\n"
@@ -961,121 +990,23 @@ async def all_time_ranking(ctx):
     fk_sorted = sorted(stats_list, key=lambda x: x['avg_fk'], reverse=True)
     win_sorted = sorted(stats_list, key=lambda x: x['win_rate'], reverse=True)
 
-    embed = discord.Embed(
-        title="All Time Ranking",
-        description="Leaderboards agregados de todos os meses",
-        color=0x3498db
-    )
-    embed.add_field(name="KDR Ranking", value=f"```{build_ranking(kdr_sorted, 'kdr', 'KDR')}```", inline=False)
-    embed.add_field(name="ADR Ranking", value=f"```{build_ranking(adr_sorted, 'adr', 'ADR')}```", inline=False)
-    embed.add_field(name="Avg FK Ranking", value=f"```{build_ranking(fk_sorted, 'avg_fk', 'Avg FK')}```", inline=False)
-    embed.add_field(name="Win Rate Ranking", value=f"```{build_ranking(win_sorted, 'win_rate', 'Win Rate')}```", inline=False)
-
-    await ctx.send(embed=embed)
+    # Build all rankings
+    kdr_ranking = build_ranking(kdr_sorted, 'kdr', 'KDR')
+    adr_ranking = build_ranking(adr_sorted, 'adr', 'ADR')
+    fk_ranking = build_ranking(fk_sorted, 'avg_fk', 'Avg FK')
+    win_ranking = build_ranking(win_sorted, 'win_rate', 'Win Rate')
+    
+    # Send as separate messages to avoid Discord limits
+    await ctx.send("📊 **All Time Ranking**\nLeaderboards agregados de todos os meses")
+    
+    await ctx.send(f"**KDR Ranking:**\n```{kdr_ranking}```")
+    await ctx.send(f"**ADR Ranking:**\n```{adr_ranking}```")
+    await ctx.send(f"**Avg FK Ranking:**\n```{fk_ranking}```")
+    await ctx.send(f"**Win Rate Ranking:**\n```{win_ranking}```")
 
 @bot.command(name="ranking")
 async def ranking(ctx, *, args: str = None):
-    await ranking_handler.handle(ctx, args)
-
-# @bot.command(name="ranking2")
-# async def ranking(ctx, month: str = None):
-#     """
-#     !ranking
-#     Displays a ranking of members (from members.json stored on S3) for the current month,
-#     based on overall KDR, ADR, average first kills per match, and overall win rate.
-#     Each ranking shows the member's nickname, metric value, and total matches played.
-#     """
-#     import json
-#     from datetime import datetime
-#     from botocore.exceptions import ClientError
-
-#     # Load members.json from S3
-#     try:
-#         response = s3.get_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY)
-#         members_contents = response["Body"].read().decode("utf-8")
-#         members_data = json.loads(members_contents)
-#     except Exception as e:
-#         await ctx.send("Error loading members data from S3.")
-#         return
-
-#     if month:
-#         try:
-#             datetime.strptime(month, "%Y-%m")
-#             month_year = month
-#         except ValueError:
-#             await ctx.send("Use YYYY-MM format, e.g. `!ranking 2025-04`")
-#             return
-#     else:
-#         month_year = datetime.now().strftime("%Y-%m")
-#     stats_list = []
-
-#     # Iterate over each member in members.json
-#     for discord_id, info in members_data.items():
-#         gc_id = info.get("gc")
-#         if not gc_id:
-#             continue
-#         stats_key = f"players/{gc_id}/stats-{month_year}.json"
-#         try:
-#             stats_response = s3.get_object(Bucket=BUCKET_NAME, Key=stats_key)
-#             stats_contents = stats_response["Body"].read().decode("utf-8")
-#             stats = json.loads(stats_contents)
-#         except ClientError:
-#             continue  # Skip members with no stats file
-#         except Exception:
-#             continue
-        
-#         # Extract overall metrics
-#         kdr = stats.get("KDR", 0)
-#         adr = stats.get("ADR", 0)
-#         avg_first = stats.get("average_first_kills_per_match", 0)
-#         win_rate = stats.get("overall_win_rate", 0)
-#         total_matches = stats.get("total_matches", 0)
-#         nickname = info.get("nickname", "Unknown")
-        
-#         stats_list.append({
-#             "discord_id": discord_id,
-#             "nickname": nickname,
-#             "kdr": kdr,
-#             "adr": adr,
-#             "avg_first": avg_first,
-#             "win_rate": win_rate,
-#             "matches": total_matches
-#         })
-    
-#     if not stats_list:
-#         await ctx.send("No aggregated stats found for this month.")
-#         return
-
-#     # Helper: Build ranking string from a sorted list
-#     def build_ranking_str(sorted_list, metric_key, metric_name):
-#         lines = []
-#         for idx, stat in enumerate(sorted_list, start=1):
-#             value = stat[metric_key]
-#             lines.append(f"{idx}. {stat['nickname']} - {metric_name}: {value:.2f} ({stat['matches']} matches)")
-#         return "\n".join(lines)
-
-#     # Sort members by each metric (descending: higher is better)
-#     kdr_sorted = sorted(stats_list, key=lambda x: x["kdr"], reverse=True)
-#     adr_sorted = sorted(stats_list, key=lambda x: x["adr"], reverse=True)
-#     first_sorted = sorted(stats_list, key=lambda x: x["avg_first"], reverse=True)
-#     win_rate_sorted = sorted(stats_list, key=lambda x: x["win_rate"], reverse=True)
-
-#     ranking_kdr = build_ranking_str(kdr_sorted, "kdr", "KDR")
-#     ranking_adr = build_ranking_str(adr_sorted, "adr", "ADR")
-#     ranking_first = build_ranking_str(first_sorted, "avg_first", "Avg First Kills")
-#     ranking_win = build_ranking_str(win_rate_sorted, "win_rate", "Win Rate")
-
-#     embed = discord.Embed(
-#         title=f"Member Rankings for {month_year}",
-#         description="Rankings based on overall KDR, ADR, Average First Kills per Match, and Win Rate.",
-#         color=0x3498db
-#     )
-#     embed.add_field(name="KDR Ranking", value=f"```{ranking_kdr}```", inline=False)
-#     embed.add_field(name="ADR Ranking", value=f"```{ranking_adr}```", inline=False)
-#     embed.add_field(name="Avg First Kills Ranking", value=f"```{ranking_first}```", inline=False)
-#     embed.add_field(name="Win Rate Ranking", value=f"```{ranking_win}```", inline=False)
-    
-#     await ctx.send(embed=embed)
+    await ranking_command.handle_ranking(ctx, args=args)
 
 @bot.command(name="arca")
 async def arca(ctx, month: str = None):
@@ -1601,6 +1532,159 @@ async def ranking_mix(ctx, period: str = None):
 @bot.command(name="ranking_mix")
 async def ranking_mix(ctx, *, args: str = None):
     await ranking_mix_handler.handle(ctx, args)
+
+@bot.command(name="c4")
+async def c4_ranking(ctx):
+    """
+    !c4
+    Ranking de média de C4 plantada por rounds jogados (all-time).
+    """
+    import json
+    from botocore.exceptions import ClientError
+
+    await ctx.send("💣 Calculando ranking de C4 plantada...")
+
+    # Load members.json from S3
+    try:
+        response = s3.get_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY)
+        members_contents = response["Body"].read().decode("utf-8")
+        members_data = json.loads(members_contents)
+    except Exception:
+        await ctx.send("Erro ao carregar dados dos membros do S3.")
+        return
+
+    # Build mappings: discord_id_str -> gc_id and gc_id -> nickname
+    discord_to_gc = {did: str(info.get("gc")) for did, info in members_data.items() if info.get("gc")}
+    gc_to_nickname = {str(info.get("gc")): info.get("nickname", f"Unknown({info.get('gc')})")
+                      for info in members_data.values() if info.get("gc")}
+    if not discord_to_gc:
+        await ctx.send("Nenhum GC ID encontrado nos dados dos membros.")
+        return
+
+    # Read match files from local directory
+    import os
+    matches_dir = "matches"
+    if not os.path.exists(matches_dir):
+        await ctx.send("Pasta de partidas local não encontrada.")
+        return
+
+    # Get all JSON files from local matches directory
+    match_files = [f for f in os.listdir(matches_dir) if f.endswith('.json')]
+    if not match_files:
+        await ctx.send("Nenhuma partida encontrada na pasta local.")
+        return
+
+    # Initialize stats for each group player
+    c4_stats = {}
+    for gc_id in discord_to_gc.values():
+        c4_stats[gc_id] = {
+            "player_c4": 0,      # C4 plantadas pelo jogador
+            "team_c4": 0,        # Total de C4 plantadas pelos times do jogador
+            "matches": 0
+        }
+
+    counted_matches = set()
+
+    # Process each match file locally
+    for filename in match_files:
+        filepath = os.path.join(matches_dir, filename)
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                match_data = json.load(f)
+        except Exception:
+            continue
+
+        # Ensure each match counted once
+        match_id = match_data.get("id") or match_data.get("match_id") or filename.split(".")[0]
+        if match_id in counted_matches:
+            continue
+        counted_matches.add(match_id)
+
+        jogos = match_data.get("jogos", {})
+        players_data = jogos.get("players", {})
+
+        # Track which players are in this match and their teams
+        match_players = {}
+        team_c4_totals = {"team_a": 0, "team_b": 0}
+
+        # First pass: collect player C4 and team totals
+        for team in ["team_a", "team_b"]:
+            team_c4 = 0
+            for player in players_data.get(team, []):
+                try:
+                    c4_planted = int(player.get("bombe", 0))
+                    team_c4 += c4_planted
+                    
+                    gc_id = str(player.get("idplayer"))
+                    if gc_id in c4_stats:
+                        match_players[gc_id] = {
+                            "c4": c4_planted,
+                            "team": team
+                        }
+                except (ValueError, TypeError):
+                    continue
+            
+            team_c4_totals[team] = team_c4
+
+        # Second pass: update stats for group players
+        for gc_id, player_info in match_players.items():
+            if gc_id in c4_stats:
+                c4_stats[gc_id]["player_c4"] += player_info["c4"]
+                c4_stats[gc_id]["team_c4"] += team_c4_totals[player_info["team"]]
+                c4_stats[gc_id]["matches"] += 1
+
+    # Calculate C4 percentage and prepare ranking
+    players_list = []
+    for gc_id, stats in c4_stats.items():
+        if stats["team_c4"] == 0:
+            continue
+            
+        c4_percentage = (stats["player_c4"] / stats["team_c4"]) * 100
+        nickname = gc_to_nickname.get(gc_id, f"Unknown({gc_id})")
+        
+        players_list.append({
+            "nickname": nickname,
+            "c4_percentage": c4_percentage,
+            "player_c4": stats["player_c4"],
+            "team_c4": stats["team_c4"],
+            "matches": stats["matches"]
+        })
+
+    if not players_list:
+        await ctx.send("Nenhum dado de C4 encontrado para os jogadores do grupo.")
+        return
+
+    # Sort by C4 percentage (descending)
+    players_list.sort(key=lambda x: x["c4_percentage"], reverse=True)
+
+    # Build ranking text with shorter format
+    ranking_lines = []
+    for i, player in enumerate(players_list):
+        ranking_lines.append(
+            f"{i+1:2d}. {player['nickname'][:15]:<15} - {player['c4_percentage']:.1f}% C4 "
+            f"({player['player_c4']}/{player['team_c4']} C4, {player['matches']} p)"
+        )
+
+    # Send ranking as plain text without embed
+    ranking_text = "\n".join(ranking_lines)
+    
+    # If too long for a single message, split into multiple messages
+    if len(ranking_text) > 1900:
+        # Split into chunks that fit in Discord messages
+        chunk_size = 30  # lines per message
+        for i in range(0, len(ranking_lines), chunk_size):
+            chunk = ranking_lines[i:i+chunk_size]
+            chunk_text = "\n".join(chunk)
+            
+            if i == 0:
+                # First message with header
+                await ctx.send(f"💣 **Ranking de C4 Plantada (All-Time)**\n% de C4 plantada pelo jogador em relação ao total do time\n```{chunk_text}```")
+            else:
+                # Subsequent messages
+                await ctx.send(f"```{chunk_text}```")
+    else:
+        # Single message
+        await ctx.send(f"💣 **Ranking de C4 Plantada (All-Time)**\n% de C4 plantada pelo jogador em relação ao total do time\n```{ranking_text}```")
 
 
 

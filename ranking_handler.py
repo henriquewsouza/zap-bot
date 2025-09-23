@@ -4,6 +4,7 @@ from datetime import datetime
 from collections import defaultdict
 from botocore.exceptions import ClientError
 import discord
+from typing import Optional
 
 
 def _is_mix_match(match_data: dict, group_gc_ids: set[str]) -> bool:
@@ -26,7 +27,7 @@ class RankingHandler:
         self.bucket = bucket
         self.members_key = members_key
 
-    async def handle(self, ctx, args: str | None):
+    async def handle(self, ctx, args: Optional[str]):
         """
         !ranking [YYYY‑MM | -all] [--exclude-mix | --no-mix | -nm]
         """
