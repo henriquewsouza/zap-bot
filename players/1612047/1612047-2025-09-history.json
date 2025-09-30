@@ -18,5 +18,70 @@
         "match_id": 24773739,
         "map": "de_dust2",
         "win": 0
+    },
+    {
+        "match_id": 24789666,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24817942,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24818551,
+        "map": "de_mirage",
+        "win": 1
+    },
+    {
+        "match_id": 24819296,
+        "map": "de_train",
+        "win": 1
+    },
+    {
+        "match_id": 24820041,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 24828117,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24828742,
+        "map": "de_inferno",
+        "win": 0
+    },
+    {
+        "match_id": 24835210,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24835893,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24875389,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24876031,
+        "map": "de_ancient",
+        "win": 1
+    },
+    {
+        "match_id": 24876748,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24883527,
+        "map": "de_mirage",
+        "win": 0
     }
 ]

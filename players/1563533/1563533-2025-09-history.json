@@ -43,5 +43,205 @@
         "match_id": 24784655,
         "map": "de_dust2",
         "win": 1
+    },
+    {
+        "match_id": 24790116,
+        "map": "de_nuke",
+        "win": 0
+    },
+    {
+        "match_id": 24797451,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24797727,
+        "map": "de_train",
+        "win": 0
+    },
+    {
+        "match_id": 24798256,
+        "map": "de_mirage",
+        "win": 1
+    },
+    {
+        "match_id": 24798688,
+        "map": "de_cbble_old",
+        "win": 0
+    },
+    {
+        "match_id": 24799057,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24799481,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24804810,
+        "map": "de_nuke",
+        "win": 0
+    },
+    {
+        "match_id": 24805072,
+        "map": "de_overpass",
+        "win": 0
+    },
+    {
+        "match_id": 24805499,
+        "map": "de_train",
+        "win": 1
+    },
+    {
+        "match_id": 24805814,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24814126,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24816946,
+        "map": "de_train",
+        "win": 1
+    },
+    {
+        "match_id": 24817409,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24817942,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24818551,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24819296,
+        "map": "de_train",
+        "win": 0
+    },
+    {
+        "match_id": 24820041,
+        "map": "de_nuke",
+        "win": 0
+    },
+    {
+        "match_id": 24837191,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24842844,
+        "map": "de_overpass",
+        "win": 1
+    },
+    {
+        "match_id": 24843376,
+        "map": "de_train",
+        "win": 0
+    },
+    {
+        "match_id": 24843894,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24844361,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24859164,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24859597,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24860207,
+        "map": "de_mirage",
+        "win": 1
+    },
+    {
+        "match_id": 24864251,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24864360,
+        "map": "de_nuke",
+        "win": 0
+    },
+    {
+        "match_id": 24864444,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24864636,
+        "map": "de_inferno",
+        "win": 0
+    },
+    {
+        "match_id": 24866244,
+        "map": "de_inferno",
+        "win": 1
+    },
+    {
+        "match_id": 24866721,
+        "map": "de_nuke",
+        "win": 1
+    },
+    {
+        "match_id": 24873104,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24874824,
+        "map": "de_nuke",
+        "win": 0
+    },
+    {
+        "match_id": 24875389,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24876031,
+        "map": "de_ancient",
+        "win": 1
+    },
+    {
+        "match_id": 24876748,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24885647,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24886379,
+        "map": "de_train",
+        "win": 1
+    },
+    {
+        "match_id": 24887173,
+        "map": "de_mirage",
+        "win": 1
     }
 ]

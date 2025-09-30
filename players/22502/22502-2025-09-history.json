@@ -1,1 +1,12 @@
-[]
+[
+    {
+        "match_id": 24826715,
+        "map": "de_overpass",
+        "win": 1
+    },
+    {
+        "match_id": 24837191,
+        "map": "de_mirage",
+        "win": 0
+    }
+]

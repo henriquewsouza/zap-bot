@@ -68,5 +68,60 @@
         "match_id": 24774646,
         "map": "de_anubis",
         "win": 0
+    },
+    {
+        "match_id": 24817942,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24818551,
+        "map": "de_mirage",
+        "win": 0
+    },
+    {
+        "match_id": 24826715,
+        "map": "de_overpass",
+        "win": 0
+    },
+    {
+        "match_id": 24835293,
+        "map": "de_overpass",
+        "win": 1
+    },
+    {
+        "match_id": 24842844,
+        "map": "de_overpass",
+        "win": 1
+    },
+    {
+        "match_id": 24850536,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24850859,
+        "map": "de_train",
+        "win": 0
+    },
+    {
+        "match_id": 24851403,
+        "map": "de_dust2",
+        "win": 1
+    },
+    {
+        "match_id": 24851955,
+        "map": "de_overpass",
+        "win": 0
+    },
+    {
+        "match_id": 24875389,
+        "map": "de_dust2",
+        "win": 0
+    },
+    {
+        "match_id": 24883975,
+        "map": "de_dust2",
+        "win": 0
     }
 ]

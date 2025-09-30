@@ -956,6 +956,10 @@ async def all_time_ranking(ctx):
         if total_matches == 0:
             continue
 
+        # Filter players with less than 20 matches
+        if total_matches < 20:
+            continue
+
         # Compute metrics
         win_rate = (total_wins / total_matches * 100)
         kdr = (total_kills / total_deaths) if total_deaths else total_kills
@@ -974,7 +978,7 @@ async def all_time_ranking(ctx):
         })
 
     if not stats_list:
-        await ctx.send("Nenhum dado de stats encontrado para ranking.")
+        await ctx.send("Nenhum jogador encontrado com pelo menos 20 partidas para ranking.")
         return
 
     # Helper to build ranking text
@@ -1495,6 +1499,11 @@ async def ranking_mix(ctx, period: str = None):
     players_list = []
     for gc, st in mix_stats.items():
         m = st["matches"]
+        
+        # Apply minimum matches filter only for all-time, not current month
+        if all_flag and m < 20:  # Only filter all-time with 20+ matches
+            continue
+        
         kdr = st["kills"] / st["deaths"] if st["deaths"] else st["kills"]
         adr = st["damage"] / st["rounds"] if st["rounds"] else 0
         avg_fk = st["first_kills"] / m if m else 0
@@ -1502,6 +1511,13 @@ async def ranking_mix(ctx, period: str = None):
         nickname = gc_to_nickname.get(gc, f"Unknown({gc})")
         players_list.append({"nickname": nickname, "kdr": kdr, "adr": adr,
                              "avg_fk": avg_fk, "win_rate": win_rate, "matches": m})
+
+    if not players_list:
+        if all_flag:
+            await ctx.send("No players found with at least 20 mix matches for all-time ranking.")
+        else:
+            await ctx.send("No players found for the current month mix ranking.")
+        return
 
     # Helper to build ranking string
     def build(sorted_list, key, label):
@@ -1532,6 +1548,118 @@ async def ranking_mix(ctx, period: str = None):
 @bot.command(name="ranking_mix")
 async def ranking_mix(ctx, *, args: str = None):
     await ranking_mix_handler.handle(ctx, args)
+
+@bot.command(name="simulatemix")
+async def simulate_mix(ctx):
+    """
+    !simulatemix
+    Simula um mix pegando 10 jogadores aleatórios da lista e dividindo em 2 times balanceados.
+    """
+    import json
+    import random
+    import itertools
+    from botocore.exceptions import ClientError
+
+    await ctx.send("🎲 Simulando mix com 10 jogadores aleatórios...")
+
+    try:
+        response = s3.get_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY)
+        members_contents = response["Body"].read().decode("utf-8")
+        members_data = json.loads(members_contents)
+    except Exception:
+        await ctx.send("Erro ao carregar dados dos membros do S3.")
+        return
+
+    # Filtrar apenas jogadores com GC ID, nickname e active=true (ou sem tag active)
+    valid_players = []
+    
+    for discord_id, info in members_data.items():
+        if info.get("gc") and info.get("nickname"):
+            # Verificar se o jogador está ativo (active=true ou sem tag active)
+            is_active = info.get("active", True)  # Default True se não tiver a tag
+            
+            if is_active:
+                # Usar nível do members.json (que já tem os níveis corretos)
+                level = info.get("level", 0)
+                
+                valid_players.append({
+                    "discord_id": discord_id,
+                    "gc": str(info["gc"]),
+                    "nickname": info["nickname"],
+                    "level": level
+                })
+
+    if len(valid_players) < 10:
+        await ctx.send(f"❌ Não há jogadores suficientes para simular um mix. Encontrados: {len(valid_players)}, necessários: 10")
+        return
+
+    # Selecionar 10 jogadores aleatórios
+    selected_players = random.sample(valid_players, 10)
+    
+    # Criar objetos FakeMember para usar com a lógica de balanceamento do !mix
+    class FakeMember:
+        def __init__(self, player_data):
+            self.id = str(player_data["discord_id"])
+            self.display_name = player_data["nickname"]
+            self.level = player_data["level"]
+        
+        @property
+        def mention(self):
+            return f"<@{self.id}>"
+    
+    # Converter para FakeMember objects
+    members = [FakeMember(player) for player in selected_players]
+    
+    # Adicionar os níveis ao user_levels para o balanceamento funcionar
+    for member in members:
+        user_levels[member.id] = {"level": member.level, "nickname": member.display_name}
+    
+    # Usar a mesma lógica de balanceamento do !mix
+    partitions = generate_valid_partitions(members)
+    
+    if not partitions:
+        await ctx.send("❌ Não foi possível gerar times balanceados com os jogadores selecionados.")
+        return
+    
+    # Ordenar por diferença de nível (menor diferença = mais balanceado)
+    partitions.sort(key=lambda x: x[0])
+    
+    # Pegar a melhor combinação (menor diferença)
+    diff, team1, team2 = partitions[0]
+    
+    # Usar a função build_team_message do !mix
+    message = build_team_message(team1, team2)
+    
+    # Adicionar cabeçalho
+    mix_message = "🎮 **MIX SIMULADO BALANCEADO**\n\n"
+    mix_message += message
+    mix_message += f"\n📊 **Total de jogadores:** {len(selected_players)}"
+    mix_message += f"\n⚖️ **Diferença de nível:** {diff}"
+    mix_message += f"\n🎯 **Times balanceados automaticamente**"
+
+    await ctx.send(mix_message)
+
+@bot.command(name="syncmembers")
+@commands.check(lambda ctx: ctx.author.id in BOT_ADMINS)
+async def sync_members(ctx):
+    """
+    !syncmembers
+    Sincroniza o arquivo members.json local com o S3.
+    (Bot Admins only.)
+    """
+    try:
+        # Carregar dados locais
+        with open("members.json", "r", encoding="utf-8") as f:
+            local_members = json.load(f)
+        
+        # Salvar no S3
+        data = json.dumps(local_members, indent=4, ensure_ascii=False)
+        s3.put_object(Bucket=BUCKET_NAME, Key=OBJECT_KEY, Body=data.encode("utf-8"))
+        
+        await ctx.send("✅ Arquivo members.json sincronizado com sucesso!")
+        
+    except Exception as e:
+        await ctx.send(f"❌ Erro ao sincronizar: {str(e)}")
 
 @bot.command(name="c4")
 async def c4_ranking(ctx):

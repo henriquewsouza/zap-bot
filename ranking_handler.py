@@ -1,5 +1,6 @@
 # ranking_handler.py
 import json
+import os
 from datetime import datetime
 from collections import defaultdict
 from botocore.exceptions import ClientError
@@ -108,6 +109,19 @@ class RankingHandler:
             await ctx.send("Nenhum dado encontrado para este período.")
             return
 
+        # Apply minimum matches filter
+        if all_flag:
+            # All-time: require 20+ matches
+            players = [p for p in players if p['matches'] >= 20]
+        # Current month: no minimum matches filter
+
+        if not players:
+            if all_flag:
+                await ctx.send("Nenhum jogador encontrado com pelo menos 20 partidas para ranking all-time.")
+            else:
+                await ctx.send("Nenhum jogador encontrado para o ranking do mês atual.")
+            return
+
         # -------------------- rankings ------------------
         def sort_metric(lst, key): return sorted(lst, key=lambda x: x[key], reverse=True)
 
@@ -115,21 +129,33 @@ class RankingHandler:
             return "\n".join(f"{i+1}. {p['nickname']} – {label}: {p[key]:.2f} ({p['matches']} part.)"
                              for i, p in enumerate(lst))
 
-        embed = discord.Embed(
-            title=f"Ranking {('All Time' if all_flag else month_year)}"
-                  f"{' (sem mixes)' if exclude_mixes else ''}",
-            description="Leaderboards do grupo",
-            color=0x3498db
-        )
-        embed.add_field(name="KDR", value=f"```{txt(sort_metric(players,'kdr'),'kdr','KDR')}```", inline=False)
-        embed.add_field(name="ADR", value=f"```{txt(sort_metric(players,'adr'),'adr','ADR')}```", inline=False)
-        embed.add_field(name="Avg FK", value=f"```{txt(sort_metric(players,'avg_fk'),'avg_fk','Avg FK')}```", inline=False)
-        embed.add_field(name="Win Rate", value=f"```{txt(sort_metric(players,'win_rate'),'win_rate','Win Rate')}```",
-                        inline=False)
-        await ctx.send(embed=embed)
+        # Send as separate messages to avoid Discord limits
+        title = f"📊 **Ranking {('All Time' if all_flag else month_year)}**"
+        if exclude_mixes:
+            title += " (sem mixes)"
+        title += "\nLeaderboards do grupo"
+        
+        await ctx.send(title)
+        
+        await ctx.send(f"**KDR Ranking:**\n```{txt(sort_metric(players,'kdr'),'kdr','KDR')}```")
+        await ctx.send(f"**ADR Ranking:**\n```{txt(sort_metric(players,'adr'),'adr','ADR')}```")
+        await ctx.send(f"**Avg FK Ranking:**\n```{txt(sort_metric(players,'avg_fk'),'avg_fk','Avg FK')}```")
+        await ctx.send(f"**Win Rate Ranking:**\n```{txt(sort_metric(players,'win_rate'),'win_rate','Win Rate')}```")
 
     # -------------- helpers --------------
     def _list_prefix(self, prefix):
+        # Try local files first
+        if prefix.startswith("players/"):
+            local_path = prefix.replace("players/", "players/")
+            if os.path.exists(local_path):
+                files = []
+                for root, dirs, filenames in os.walk(local_path):
+                    for filename in filenames:
+                        if filename.endswith('.json'):
+                            files.append(os.path.join(root, filename))
+                return files
+        
+        # Fallback to S3
         try:
             res = self.s3.list_objects_v2(Bucket=self.bucket, Prefix=prefix)
             return [obj["Key"] for obj in res.get("Contents", [])]
@@ -142,7 +168,12 @@ class RankingHandler:
         total = defaultdict(float)
         for key in stats_files:
             try:
-                data = json.loads(self.s3.get_object(Bucket=self.bucket, Key=key)["Body"].read().decode("utf-8"))
+                # Try local file first, fallback to S3
+                if os.path.exists(key):
+                    with open(key, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                else:
+                    data = json.loads(self.s3.get_object(Bucket=self.bucket, Key=key)["Body"].read().decode("utf-8"))
             except ClientError:
                 continue
             except Exception:
@@ -166,11 +197,19 @@ class RankingHandler:
     def _aggregate_from_matches(self, month_year, all_flag, exclude_mixes,
                                 group_gc_ids, gc_to_nick):
         players = defaultdict(lambda: defaultdict(float))
-        listed = self._list_prefix("matches/")
+        
+        # Use local matches directory instead of S3
+        matches_dir = "matches"
+        if not os.path.exists(matches_dir):
+            return []
+        
+        match_files = [f for f in os.listdir(matches_dir) if f.endswith('.json')]
         from datetime import datetime
-        for key in listed:
+        for filename in match_files:
+            filepath = os.path.join(matches_dir, filename)
             try:
-                match = json.loads(self.s3.get_object(Bucket=self.bucket, Key=key)["Body"].read().decode("utf-8"))
+                with open(filepath, "r", encoding="utf-8") as f:
+                    match = json.load(f)
             except Exception:
                 continue
             # filtro de data

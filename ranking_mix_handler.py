@@ -1,5 +1,6 @@
 # ranking_mix_handler.py
 import json
+import os
 import asyncio
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
@@ -19,7 +20,8 @@ class RankingMixHandler:
     """
 
     MIN_GROUP_PLAYERS_IN_MATCH = 7       # players do grupo (somando os dois times)
-    MIN_MATCHES_PER_PLAYER     = 4       # descarta player com menos de 3 partidas
+    MIN_MATCHES_PER_PLAYER     = 4       # descarta player com menos de 4 partidas (current month)
+    MIN_MATCHES_ALL_TIME       = 10      # descarta player com menos de 20 partidas (all-time)
 
     def __init__(
         self,
@@ -38,8 +40,8 @@ class RankingMixHandler:
     # ──────────────────────────────────────────────────────────────────────────
     async def handle(self, ctx: commands.Context, args: Optional[str] = None):
         # ------------------------------------------------------------------ 1. FLAGS
-        period: Optional[str] = None        # só filtra se for passado
-        last_n = 10                         # default
+        period: Optional[str] = None  # default to all-time
+        last_n = 10                   # default
         toks = args.split() if args else []
 
         idx = 0
@@ -53,13 +55,16 @@ class RankingMixHandler:
                 except ValueError:
                     await ctx.send("`-last` precisa ser seguido por número inteiro.")
                     return
+            elif tok.lower() == "-all":
+                period = None  # all-time
+                idx += 1
             else:
                 # qualquer token restante tratamos como possível período YYYY-MM
                 try:
                     datetime.strptime(tok, "%Y-%m")
                     period = tok
                 except ValueError:
-                    await ctx.send("Período inválido – use `YYYY-MM` ou omita para all‑time.")
+                    await ctx.send("Período inválido – use `YYYY-MM`, `-all` para all-time, ou omita para all-time.")
                     return
                 idx += 1
 
@@ -80,28 +85,27 @@ class RankingMixHandler:
             await ctx.send("Nenhum GC ID do grupo encontrado.")
             return
 
-        # ------------------------------------------------------------------ 3. LISTA DE PARTIDAS
-        try:
-            objs = self.s3.list_objects_v2(Bucket=self.bucket, Prefix=self.matches_prefix)
-            match_keys = [o["Key"] for o in objs.get("Contents", [])]
-        except Exception as exc:
-            await ctx.send(f"Erro ao listar partidas no S3: {exc}")
+        # ------------------------------------------------------------------ 3. LISTA DE PARTIDAS (LOCAL)
+        matches_dir = "matches"
+        if not os.path.exists(matches_dir):
+            await ctx.send("Pasta de partidas local não encontrada.")
+            return
+        
+        match_files = [f for f in os.listdir(matches_dir) if f.endswith('.json')]
+        if not match_files:
+            await ctx.send("Nenhuma partida encontrada na pasta local.")
             return
 
-        # ------------------------------------------------------------------ 4. DOWNLOAD EM PARALELO
-        loop = asyncio.get_event_loop()
-
-        async def fetch(key: str):
+        # ------------------------------------------------------------------ 4. PROCESSAR ARQUIVOS LOCAIS
+        fetched = []
+        for filename in match_files:
+            filepath = os.path.join(matches_dir, filename)
             try:
-                data = await loop.run_in_executor(
-                    self.executor,
-                    lambda: self.s3.get_object(Bucket=self.bucket, Key=key)["Body"].read().decode(),
-                )
-                return key, json.loads(data)
+                with open(filepath, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                fetched.append((filename, data))
             except Exception:
-                return key, None
-
-        fetched = await asyncio.gather(*(fetch(k) for k in match_keys))
+                fetched.append((filename, None))
 
         # ------------------------------------------------------------------ 5. AGREGAÇÃO
         stats: Dict[str, List[Dict[str, Any]]] = {}   # gc_id -> lista de registros
@@ -173,11 +177,20 @@ class RankingMixHandler:
         # ------------------------------------------------------------------ 6. MÉTRICAS POR PLAYER
         players: List[Dict[str, Any]] = []
         for gc, recs in stats.items():
-            if len(recs) < self.MIN_MATCHES_PER_PLAYER:
+            # Apply different minimum matches based on period
+            # All-time (period=None): 20+ matches, Current month: 4+ matches
+            min_matches = self.MIN_MATCHES_ALL_TIME if period is None else self.MIN_MATCHES_PER_PLAYER
+            if len(recs) < min_matches:
                 continue
 
             # usa apenas os N últimos jogos do próprio player
-            recs = sorted(recs, key=lambda r: r["date"])[-last_n:]
+            # Se -all foi usado, não limita por last_n
+            if period is None and "-all" in (args or ""):
+                # Para -all, usa todos os matches (não limita por last_n)
+                pass
+            else:
+                # Para outros casos, limita por last_n
+                recs = sorted(recs, key=lambda r: r["date"])[-last_n:]
 
             tot = len(recs)
             S = {k: sum(r[k] for r in recs) for k in
@@ -193,7 +206,10 @@ class RankingMixHandler:
             })
 
         if not players:
-            await ctx.send("Nenhum player com partidas suficientes para ranquear.")
+            if period is None:
+                await ctx.send("Nenhum player encontrado com pelo menos 20 partidas para ranking all-time.")
+            else:
+                await ctx.send(f"Nenhum player encontrado com pelo menos 4 partidas para ranking de {period}.")
             return
 
         # ------------------------------------------------------------------ 7. RANKINGS
@@ -221,4 +237,16 @@ class RankingMixHandler:
         for lbl, lst in ranks.items():
             embed.add_field(name=lbl, value=f"```{build(lst, key_of[lbl], lbl)}```", inline=False)
 
-        await ctx.send(embed=embed)
+        # Send as separate messages to avoid Discord limits
+        if period is None and "-all" in (args or ""):
+            title = f"🎮 **Mix Ranking All‑Time**"
+        elif period is None:
+            title = f"🎮 **Mix Ranking All‑Time (últ. {last_n})**"
+        else:
+            title = f"🎮 **Mix Ranking {period} (últ. {last_n})**"
+        description = f"Somente partidas grupo vs grupo (≥{self.MIN_GROUP_PLAYERS_IN_MATCH} players do grupo)."
+        
+        await ctx.send(f"{title}\n{description}")
+        
+        for lbl, lst in ranks.items():
+            await ctx.send(f"**{lbl} Ranking:**\n```{build(lst, key_of[lbl], lbl)}```")
