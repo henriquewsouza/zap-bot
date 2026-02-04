@@ -1830,11 +1830,22 @@ async def on_ready():
             print(f"- {perm}: {value}")
         print("------")
 if __name__ == '__main__':
-    with open("config.json", "r") as config_file:
-        config = json.load(config_file)
-
-    TOKEN = config["discord_token"]
-    OPENAI_API_KEY = config["openai_api_key"]
+    import os
+    from dotenv import load_dotenv
+    
+    # Carregar variáveis de ambiente do arquivo .env
+    load_dotenv()
+    
+    TOKEN = os.getenv("DISCORD_TOKEN")
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    
+    # Verificar se as variáveis foram carregadas
+    if not TOKEN:
+        print("❌ DISCORD_TOKEN não encontrado. Verifique o arquivo .env")
+        exit(1)
+    if not OPENAI_API_KEY:
+        print("❌ OPENAI_API_KEY não encontrada. Verifique o arquivo .env")
+        exit(1)
     client = OpenAI(
     # This is the default and can be omitted
     api_key=OPENAI_API_KEY,
