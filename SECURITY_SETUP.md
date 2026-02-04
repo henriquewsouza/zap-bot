@@ -4,7 +4,7 @@
 
 Os seguintes tokens sensíveis foram removidos dos arquivos de configuração:
 
-- **Discord Token**: Removido de `config.json`
+- **Discord Token**: Removido do repositório (use `.env`)
 - **JWT Tokens**: Removidos de `cookies.json`
 - **GamersClub Session**: Removida de `cookies.json`
 
@@ -43,7 +43,7 @@ O código precisa ser atualizado para ler as variáveis do arquivo `.env` em vez
 Para remover completamente os tokens do histórico do Git, execute:
 
 ```bash
-./clean_git_history.sh
+./clean_git_history.sh --yes
 ```
 
 **⚠️ ATENÇÃO**: Este script irá reescrever o histórico do Git. Faça backup antes de executar!

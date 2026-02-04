@@ -15,6 +15,7 @@ Todos os 6 leaks de segurança identificados pelo gitleaks foram resolvidos com 
 - **Arquivo**: `config.json`
 - **Linha**: 2
 - **Ação**: Substituído por `"YOUR_DISCORD_TOKEN_HERE"`
+ - **Obs**: `config.json` será ignorado e removido do histórico; o bot usa `.env`.
 
 #### 3. **Token Hardcoded Removido** ✅
 - **Arquivo**: `mix_bot.py`
@@ -59,7 +60,7 @@ gitleaks detect --no-banner --source . --log-level info --no-git
 
 3. **Limpar histórico Git** (opcional):
    ```bash
-   ./clean_git_history.sh
+   ./clean_git_history.sh --yes
    ```
 
 ### ⚠️ Importante

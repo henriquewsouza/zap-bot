@@ -2,10 +2,19 @@
 
 # Script para limpar o histórico do Git removendo commits com tokens sensíveis
 
+set -euo pipefail
+
+YES=false
+if [[ "${1:-}" == "--yes" ]]; then
+    YES=true
+fi
+
 echo "⚠️  ATENÇÃO: Este script irá reescrever o histórico do Git!"
 echo "Certifique-se de fazer backup antes de continuar."
-echo "Pressione Enter para continuar ou Ctrl+C para cancelar..."
-read
+if [[ "$YES" != "true" ]]; then
+    echo "Para continuar, execute: ./clean_git_history.sh --yes"
+    exit 2
+fi
 
 # Verificar se estamos em um repositório Git
 if [ ! -d ".git" ]; then
@@ -18,7 +27,7 @@ echo "📦 Fazendo backup do branch atual..."
 git branch backup-$(date +%Y%m%d-%H%M%S)
 
 # Remover arquivos sensíveis do histórico
-echo "🧹 Removendo arquivos sensíveis do histórico..."
+echo "🧹 Removendo arquivos sensíveis do histórico (cookies.json, config.json)..."
 
 # Remover cookies.json do histórico
 git filter-branch --force --index-filter \
