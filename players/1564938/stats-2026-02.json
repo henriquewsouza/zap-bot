@@ -1,0 +1,19 @@
+{
+    "player_id": 1564938,
+    "month_year": "2026-02",
+    "total_matches": 0,
+    "total_wins": 0,
+    "total_losses": 0,
+    "overall_win_rate": 0,
+    "total_kills": 0,
+    "total_deaths": 0,
+    "KDR": 0.0,
+    "total_damage": 0,
+    "total_rounds": 0,
+    "ADR": 0,
+    "total_first_kills": 0,
+    "average_first_kills_per_match": 0,
+    "total_headshots": 0,
+    "HS_percent": 0,
+    "per_map": {}
+}

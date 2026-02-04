@@ -1,6 +1,11 @@
 import os
 import cloudscraper
 import json
+from dotenv import load_dotenv
+from pathlib import Path
+
+_repo_root = Path(__file__).resolve().parent
+load_dotenv(dotenv_path=_repo_root / ".env", encoding="utf-8-sig")
 
 def fetch_match_stats(match_id):
     # Ensure the "matches" folder exists
@@ -10,6 +15,12 @@ def fetch_match_stats(match_id):
     local_filename = os.path.join("matches", f"{match_id}.json")
 
     url = f"https://gamersclub.com.br/lobby/match/{match_id}/1"
+    # Use env var for GamersClub session cookie to avoid hardcoding secrets.
+    # Expected either raw value (just the hex) or "gclubsess=<value>".
+    sess = os.getenv("GAMERSCLUB_SESSION_COOKIE", "").strip()
+    if sess and not sess.startswith("gclubsess="):
+        sess = f"gclubsess={sess}"
+
     headers = {
         "accept": "application/json, text/javascript, */*; q=0.01",
         "accept-language": "en-US,en;q=0.9,pt-BR;q=0.8,pt;q=0.7",
@@ -29,7 +40,7 @@ def fetch_match_stats(match_id):
         "sec-fetch-site": "same-origin",
         "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
         "x-requested-with": "XMLHttpRequest",
-        "Cookie": "gclubsess=6de293ceadbd014c40c4c7c84b34a8b53b5f16d7"
+        **({"Cookie": sess} if sess else {})
     }
 
     print(f"Fetching stats for match {match_id} using cloudscraper...")

@@ -1,0 +1,75 @@
+{
+    "player_id": 1760648,
+    "month_year": "2026-02",
+    "total_matches": 11,
+    "total_wins": 2,
+    "total_losses": 9,
+    "overall_win_rate": 18.181818181818183,
+    "total_kills": 149,
+    "total_deaths": 177,
+    "KDR": 0.8418079096045198,
+    "total_damage": 16620,
+    "total_rounds": 234,
+    "ADR": 71.02564102564102,
+    "total_first_kills": 23,
+    "average_first_kills_per_match": 2.090909090909091,
+    "total_headshots": 63,
+    "HS_percent": 42.281879194630875,
+    "per_map": {
+        "de_anubis": {
+            "matches": 4,
+            "wins": 1,
+            "win_rate": 25.0,
+            "kills": 55,
+            "deaths": 66,
+            "damage": 6342,
+            "rounds": 89,
+            "kdr": 0.8333333333333334,
+            "adr": 71.25842696629213
+        },
+        "de_dust2": {
+            "matches": 4,
+            "wins": 1,
+            "win_rate": 25.0,
+            "kills": 57,
+            "deaths": 60,
+            "damage": 5914,
+            "rounds": 83,
+            "kdr": 0.95,
+            "adr": 71.25301204819277
+        },
+        "de_mirage": {
+            "matches": 1,
+            "wins": 0,
+            "win_rate": 0.0,
+            "kills": 12,
+            "deaths": 19,
+            "damage": 1153,
+            "rounds": 23,
+            "kdr": 0.631578947368421,
+            "adr": 50.130434782608695
+        },
+        "de_nuke": {
+            "matches": 1,
+            "wins": 0,
+            "win_rate": 0.0,
+            "kills": 10,
+            "deaths": 15,
+            "damage": 1373,
+            "rounds": 18,
+            "kdr": 0.6666666666666666,
+            "adr": 76.27777777777777
+        },
+        "de_ancient": {
+            "matches": 1,
+            "wins": 0,
+            "win_rate": 0.0,
+            "kills": 15,
+            "deaths": 17,
+            "damage": 1838,
+            "rounds": 21,
+            "kdr": 0.8823529411764706,
+            "adr": 87.52380952380952
+        }
+    }
+}

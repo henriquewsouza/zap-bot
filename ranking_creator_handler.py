@@ -2,12 +2,12 @@
 import asyncio
 import json
 import re
+import os
 from collections import defaultdict
 from datetime import datetime
 from typing import Dict, Optional, Set
 
 import discord
-from botocore.exceptions import ClientError
 
 
 class RankingCreatorHandler:
@@ -20,16 +20,15 @@ class RankingCreatorHandler:
       !ranking_creators -all         -> all‑time
     """
 
-    MATCH_PREFIX: str = "matches/"   # pasta no S3 onde ficam os JSON de partidas
+    MATCH_DIR: str = "matches"       # pasta local onde ficam os JSON de partidas
     MIN_LOBBIES: int = 10             # qtd. mínima de lobbys para entrar no ranking
 
     # --------------------------------------------------------------------- #
     #  Construtor                                                           #
     # --------------------------------------------------------------------- #
-    def __init__(self, s3_client, bucket_name: str, members_key: str):
-        self.s3 = s3_client
-        self.bucket = bucket_name
-        self.members_key = members_key  # geralmente "members.json"
+    def __init__(self, members_path: str = "members.json", matches_dir: str = "matches"):
+        self.members_path = members_path
+        self.matches_dir = matches_dir
 
     # --------------------------------------------------------------------- #
     #  Entrada principal chamada pelo bot                                   #
@@ -111,21 +110,16 @@ class RankingCreatorHandler:
         stats: Dict[str, Dict[str, int]] = defaultdict(
             lambda: {"wins": 0, "matches": 0}
         )
-        objects = (
-            self.s3.list_objects_v2(Bucket=self.bucket, Prefix=self.MATCH_PREFIX).get(
-                "Contents", []
-            )
-        )
+        if not os.path.isdir(self.matches_dir):
+            return stats
 
-        for obj in objects:
-            key = obj["Key"]
+        for filename in os.listdir(self.matches_dir):
+            if not filename.endswith(".json"):
+                continue
+            path = os.path.join(self.matches_dir, filename)
             try:
-                body = (
-                    self.s3.get_object(Bucket=self.bucket, Key=key)["Body"]
-                    .read()
-                    .decode("utf-8")
-                )
-                match = json.loads(body)
+                with open(path, "r", encoding="utf-8") as f:
+                    match = json.load(f)
             except Exception:
                 continue
 
@@ -170,13 +164,9 @@ class RankingCreatorHandler:
     # --------------------------------------------------------------------- #
     def _load_members(self) -> Dict:
         try:
-            content = (
-                self.s3.get_object(Bucket=self.bucket, Key=self.members_key)["Body"]
-                .read()
-                .decode("utf-8")
-            )
-            return json.loads(content)
-        except ClientError:
+            with open(self.members_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
             return {}
 
     @staticmethod

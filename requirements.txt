@@ -1,2 +1,5 @@
 discord.py>=2.4.0
 python-dotenv>=1.0.1
+requests>=2.32.0
+cloudscraper>=1.2.71
+python-dateutil>=2.9.0.post0

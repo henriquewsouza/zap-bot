@@ -25,16 +25,12 @@ class RankingMixHandler:
 
     def __init__(
         self,
-        s3_client,
-        bucket_name: str,
-        members_key: str = "members.json",
-        matches_prefix: str = "matches/",
+        members_path: str = "members.json",
+        matches_dir: str = "matches",
         max_workers: int = 10,
     ):
-        self.s3 = s3_client
-        self.bucket = bucket_name
-        self.members_key = members_key
-        self.matches_prefix = matches_prefix
+        self.members_path = members_path
+        self.matches_dir = matches_dir
         self.executor = ThreadPoolExecutor(max_workers=max_workers)
 
     # ──────────────────────────────────────────────────────────────────────────
@@ -68,12 +64,12 @@ class RankingMixHandler:
                     return
                 idx += 1
 
-        # ------------------------------------------------------------------ 2. MEMBERS
+        # ------------------------------------------------------------------ 2. MEMBERS (LOCAL)
         try:
-            resp = self.s3.get_object(Bucket=self.bucket, Key=self.members_key)
-            members: Dict[str, Any] = json.loads(resp["Body"].read().decode())
+            with open(self.members_path, "r", encoding="utf-8") as f:
+                members: Dict[str, Any] = json.load(f)
         except Exception as exc:
-            await ctx.send(f"Erro ao carregar members.json: {exc}")
+            await ctx.send(f"Erro ao carregar {self.members_path}: {exc}")
             return
 
         discord_to_gc = {did: str(info["gc"]) for did, info in members.items() if info.get("gc")}
@@ -86,7 +82,7 @@ class RankingMixHandler:
             return
 
         # ------------------------------------------------------------------ 3. LISTA DE PARTIDAS (LOCAL)
-        matches_dir = "matches"
+        matches_dir = self.matches_dir
         if not os.path.exists(matches_dir):
             await ctx.send("Pasta de partidas local não encontrada.")
             return

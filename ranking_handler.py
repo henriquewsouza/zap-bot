@@ -3,7 +3,6 @@ import json
 import os
 from datetime import datetime
 from collections import defaultdict
-from botocore.exceptions import ClientError
 import discord
 from typing import Optional
 
@@ -23,10 +22,9 @@ class RankingHandler:
     Gera rankings mensais (ou all‑time) com opção de ignorar partidas de mix.
     """
 
-    def __init__(self, s3, bucket, members_key):
-        self.s3 = s3
-        self.bucket = bucket
-        self.members_key = members_key
+    def __init__(self, members_path: str = "members.json", matches_dir: str = "matches"):
+        self.members_path = members_path
+        self.matches_dir = matches_dir
 
     async def handle(self, ctx, args: Optional[str]):
         """
@@ -43,12 +41,12 @@ class RankingHandler:
                 elif la != "":
                     month_arg = a
 
-        # ------------------ members --------------------
+        # ------------------ members (LOCAL) --------------------
         try:
-            body = self.s3.get_object(Bucket=self.bucket, Key=self.members_key)["Body"].read()
-            members = json.loads(body.decode("utf-8"))
-        except Exception:
-            await ctx.send("Erro ao carregar members.json do S3.")
+            with open(self.members_path, "r", encoding="utf-8") as f:
+                members = json.load(f)
+        except Exception as e:
+            await ctx.send(f"Erro ao carregar {self.members_path}: {e}")
             return
 
         discord_to_gc = {did: str(info["gc"]) for did, info in members.items() if info.get("gc")}
@@ -144,23 +142,18 @@ class RankingHandler:
 
     # -------------- helpers --------------
     def _list_prefix(self, prefix):
-        # Try local files first
-        if prefix.startswith("players/"):
-            local_path = prefix.replace("players/", "players/")
-            if os.path.exists(local_path):
-                files = []
-                for root, dirs, filenames in os.walk(local_path):
-                    for filename in filenames:
-                        if filename.endswith('.json'):
-                            files.append(os.path.join(root, filename))
-                return files
-        
-        # Fallback to S3
-        try:
-            res = self.s3.list_objects_v2(Bucket=self.bucket, Prefix=prefix)
-            return [obj["Key"] for obj in res.get("Contents", [])]
-        except Exception:
+        # Local-only: prefix is a filesystem path/prefix like "players/<gc>/stats-"
+        if not prefix.startswith("players/"):
             return []
+        base_dir = os.path.dirname(prefix)
+        if not os.path.exists(base_dir):
+            return []
+        files = []
+        for root, _, filenames in os.walk(base_dir):
+            for filename in filenames:
+                if filename.startswith(os.path.basename(prefix)) and filename.endswith(".json"):
+                    files.append(os.path.join(root, filename))
+        return files
 
     def _aggregate_from_stats_files(self, stats_files):
         if not stats_files:
@@ -168,14 +161,8 @@ class RankingHandler:
         total = defaultdict(float)
         for key in stats_files:
             try:
-                # Try local file first, fallback to S3
-                if os.path.exists(key):
-                    with open(key, "r", encoding="utf-8") as f:
-                        data = json.load(f)
-                else:
-                    data = json.loads(self.s3.get_object(Bucket=self.bucket, Key=key)["Body"].read().decode("utf-8"))
-            except ClientError:
-                continue
+                with open(key, "r", encoding="utf-8") as f:
+                    data = json.load(f)
             except Exception:
                 continue
             total["matches"] += data.get("total_matches", 0)
@@ -198,8 +185,8 @@ class RankingHandler:
                                 group_gc_ids, gc_to_nick):
         players = defaultdict(lambda: defaultdict(float))
         
-        # Use local matches directory instead of S3
-        matches_dir = "matches"
+        # Use local matches directory
+        matches_dir = self.matches_dir
         if not os.path.exists(matches_dir):
             return []
         

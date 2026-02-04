@@ -1,0 +1,42 @@
+{
+    "player_id": 1323034,
+    "month_year": "2026-02",
+    "total_matches": 4,
+    "total_wins": 2,
+    "total_losses": 2,
+    "overall_win_rate": 50.0,
+    "total_kills": 46,
+    "total_deaths": 75,
+    "KDR": 0.6133333333333333,
+    "total_damage": 5986,
+    "total_rounds": 97,
+    "ADR": 61.71134020618557,
+    "total_first_kills": 9,
+    "average_first_kills_per_match": 2.25,
+    "total_headshots": 22,
+    "HS_percent": 47.82608695652174,
+    "per_map": {
+        "de_dust2": {
+            "matches": 3,
+            "wins": 1,
+            "win_rate": 33.33333333333333,
+            "kills": 34,
+            "deaths": 54,
+            "damage": 4357,
+            "rounds": 69,
+            "kdr": 0.6296296296296297,
+            "adr": 63.14492753623188
+        },
+        "de_ancient": {
+            "matches": 1,
+            "wins": 1,
+            "win_rate": 100.0,
+            "kills": 12,
+            "deaths": 21,
+            "damage": 1629,
+            "rounds": 28,
+            "kdr": 0.5714285714285714,
+            "adr": 58.17857142857143
+        }
+    }
+}

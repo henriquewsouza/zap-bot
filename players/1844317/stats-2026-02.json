@@ -1,0 +1,75 @@
+{
+    "player_id": 1844317,
+    "month_year": "2026-02",
+    "total_matches": 20,
+    "total_wins": 8,
+    "total_losses": 12,
+    "overall_win_rate": 40.0,
+    "total_kills": 364,
+    "total_deaths": 316,
+    "KDR": 1.1518987341772151,
+    "total_damage": 38541,
+    "total_rounds": 462,
+    "ADR": 83.42207792207792,
+    "total_first_kills": 66,
+    "average_first_kills_per_match": 3.3,
+    "total_headshots": 138,
+    "HS_percent": 37.91208791208791,
+    "per_map": {
+        "de_dust2": {
+            "matches": 7,
+            "wins": 3,
+            "win_rate": 42.857142857142854,
+            "kills": 129,
+            "deaths": 94,
+            "damage": 13283,
+            "rounds": 147,
+            "kdr": 1.372340425531915,
+            "adr": 90.36054421768708
+        },
+        "de_anubis": {
+            "matches": 5,
+            "wins": 3,
+            "win_rate": 60.0,
+            "kills": 91,
+            "deaths": 77,
+            "damage": 9964,
+            "rounds": 113,
+            "kdr": 1.1818181818181819,
+            "adr": 88.17699115044248
+        },
+        "de_mirage": {
+            "matches": 3,
+            "wins": 1,
+            "win_rate": 33.33333333333333,
+            "kills": 56,
+            "deaths": 59,
+            "damage": 5831,
+            "rounds": 78,
+            "kdr": 0.9491525423728814,
+            "adr": 74.75641025641026
+        },
+        "de_nuke": {
+            "matches": 3,
+            "wins": 1,
+            "win_rate": 33.33333333333333,
+            "kills": 54,
+            "deaths": 50,
+            "damage": 5493,
+            "rounds": 76,
+            "kdr": 1.08,
+            "adr": 72.27631578947368
+        },
+        "de_ancient": {
+            "matches": 2,
+            "wins": 0,
+            "win_rate": 0.0,
+            "kills": 34,
+            "deaths": 36,
+            "damage": 3970,
+            "rounds": 48,
+            "kdr": 0.9444444444444444,
+            "adr": 82.70833333333333
+        }
+    }
+}
