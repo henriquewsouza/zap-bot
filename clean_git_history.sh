@@ -41,7 +41,14 @@ git filter-branch --force --index-filter \
 
 # Limpar referências órfãs
 echo "🧽 Limpando referências órfãs..."
-git for-each-ref --format="%(refname)" refs/original/ | xargs -n 1 git update-ref -d
+
+# Remover refs/original/* sem depender de xargs (mais robusto em ambientes restritos)
+while IFS= read -r ref; do
+    if [[ -n "${ref}" ]]; then
+        git update-ref -d "${ref}" || true
+    fi
+done < <(git for-each-ref --format="%(refname)" refs/original/ || true)
+
 git reflog expire --expire=now --all
 git gc --prune=now --aggressive
 
